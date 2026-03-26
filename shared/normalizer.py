@@ -1,0 +1,183 @@
+"""
+Product name normalizer — extracts model_family, storage_gb, ram_gb, color, sku.
+
+Shared between backend (batch normalization script) and scraper (pipeline auto-normalization).
+Pure Python, no database or async dependencies.
+"""
+
+import re
+
+# ─── Color dictionary ───────────────────────────────────────────────
+KNOWN_COLORS = [
+    # English multi-word
+    "midnight", "starlight", "sky blue", "space gray", "space grey",
+    "space black", "cloud white",
+    "natural titanium", "black titanium", "white titanium", "desert titanium",
+    "cobalt violet", "icyblue", "icy blue", "silver shadow",
+    "phantom black", "midnight black", "ocean cyan", "mocha brown", "navy peony blue",
+    "titanium purple", "glacier blue",
+    "navy blue", "dark blue", "light blue", "velvet black", "velvet grey",
+    "dawning orange", "forest owl", "forest green", "jade black", "sakura pink",
+    "verona green", "mica silver", "jet black", "jetblack",
+    "titanium gray", "titanium grey", "titanium black", "light gold",
+    "light violet", "dark green", "midnight black", "desert gold",
+    "meteor silver", "sleek blue", "sleek black",
+    # English single-word
+    "black", "white", "blue", "green", "pink", "yellow", "red",
+    "gold", "silver", "gray", "grey", "orange",
+    "purple", "brown", "beige", "cream", "coral", "teal",
+    "mint", "lavender", "bronze", "graphite", "titanium", "amber",
+    "citrus", "indigo", "blush", "plum", "denim", "sage", "mist",
+    # Azerbaijani colors
+    "çəhrayı qızıl", "mavi göy",
+    "ağ", "qara", "göy", "yaşıl", "qırmızı", "narıncı", "sarı",
+    "bənövşəyi", "bənövşəy", "gecəyarısı", "gecəyarı",
+    "gümüşü", "gümüş", "qızılı", "qızıl",
+    "çəhrayı", "boz", "mavi", "tünd",
+]
+KNOWN_COLORS.sort(key=len, reverse=True)
+
+COLOR_PATTERN = re.compile(
+    r"(?:\b|(?<=[\s,]))("
+    + "|".join(re.escape(c) for c in KNOWN_COLORS)
+    + r")(?:\b|(?=[\s,]))",
+    re.IGNORECASE,
+)
+
+# Map AZ color names to English for consistent attribute storage
+AZ_COLOR_MAP = {
+    "ağ": "White", "qara": "Black", "göy": "Blue", "yaşıl": "Green",
+    "qırmızı": "Red", "narıncı": "Orange", "sarı": "Yellow",
+    "bənövşəyi": "Purple", "bənövşəy": "Purple",
+    "gecəyarısı": "Midnight", "gecəyarı": "Midnight",
+    "gümüşü": "Silver", "gümüş": "Silver",
+    "qızılı": "Gold", "qızıl": "Gold",
+    "çəhrayı qızıl": "Rose Gold", "çəhrayı": "Pink",
+    "boz": "Gray", "mavi": "Blue", "mavi göy": "Blue",
+    "tünd": "Dark",
+}
+
+# ─── Apple SKU pattern ──────────────────────────────────────────────
+APPLE_SKU_PATTERN = re.compile(
+    r"\b(M[A-Z0-9]{4,7})(?:/[A-Z])?\b",
+)
+
+# ─── Storage patterns ───────────────────────────────────────────────
+STORAGE_PATTERN = re.compile(
+    r"(?<!\d[/x])(\d{1,4})\s*([GT])B\b",
+    re.IGNORECASE,
+)
+
+RAM_STORAGE_PATTERN = re.compile(
+    r"(\d{1,3})\s*(?:GB)?\s*[/]\s*(\d{1,4})\s*([GT])B\b",
+    re.IGNORECASE,
+)
+
+# ─── AZ product name prefixes to strip ──────────────────────────────
+AZ_PREFIXES = [
+    "Smartfon ", "Notbuk ", "Noutbuk ",
+    "Simsiz qulaqlıq ", "Simsiz qulaqlıqlar ",
+    "Qulaqlıq ", "Qulaqlıqlar ",
+    "Smart saat ", "Klaviatura ", "Kabel ",
+    "Qidalanma adapteri ", "Trekpad ",
+]
+
+
+def _normalize_family_case(family: str) -> str:
+    """Normalize model family casing for consistent grouping."""
+    apple_prefixed = re.match(
+        r"^(?:APPLE|Apple)\s+((?:iPhone|iPad|MacBook|AirPods|Apple\s+Watch|"
+        r"EarPods|AirTag|HomePod|Mac\s+\w+).*)",
+        family,
+        re.IGNORECASE,
+    )
+    if apple_prefixed:
+        family = apple_prefixed.group(1)
+    return family
+
+
+def _should_remove_parens(match: re.Match) -> str:
+    """Keep chip identifiers like (A18 Pro), (M4); remove everything else."""
+    content = match.group(1).strip()
+    if re.match(r"^[AM]\d{1,2}(?:\s+Pro)?$", content):
+        return content
+    return ""
+
+
+def normalize_name(name: str) -> dict:
+    """Extract model_family, storage_gb, ram_gb, color, sku from a product name."""
+    result = {
+        "model_family": None,
+        "storage_gb": None,
+        "ram_gb": None,
+        "color": None,
+        "sku": None,
+    }
+
+    # Normalize whitespace: replace non-breaking spaces, tabs, etc.
+    cleaned = re.sub(r"[\u00a0\u200b\u2009\u2007\t]+", " ", name).strip()
+
+    for prefix in AZ_PREFIXES:
+        if cleaned.startswith(prefix):
+            cleaned = cleaned[len(prefix):]
+            break
+
+    # Extract color
+    color_matches = list(COLOR_PATTERN.finditer(cleaned))
+    if color_matches:
+        raw_color = color_matches[-1].group(1).strip()
+        result["color"] = AZ_COLOR_MAP.get(
+            raw_color.lower(), raw_color.strip().title()
+        )
+
+    # Extract Apple SKU (e.g. MHFA4RU from "MHFA4RU/A")
+    sku_match = APPLE_SKU_PATTERN.search(cleaned)
+    if sku_match:
+        result["sku"] = sku_match.group(1)
+
+    # Extract RAM/Storage combined
+    ram_storage_match = RAM_STORAGE_PATTERN.search(cleaned)
+    if ram_storage_match:
+        ram = int(ram_storage_match.group(1))
+        storage = int(ram_storage_match.group(2))
+        unit = ram_storage_match.group(3).upper()
+        if unit == "T":
+            storage *= 1024
+        if ram <= 64:
+            result["ram_gb"] = ram
+        result["storage_gb"] = storage
+    else:
+        storage_matches = list(STORAGE_PATTERN.finditer(cleaned))
+        if storage_matches:
+            for m in storage_matches:
+                val = int(m.group(1))
+                unit = m.group(2).upper()
+                if unit == "T":
+                    val *= 1024
+                if val >= 32:
+                    result["storage_gb"] = val
+                    break
+
+    # Build model family
+    family = cleaned
+    family = RAM_STORAGE_PATTERN.sub("", family)
+    family = STORAGE_PATTERN.sub("", family)
+    family = COLOR_PATTERN.sub("", family)
+    family = re.sub(r"\(([^)]*)\)", _should_remove_parens, family)
+    family = re.sub(r"\bM[A-Z0-9]{4,7}(?:/[A-Z])?\b", "", family)
+    family = re.sub(r"\b\d{2}NR[A-Z0-9\-]+\b", "", family)
+    family = re.sub(
+        r"\d+C\s*CPU\s*/\s*\d+C\s*GPU", "", family, flags=re.IGNORECASE
+    )
+    family = re.sub(r'(\d+)["\u2033\u201d]', r"\1", family)
+    family = re.sub(r"[\s,\-/]+$", "", family)
+    family = re.sub(r"\s{2,}", " ", family).strip()
+    family = re.sub(r"\b\d*\s*[GT]B\b", "", family, flags=re.IGNORECASE).strip()
+    family = re.sub(r"\s{2,}", " ", family).strip()
+    family = re.sub(r"[\s,\-/]+$", "", family).strip()
+    family = re.sub(r'[,\s"]+$', "", family).strip()
+
+    if family:
+        result["model_family"] = _normalize_family_case(family)
+
+    return result

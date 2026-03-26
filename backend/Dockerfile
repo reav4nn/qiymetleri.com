@@ -4,11 +4,12 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir poetry
 
-COPY pyproject.toml poetry.lock* ./
+COPY backend/pyproject.toml backend/poetry.lock* ./
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --only main
 
-COPY . .
+COPY shared/ /app/shared/
+COPY backend/ .
 
 EXPOSE 8000
 

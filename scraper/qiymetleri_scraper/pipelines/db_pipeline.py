@@ -1,4 +1,5 @@
 import logging
+import json
 import re
 from datetime import datetime, timezone
 
@@ -7,6 +8,12 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 logger = logging.getLogger(__name__)
+
+try:
+    from shared.normalizer import normalize_name
+except ImportError:
+    normalize_name = None
+    logger.warning("Could not import normalize_name — products won't be auto-normalized")
 
 
 class DatabasePipeline:
@@ -128,22 +135,34 @@ class DatabasePipeline:
                 )
             return
 
+        # Normalize product name to extract model_family and attributes
+        name = adapter.get("original_title", "")
+        model_family = None
+        attributes = {}
+        if normalize_name:
+            parsed = normalize_name(name)
+            model_family = parsed.get("model_family")
+            for key in ("storage_gb", "ram_gb", "color", "sku"):
+                if parsed.get(key):
+                    attributes[key] = parsed[key]
+
         session.execute(
             text("""
-                INSERT INTO products (id, canonical_id, brand, category, name, image_url, attributes)
-                VALUES (gen_random_uuid(), :canonical_id, :brand, :category, :name, :image_url, CAST(:attributes AS jsonb))
+                INSERT INTO products (id, canonical_id, brand, category, name, image_url, model_family, attributes)
+                VALUES (gen_random_uuid(), :canonical_id, :brand, :category, :name, :image_url, :model_family, CAST(:attributes AS jsonb))
                 ON CONFLICT (canonical_id) DO NOTHING
             """),
             {
                 "canonical_id": canonical_id,
                 "brand": adapter.get("brand"),
                 "category": adapter.get("category"),
-                "name": adapter.get("original_title", ""),
+                "name": name,
                 "image_url": image_url,
-                "attributes": "{}",
+                "model_family": model_family,
+                "attributes": json.dumps(attributes),
             },
         )
-        logger.info(f"Created new product: {canonical_id}")
+        logger.info(f"Created new product: {canonical_id} (family={model_family})")
 
     @staticmethod
     def _clean_image_url(url: str | None) -> str | None:
