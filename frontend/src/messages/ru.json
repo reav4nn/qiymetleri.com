@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "qiymetleri.com — Найди самую низкую цену на технику в Азербайджане",
+    "title": "qiymetleri.com — самый выгодный выбор.",
     "description": "Сравнение цен на электронику в Азербайджане. Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — сравните цены всех магазинов.",
     "productTitle": "{name} цена в Азербайджане",
     "productDescriptionWithPrice": "{name} самая низкая цена: {price} ₼ — qiymetleri.com",
@@ -14,10 +14,10 @@
     "headphones": "Наушники"
   },
   "footer": {
-    "tagline": "qiymetleri.com — Найди самую низкую цену на технику в Азербайджане"
+    "tagline": "qiymetleri.com — самый выгодный выбор."
   },
   "home": {
-    "heroTitle": "Найди самую низкую цену на технику в Азербайджане",
+    "heroTitle": "самый выгодный выбор.",
     "heroSubtitle": "Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — сравните цены всех магазинов одним поиском.",
     "categories": "Категории"
   },

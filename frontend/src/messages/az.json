@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "qiymetleri.com — Azərbaycanda ən ucuz texnikanı tap",
+    "title": "qiymetleri.com — ən sərfəli seçim.",
     "description": "Azərbaycanda elektron məhsulların qiymət müqayisəsi. Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — bütün mağazaların qiymətlərini müqayisə edin.",
     "productTitle": "{name} Azərbaycanda qiymət",
     "productDescriptionWithPrice": "{name} ən ucuz: {price} ₼ — qiymetleri.com",
@@ -14,10 +14,10 @@
     "headphones": "Qulaqlıqlar"
   },
   "footer": {
-    "tagline": "qiymetleri.com — Azərbaycanda ən ucuz texnikanı tap"
+    "tagline": "qiymetleri.com — ən sərfəli seçim."
   },
   "home": {
-    "heroTitle": "Azərbaycanda ən ucuz texnikanı tap",
+    "heroTitle": "ən sərfəli seçim.",
     "heroSubtitle": "Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — bütün mağazaların qiymətlərini bir axtarışla müqayisə et.",
     "categories": "Kateqoriyalar"
   },

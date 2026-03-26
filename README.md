@@ -7,7 +7,7 @@ Find the cheapest smartphones, laptops, headphones, and smartwatches across all 
 <div align="center">
 
 ```
-"Azərbaycanda ən ucuz texnikanı tap"
+"Azərbaycanda ən sərfəli seçim"
 ```
 
 </div>
