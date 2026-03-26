@@ -26,16 +26,16 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
     return [...set].sort();
   }, [variants]);
 
-  const [selectedStorage, setSelectedStorage] = useState<number | null>(
-    storages[0] ?? null
-  );
+  const [selectedStorage, setSelectedStorage] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Filter variants based on selection
+  // Variants with null storage/color are shown in all filter states
   const filteredVariants = useMemo(() => {
     return variants.filter((v) => {
-      if (selectedStorage && v.storage_gb !== selectedStorage) return false;
-      if (selectedColor && v.color !== selectedColor) return false;
+      if (selectedStorage && v.storage_gb && v.storage_gb !== selectedStorage)
+        return false;
+      if (selectedColor && v.color && v.color !== selectedColor) return false;
       return true;
     });
   }, [variants, selectedStorage, selectedColor]);

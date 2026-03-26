@@ -63,6 +63,12 @@ AZ_COLOR_MAP = {
     "tünd": "Dark",
 }
 
+# ─── Apple SKU pattern ──────────────────────────────────────────────
+# Matches: MHFA4RU/A, MHFC4RU, MC6A4RU/A, MFHP4ZE/A, MRE03QR/A, etc.
+APPLE_SKU_PATTERN = re.compile(
+    r"\b(M[A-Z0-9]{4,7})(?:/[A-Z])?\b",
+)
+
 # ─── Storage patterns ───────────────────────────────────────────────
 STORAGE_PATTERN = re.compile(
     r"(?<!\d[/x])(\d{1,4})\s*([GT])B\b",
@@ -97,6 +103,7 @@ def normalize_name(name: str) -> dict:
         "storage_gb": None,
         "ram_gb": None,
         "color": None,
+        "sku": None,
     }
 
     # Normalize whitespace: replace non-breaking spaces, tabs, etc.
@@ -119,6 +126,11 @@ def normalize_name(name: str) -> dict:
         raw_color = color_matches[-1].group(1).strip()
         # Map AZ colors to English, otherwise title-case
         result["color"] = AZ_COLOR_MAP.get(raw_color.lower(), raw_color.strip().title())
+
+    # Extract Apple SKU (e.g. MHFA4RU from "MHFA4RU/A")
+    sku_match = APPLE_SKU_PATTERN.search(cleaned)
+    if sku_match:
+        result["sku"] = sku_match.group(1)
 
     # Extract RAM/Storage combined
     ram_storage_match = RAM_STORAGE_PATTERN.search(cleaned)
@@ -203,7 +215,9 @@ async def run():
         rows = result.fetchall()
         print(f"Found {len(rows)} products to normalize")
 
+        # First pass: normalize all products
         updated = 0
+        all_parsed = []  # (pid, parsed_dict) for second pass
         for row in rows:
             pid, name, brand, category = row
             parsed = normalize_name(name)
@@ -215,8 +229,11 @@ async def run():
                 attrs["ram_gb"] = parsed["ram_gb"]
             if parsed["color"]:
                 attrs["color"] = parsed["color"]
+            if parsed["sku"]:
+                attrs["sku"] = parsed["sku"]
 
             model_family = parsed["model_family"]
+            all_parsed.append((str(pid), model_family, attrs))
 
             if model_family or attrs:
                 await session.execute(
@@ -236,6 +253,40 @@ async def run():
 
         await session.commit()
         print(f"Updated {updated} products")
+
+        # Second pass: propagate storage/color from SKU-matched siblings
+        # Build lookup: SKU → {storage_gb, color} from products that have full attributes
+        sku_attrs: dict[str, dict] = {}
+        for pid, family, attrs in all_parsed:
+            sku = attrs.get("sku")
+            if sku and attrs.get("storage_gb"):
+                sku_attrs[sku] = {
+                    "storage_gb": attrs.get("storage_gb"),
+                    "color": attrs.get("color"),
+                }
+
+        # Fill missing attributes from SKU lookup
+        propagated = 0
+        for pid, family, attrs in all_parsed:
+            sku = attrs.get("sku")
+            if sku and sku in sku_attrs and not attrs.get("storage_gb"):
+                donor = sku_attrs[sku]
+                attrs["storage_gb"] = donor["storage_gb"]
+                if not attrs.get("color") and donor.get("color"):
+                    attrs["color"] = donor["color"]
+                await session.execute(
+                    text("""
+                        UPDATE products
+                        SET attributes = CAST(:attrs AS jsonb)
+                        WHERE id = :pid
+                    """),
+                    {"attrs": json.dumps(attrs), "pid": pid},
+                )
+                propagated += 1
+
+        await session.commit()
+        if propagated:
+            print(f"Propagated attributes to {propagated} products via SKU matching")
 
         result = await session.execute(
             text("""
