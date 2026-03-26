@@ -90,12 +90,12 @@ export default async function ProductPage({
 
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         {/* Product image */}
-        <div className="flex h-48 w-48 flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl bg-[var(--color-bg-surface)] sm:h-56 sm:w-56 sm:self-start">
+        <div className="flex h-48 w-48 flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl bg-white sm:h-56 sm:w-56 sm:self-start">
           {product.image_url ? (
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-auto object-contain"
+              className="h-full w-auto object-contain mix-blend-multiply"
             />
           ) : (
             <svg className="h-16 w-16 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">

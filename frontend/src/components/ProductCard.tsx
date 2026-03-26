@@ -17,14 +17,14 @@ export function ProductCard({ product, locale }: ProductCardProps) {
       href={`/${locale}/products/${product.id}`}
       className="flex flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 transition hover:border-[var(--color-accent)] hover:shadow-lg hover:shadow-[var(--color-accent-subtle)]"
     >
-      <div className="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-[var(--color-bg-surface-hover)]">
+      <div className="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-white">
         {product.image_url ? (
           <Image
             src={product.image_url}
             alt={product.name}
             width={144}
             height={144}
-            className="h-full w-auto object-contain"
+            className="h-full w-auto object-contain mix-blend-multiply"
             unoptimized
           />
         ) : (
