@@ -20,6 +20,7 @@ router = APIRouter()
 async def list_products(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
+    q: str | None = Query(None, max_length=200),
     category: str | None = None,
     brand: str | None = None,
     store_id: str | None = None,
@@ -32,6 +33,7 @@ async def list_products(
         db,
         page=page,
         per_page=per_page,
+        q=q,
         category=category,
         brand=brand,
         store_id=store_id,
