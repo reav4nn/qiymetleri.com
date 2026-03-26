@@ -83,8 +83,8 @@ export default async function ProductPage({
         <h2 className="text-xl font-semibold text-gray-900">
           Qiymət müqayisəsi
         </h2>
-        <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
-          <table className="w-full">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full min-w-[500px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
@@ -96,7 +96,7 @@ export default async function ProductPage({
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell">
                   Yenilənmə
                 </th>
                 <th className="px-4 py-3" />
@@ -122,7 +122,7 @@ export default async function ProductPage({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td className="hidden px-4 py-3 text-xs text-gray-500 sm:table-cell">
                     {new Date(price.last_checked_at).toLocaleString("az-AZ")}
                   </td>
                   <td className="px-4 py-3">
@@ -131,7 +131,7 @@ export default async function ProductPage({
                         href={price.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        className="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                       >
                         Mağazaya keç →
                       </a>

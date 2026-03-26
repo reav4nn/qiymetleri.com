@@ -50,17 +50,45 @@ export interface PriceHistory {
   in_stock: boolean | null;
 }
 
-export async function fetchProducts(params: {
+export interface FilterOption {
+  id: string;
+  name: string;
+  count: number;
+}
+
+export interface FilterOptions {
+  brands: FilterOption[];
+  stores: FilterOption[];
+  categories: FilterOption[];
+  price_range: { min: number; max: number };
+}
+
+export interface ProductFilterParams {
   page?: number;
   per_page?: number;
   category?: string;
   brand?: string;
-  q?: string;
+  store_id?: string;
+  min_price?: number;
+  max_price?: number;
   sort_by?: string;
-}): Promise<PaginatedResponse<Product>> {
+  q?: string;
+}
+
+export async function fetchFilters(): Promise<FilterOptions> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/filters`, {
+    next: { revalidate: 600 },
+  });
+  if (!res.ok) throw new Error("Failed to fetch filters");
+  return res.json();
+}
+
+export async function fetchProducts(
+  params: ProductFilterParams
+): Promise<PaginatedResponse<Product>> {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
+    if (value !== undefined && value !== null && value !== "") {
       searchParams.set(key, String(value));
     }
   });
