@@ -89,6 +89,7 @@ export default async function AdminDashboard() {
 
       {/* Stat cards grid */}
       <div
+        className="admin-stat-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
@@ -154,10 +155,11 @@ export default async function AdminDashboard() {
           backgroundColor: "var(--color-bg-surface, #16161e)",
           border: "1px solid var(--color-border, #2a2a3e)",
           borderRadius: 12,
-          overflow: "hidden",
+          overflow: "auto",
+          WebkitOverflowScrolling: "touch",
         }}
       >
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 300 }}>
           <thead>
             <tr
               style={{

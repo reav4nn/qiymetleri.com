@@ -150,21 +150,24 @@ export default function ScraperPage() {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 24,
+          flexWrap: "wrap",
+          gap: 12,
         }}
       >
-        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
+        <h1 className="admin-page-title" style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
           🕷️ Scraper İdarəetmə
         </h1>
         <button
           onClick={refresh}
           style={{
-            padding: "6px 14px",
+            padding: "10px 18px",
             borderRadius: 8,
             border: "1px solid var(--color-border, #2a2a3e)",
             backgroundColor: "var(--color-bg-surface, #16161e)",
             color: "var(--color-text-secondary)",
             cursor: "pointer",
             fontSize: 13,
+            minHeight: 44,
           }}
         >
           🔄 Yenilə
@@ -207,11 +210,13 @@ export default function ScraperPage() {
         </div>
       )}
 
-      {/* Spider status table */}
       <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
         Spider Statusu
       </h2>
+
+      {/* Spider status — desktop table */}
       <div
+        className="admin-table-desktop"
         style={{
           backgroundColor: "var(--color-bg-surface)",
           border: "1px solid var(--color-border)",
@@ -327,112 +332,218 @@ export default function ScraperPage() {
         </table>
       </div>
 
+      {/* Spider status — mobile cards */}
+      <div className="admin-cards-mobile" style={{ marginBottom: 32 }}>
+        {overview?.spiders.map((s: SpiderStatus) => (
+          <div
+            key={s.name}
+            style={{
+              backgroundColor: "var(--color-bg-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 12,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>{s.display_name}</div>
+              {statusBadge(s.last_status, s.is_running)}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Son icrası</div>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>{timeAgo(s.last_run)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Məhsul</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{s.last_item_count ?? "—"}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Müddət</div>
+                <div style={{ fontSize: 13 }}>{s.last_duration ? `${s.last_duration.toFixed(1)}s` : "—"}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Cədvəl</div>
+                <div style={{ fontSize: 12 }}>{s.schedule}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleTrigger(s.name)}
+              disabled={triggering === s.name || s.is_running}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: 8,
+                border: "none",
+                minHeight: 48,
+                backgroundColor:
+                  triggering === s.name || s.is_running
+                    ? "var(--color-bg-input)"
+                    : "var(--color-accent)",
+                color:
+                  triggering === s.name || s.is_running
+                    ? "var(--color-text-muted)"
+                    : "#fff",
+                cursor:
+                  triggering === s.name || s.is_running
+                    ? "not-allowed"
+                    : "pointer",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              {triggering === s.name ? "Göndərilir..." : "▶ Başlat"}
+            </button>
+          </div>
+        ))}
+      </div>
+
       {/* Task history */}
       <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
         Son Tapşırıqlar
       </h2>
-      <div
-        style={{
-          backgroundColor: "var(--color-bg-surface)",
-          border: "1px solid var(--color-border)",
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
-        {history.length === 0 ? (
+
+      {history.length === 0 ? (
+        <div
+          style={{
+            padding: 24,
+            textAlign: "center",
+            color: "var(--color-text-muted)",
+            fontSize: 14,
+            backgroundColor: "var(--color-bg-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: 12,
+          }}
+        >
+          Tapşırıq tarixçəsi tapılmadı
+        </div>
+      ) : (
+        <>
+          {/* Desktop table */}
           <div
+            className="admin-table-desktop"
             style={{
-              padding: 24,
-              textAlign: "center",
-              color: "var(--color-text-muted)",
-              fontSize: 14,
+              backgroundColor: "var(--color-bg-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 12,
+              overflow: "hidden",
             }}
           >
-            Tapşırıq tarixçəsi tapılmadı
-          </div>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                {["Spider", "Status", "Vaxt", "Məhsul", "Müddət", "Task ID"].map(
-                  (h) => (
-                    <th
-                      key={h}
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                  {["Spider", "Status", "Vaxt", "Məhsul", "Müddət", "Task ID"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: "left",
+                          padding: "10px 14px",
+                          fontSize: 11,
+                          color: "var(--color-text-muted)",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((t) => (
+                  <tr
+                    key={t.task_id}
+                    style={{
+                      borderBottom: "1px solid var(--color-border-subtle)",
+                    }}
+                  >
+                    <td style={{ padding: "10px 14px", fontSize: 13 }}>
+                      {t.spider}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      {statusBadge(t.status, false)}
+                    </td>
+                    <td
                       style={{
-                        textAlign: "left",
                         padding: "10px 14px",
-                        fontSize: 11,
-                        color: "var(--color-text-muted)",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.5,
+                        fontSize: 12,
+                        color: "var(--color-text-secondary)",
                       }}
                     >
-                      {h}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((t) => (
-                <tr
-                  key={t.task_id}
-                  style={{
-                    borderBottom: "1px solid var(--color-border-subtle)",
-                  }}
-                >
-                  <td style={{ padding: "10px 14px", fontSize: 13 }}>
-                    {t.spider}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    {statusBadge(t.status, false)}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      fontSize: 12,
-                      color: "var(--color-text-secondary)",
-                    }}
-                  >
+                      {t.completed_at
+                        ? new Date(t.completed_at).toLocaleString("az-AZ", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "—"}
+                    </td>
+                    <td
+                      style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600 }}
+                    >
+                      {t.item_count ?? "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        fontSize: 12,
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      {t.duration ? `${t.duration.toFixed(1)}s` : "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        fontSize: 11,
+                        fontFamily: "monospace",
+                        color: "var(--color-text-muted)",
+                      }}
+                    >
+                      {t.task_id.slice(0, 12)}…
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="admin-cards-mobile">
+            {history.map((t) => (
+              <div
+                key={t.task_id}
+                style={{
+                  backgroundColor: "var(--color-bg-surface)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 10,
+                  padding: 14,
+                  marginBottom: 10,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{t.spider}</span>
+                  {statusBadge(t.status, false)}
+                </div>
+                <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--color-text-secondary)" }}>
+                  <span>
                     {t.completed_at
-                      ? new Date(t.completed_at).toLocaleString("az-AZ", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                      ? new Date(t.completed_at).toLocaleString("az-AZ", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                       : "—"}
-                  </td>
-                  <td
-                    style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600 }}
-                  >
-                    {t.item_count ?? "—"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      fontSize: 12,
-                      color: "var(--color-text-secondary)",
-                    }}
-                  >
-                    {t.duration ? `${t.duration.toFixed(1)}s` : "—"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      fontSize: 11,
-                      fontFamily: "monospace",
-                      color: "var(--color-text-muted)",
-                    }}
-                  >
-                    {t.task_id.slice(0, 12)}…
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                  </span>
+                  <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>
+                    {t.item_count ?? "—"} məhsul
+                  </span>
+                  <span>{t.duration ? `${t.duration.toFixed(1)}s` : "—"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

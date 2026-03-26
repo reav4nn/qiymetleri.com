@@ -35,6 +35,7 @@ export default async function StoresPage() {
       </h1>
 
       <div
+        className="admin-store-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
