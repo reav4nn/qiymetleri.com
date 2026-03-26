@@ -32,20 +32,30 @@ KNOWN_COLORS = [
     "titanium gray", "titanium grey", "titanium black", "light gold",
     "light violet", "dark green", "midnight black", "desert gold",
     "meteor silver", "sleek blue", "sleek black",
-    "cosmic black", "deep blue",
+    "cosmic black", "cosmic orange", "deep blue",
     # English single-word
     "black", "white", "blue", "green", "pink", "yellow", "red",
     "gold", "silver", "gray", "grey", "orange",
     "purple", "brown", "beige", "cream", "coral", "teal",
     "mint", "lavender", "bronze", "graphite", "titanium", "amber",
     "citrus", "indigo", "blush", "plum", "denim", "sage", "mist",
-    "cosmic", "deep", "neon",
+    "cosmic", "deep", "neon", "dark",
+    # Device-specific colors
+    "moonstone", "obsidian", "moonlight", "emerald", "sunrise",
+    "cyan", "ghost", "turquoise", "mocha", "silvery", "creamy",
+    "rose", "blackish", "khaki", "ivory", "glacier",
+    "ultramarine", "volcanic", "atlantic", "petrol",
+    "tapestry", "tendril", "feather", "olive", "nebula", "starry",
+    "kingfisher", "swan", "parrot", "peacock",
+    "sandy", "titan", "ocean", "lime", "ink", "ripple", "veil",
     # Azerbaijani colors
     "çəhrayı qızıl", "mavi göy",
     "ağ", "qara", "göy", "yaşıl", "qırmızı", "narıncı", "sarı",
     "bənövşəyi", "bənövşəy", "gecəyarısı", "gecəyarı",
     "gümüşü", "gümüş", "qızılı", "qızıl",
     "çəhrayı", "boz", "mavi", "tünd",
+    # Turkish colors (Ttec, etc.)
+    "lacivert", "siyah", "gri",
 ]
 KNOWN_COLORS.sort(key=len, reverse=True)
 
@@ -67,6 +77,8 @@ AZ_COLOR_MAP = {
     "çəhrayı qızıl": "Rose Gold", "çəhrayı": "Pink",
     "boz": "Gray", "mavi": "Blue", "mavi göy": "Blue",
     "tünd": "Dark",
+    # Turkish colors
+    "lacivert": "Navy Blue", "siyah": "Black", "gri": "Gray",
 }
 
 # ─── Apple SKU pattern ──────────────────────────────────────────────
