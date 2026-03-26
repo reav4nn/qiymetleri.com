@@ -20,6 +20,79 @@ CATEGORY_URLS = {
     "smartwatches": "/az/telefon-ve-aksesuarlar/smart-saatlar",
 }
 
+# Known brands per category — products with these brands pass validation
+CATEGORY_BRANDS = {
+    "smartphones": {
+        "apple", "iphone", "samsung", "xiaomi", "huawei", "honor", "oppo",
+        "vivo", "realme", "oneplus", "google", "motorola", "nokia", "nothing",
+        "poco", "infinix", "tecno", "hmd", "cubot", "doogee", "oscal",
+        "oukitel", "zte", "meizu", "sony", "htc", "blackview", "umidigi",
+        "agm", "cat",
+    },
+    "laptops": {
+        "apple", "lenovo", "hp", "dell", "acer", "asus", "msi", "microsoft",
+        "huawei", "honor", "samsung", "razer", "gigabyte", "toshiba",
+        "macbook",
+    },
+    "headphones": {
+        "apple", "samsung", "jbl", "marshall", "beats", "bose", "sennheiser",
+        "sony", "xiaomi", "huawei", "honor", "razer", "logitech",
+        "steelseries", "corsair", "hyperx", "jabra", "anker", "soundcore",
+        "edifier", "haylou", "borofone", "celebrat", "euroacs", "baseus",
+        "canyon", "akg", "skullcandy", "1more", "marley", "monster",
+    },
+    "smartwatches": {
+        "apple", "samsung", "xiaomi", "huawei", "honor", "garmin", "fitbit",
+        "amazfit", "mibro", "haylou", "wonlex",
+    },
+}
+
+# Keywords in product name that confirm category membership
+CATEGORY_KEYWORDS = {
+    "smartphones": [
+        r"\b\d+\s*gb\b", r"\b\d+\s*tb\b", r"\bphone\b", r"\btelefon\b",
+        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bredmi\b", r"\bnote \d",
+        r"\b[45]g\b", r"\blte\b", r"\bdual sim\b", r"\bds\b", r"\bflip\b",
+        r"\bfold\b", r"\bpro max\b",
+    ],
+    "laptops": [
+        r"\blaptop\b", r"\bnotebook\b", r"\bmacbook\b", r"\bthinkpad\b",
+        r"\bideapad\b", r"\bzenbook\b", r"\bvivobook\b", r"\bpavilion\b",
+        r"\binspir", r"\blatitude\b", r"\baspire\b", r"\bswift\b",
+        r"\bnitro\b", r"\bpredator\b", r'\b\d+\.?\d*"\b', r"\bintel\b",
+        r"\bryzen\b", r"\bcore i[3579]\b", r"\bm[1-5]\b",
+    ],
+    "headphones": [
+        r"\bheadphone\b", r"\bearphone\b", r"\bearbud\b", r"\bheadset\b",
+        r"\bqulaql[ıi]q\b", r"\bairpods\b", r"\bbuds\b", r"\btws\b",
+        r"\bin-ear\b", r"\bover-ear\b", r"\bon-ear\b", r"\bnoise cancel",
+        r"\banc\b", r"\bbluetooth\b.*\b(ear|head)",
+    ],
+    "smartwatches": [
+        r"\bwatch\b", r"\bsaat\b", r"\bband\b", r"\btracker\b",
+        r"\bsmartwatch\b", r"\bwearable\b", r"\bfit\b", r"\bgt\s*\d",
+        r"\bgtr\b", r"\bgts\b",
+    ],
+}
+
+# Products containing these terms are NEVER valid for ANY of our categories
+JUNK_KEYWORDS = [
+    r"\bwashing\b", r"\bpaltaryuyan\b", r"\bvacuum\b", r"\btozsoran\b",
+    r"\bdishwasher\b", r"\bqabyuyan\b", r"\brefrigerator\b", r"\bsoyuducu\b",
+    r"\bconditioner\b.*\bbtu\b", r"\bkondisioner\b", r"\bboiler\b",
+    r"\bkombi\b", r"\bcoffee grinder\b", r"\bblender\b", r"\bmixer\b",
+    r"\bair fryer\b", r"\bhair\b.*\b(dryer|styler|straighten|curl)\b",
+    r"\bairwrap\b", r"\bskateboard\b", r"\bhot wheels\b", r"\btoys\b",
+    r"\bplaystation\b", r"\bxbox\b", r"\bgta\b", r"\belektromobil\b",
+    r"\bmatress\b", r"\bmattress\b", r"\byorğan\b", r"\bkreslo\b",
+    r"\bbackpack\b", r"\bpressure washer\b", r"\b\d+ kw\b",
+    r"\binverter\b", r"\bsmart tv\b", r"\bled tv\b",
+    r"\bparca\b.*\b(boz|qara|ağ)\b", r"\bindiksion\b",
+    r"\bmulti-styler\b", r"\bfootball\b", r"\bbasketball\b",
+    r"\bflash drive\b", r"\bsandisk\b", r"\bgame console\b",
+    r"\btreadmill\b", r"\bwalkingpad\b",
+]
+
 
 class IrshadElectronicsSpider(scrapy.Spider):
     name = "irshad_electronics"
@@ -61,10 +134,13 @@ class IrshadElectronicsSpider(scrapy.Spider):
         page = response.meta.get("playwright_page")
 
         try:
-            # Click "daha çoxuna bax" (show more) until all products loaded
+            # Click "daha çoxuna bax" (show more) — track count to stop early
             if page:
                 clicks = 0
-                while clicks < 30:
+                prev_count = await page.evaluate(
+                    'document.querySelectorAll("div.product").length'
+                )
+                while clicks < 20:
                     btn = await page.query_selector(
                         'button:has-text("daha çoxuna bax"), '
                         'a:has-text("daha çoxuna bax")'
@@ -75,6 +151,16 @@ class IrshadElectronicsSpider(scrapy.Spider):
                         await btn.click()
                         await page.wait_for_timeout(2000)
                         clicks += 1
+                        new_count = await page.evaluate(
+                            'document.querySelectorAll("div.product").length'
+                        )
+                        if new_count <= prev_count:
+                            self.logger.info(
+                                f"[IRSHAD] No new products after click {clicks} "
+                                f"in {category}, stopping"
+                            )
+                            break
+                        prev_count = new_count
                     except Exception:
                         break
 
@@ -120,9 +206,17 @@ class IrshadElectronicsSpider(scrapy.Spider):
                 f"on {response.url}"
             )
 
+            skipped = 0
             for data in products_data:
                 name = data.get("name", "").strip()
                 if not name or len(name) < 3:
+                    continue
+
+                if not self._validate_category(name, category):
+                    skipped += 1
+                    self.logger.debug(
+                        f"[IRSHAD] Skipped '{name}' — doesn't match {category}"
+                    )
                     continue
 
                 item = ProductItem()
@@ -143,6 +237,12 @@ class IrshadElectronicsSpider(scrapy.Spider):
                     item["image_url"] = img_src
 
                 yield item
+
+            if skipped:
+                self.logger.info(
+                    f"[IRSHAD] Skipped {skipped} misclassified products "
+                    f"in {category}"
+                )
         finally:
             if page:
                 await page.close()
@@ -162,12 +262,43 @@ class IrshadElectronicsSpider(scrapy.Spider):
             "acer", "msi", "jbl", "marshall", "beats",
             "bose", "sennheiser", "garmin", "fitbit",
             "poco", "infinix", "tecno", "nokia", "nothing",
-            "haylou", "mibro",
+            "haylou", "mibro", "hmd", "cubot", "doogee", "oscal",
+            "oukitel", "zte", "meizu", "amazfit", "wonlex",
+            "borofone", "celebrat", "euroacs", "baseus", "canyon",
+            "edifier", "razer", "microsoft", "macbook",
         ]
         title_lower = title.lower()
         for brand in known_brands:
             if re.search(rf"\b{re.escape(brand)}\b", title_lower):
                 if brand == "iphone":
                     return "apple"
+                if brand == "macbook":
+                    return "apple"
                 return brand
         return None
+
+    @staticmethod
+    def _validate_category(name: str, category: str) -> bool:
+        """Check if a product name plausibly belongs to the given category."""
+        # Normalize Turkish characters for matching
+        name_lower = name.lower().replace("İ", "i").replace("i̇", "i")
+
+        # Reject if name matches obvious junk keywords
+        for pattern in JUNK_KEYWORDS:
+            if re.search(pattern, name_lower):
+                return False
+
+        # Accept if name contains a brand known for this category
+        brands = CATEGORY_BRANDS.get(category, set())
+        for brand in brands:
+            if re.search(rf"\b{re.escape(brand)}\b", name_lower):
+                return True
+
+        # Accept if name matches category-specific keywords
+        keywords = CATEGORY_KEYWORDS.get(category, [])
+        for pattern in keywords:
+            if re.search(pattern, name_lower):
+                return True
+
+        # Unknown product — reject to be safe
+        return False
