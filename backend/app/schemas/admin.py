@@ -74,3 +74,17 @@ class TriggerResponse(BaseModel):
     spider: str
     status: str
     message: str
+
+
+class RecentProduct(BaseModel):
+    product_id: str
+    name: str
+    brand: str | None
+    category: str | None
+    image_url: str | None
+    created_at: datetime | None
+    price: float | None
+    url: str | None
+    in_stock: bool | None
+    store_name: str
+    store_id: str

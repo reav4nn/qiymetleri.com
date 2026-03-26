@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type {
+  RecentProduct,
   ScraperOverview,
   SpiderStatus,
   TaskResult,
@@ -34,7 +35,7 @@ function statusBadge(status: string | null, isRunning: boolean) {
           color: "var(--color-accent, #6366f1)",
         }}
       >
-        ⏳ İşləyir
+        İşləyir
       </span>
     );
   if (status === "success" || status === "SUCCESS")
@@ -49,7 +50,7 @@ function statusBadge(status: string | null, isRunning: boolean) {
           color: "var(--color-success, #22c55e)",
         }}
       >
-        ✅ Uğurlu
+        Uğurlu
       </span>
     );
   if (status === "FAILURE" || status === "failed")
@@ -64,7 +65,7 @@ function statusBadge(status: string | null, isRunning: boolean) {
           color: "var(--color-danger, #ef4444)",
         }}
       >
-        ❌ Xəta
+        Xəta
       </span>
     );
   return (
@@ -87,6 +88,10 @@ export default function ScraperPage() {
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState<string | null>(null);
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null);
+  const [recentProducts, setRecentProducts] = useState<RecentProduct[]>([]);
+  const [recentOpen, setRecentOpen] = useState(false);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [recentMinutes, setRecentMinutes] = useState(60);
 
   const refresh = useCallback(async () => {
     try {
@@ -121,19 +126,35 @@ export default function ScraperPage() {
         `${API_BASE}/api/v1/admin/scraper/trigger/${spider}`,
         { method: "POST" }
       ).then((r) => r.json());
-      setTriggerMsg(`✅ ${res.message} (task: ${res.task_id.slice(0, 8)}...)`);
+      setTriggerMsg(`${res.message} (task: ${res.task_id.slice(0, 8)}...)`);
       setTimeout(refresh, 2000);
     } catch {
-      setTriggerMsg(`❌ Spider trigger xətası: ${spider}`);
+      setTriggerMsg(`Spider trigger xətası: ${spider}`);
     } finally {
       setTriggering(null);
+    }
+  };
+
+  const fetchRecent = async (mins: number) => {
+    setRecentLoading(true);
+    try {
+      const data = await fetch(
+        `${API_BASE}/api/v1/admin/products/recent?minutes=${mins}`,
+        { cache: "no-store" }
+      ).then((r) => r.json() as Promise<RecentProduct[]>);
+      setRecentProducts(data);
+      setRecentOpen(true);
+    } catch {
+      setRecentProducts([]);
+    } finally {
+      setRecentLoading(false);
     }
   };
 
   if (loading) {
     return (
       <div>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>🕷️ Scraper</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>Scraper</h1>
         <p style={{ color: "var(--color-text-muted)" }}>Yüklənir...</p>
       </div>
     );
@@ -152,7 +173,7 @@ export default function ScraperPage() {
         }}
       >
         <h1 className="admin-page-title" style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
-          🕷️ Scraper İdarəetmə
+          Scraper İdarəetmə
         </h1>
         <button
           onClick={refresh}
@@ -167,7 +188,7 @@ export default function ScraperPage() {
             minHeight: 44,
           }}
         >
-          🔄 Yenilə
+          Yenilə
         </button>
       </div>
 
@@ -188,8 +209,8 @@ export default function ScraperPage() {
         }}
       >
         {overview?.worker_online
-          ? `✅ Celery Worker aktiv — ${overview.active_tasks} aktiv task, ${overview.scheduled_tasks} planlaşdırılmış`
-          : "❌ Celery Worker offline — spider-lar işləyə bilmir!"}
+          ? `Celery Worker aktiv — ${overview.active_tasks} aktiv task, ${overview.scheduled_tasks} planlaşdırılmış`
+          : "Celery Worker offline — spider-lar işləyə bilmir!"}
       </div>
 
       {triggerMsg && (
@@ -320,7 +341,7 @@ export default function ScraperPage() {
                       fontWeight: 600,
                     }}
                   >
-                    {triggering === s.name ? "..." : "▶ Başlat"}
+                    {triggering === s.name ? "..." : "Başlat"}
                   </button>
                 </td>
               </tr>
@@ -389,7 +410,7 @@ export default function ScraperPage() {
                 fontWeight: 600,
               }}
             >
-              {triggering === s.name ? "Göndərilir..." : "▶ Başlat"}
+              {triggering === s.name ? "Göndərilir..." : "Başlat"}
             </button>
           </div>
         ))}
@@ -541,6 +562,191 @@ export default function ScraperPage() {
           </div>
         </>
       )}
+
+      {/* Recent products section */}
+      <div style={{ marginTop: 32 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>
+            Son Yenilənən Məhsullar
+          </h2>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <select
+              value={recentMinutes}
+              onChange={(e) => setRecentMinutes(Number(e.target.value))}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-bg-surface)",
+                color: "var(--color-text-primary)",
+                fontSize: 13,
+                minHeight: 40,
+              }}
+            >
+              <option value={30}>Son 30 dəq</option>
+              <option value={60}>Son 1 saat</option>
+              <option value={120}>Son 2 saat</option>
+              <option value={240}>Son 4 saat</option>
+              <option value={480}>Son 8 saat</option>
+              <option value={1440}>Son 24 saat</option>
+            </select>
+            <button
+              onClick={() => fetchRecent(recentMinutes)}
+              disabled={recentLoading}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 8,
+                border: "none",
+                backgroundColor: "var(--color-accent)",
+                color: "#fff",
+                cursor: recentLoading ? "not-allowed" : "pointer",
+                fontSize: 13,
+                fontWeight: 600,
+                minHeight: 40,
+                opacity: recentLoading ? 0.6 : 1,
+              }}
+            >
+              {recentLoading ? "Yüklənir..." : "Göstər"}
+            </button>
+          </div>
+        </div>
+
+        {recentOpen && (
+          recentProducts.length === 0 ? (
+            <div
+              style={{
+                padding: 24,
+                textAlign: "center",
+                color: "var(--color-text-muted)",
+                fontSize: 14,
+                backgroundColor: "var(--color-bg-surface)",
+                border: "1px solid var(--color-border)",
+                borderRadius: 12,
+              }}
+            >
+              Bu müddətdə yenilənən məhsul tapılmadı
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 12 }}>
+                {recentProducts.length} məhsul tapıldı
+              </div>
+
+              {/* Desktop table */}
+              <div
+                className="admin-table-desktop"
+                style={{
+                  backgroundColor: "var(--color-bg-surface)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                }}
+              >
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                      {["Məhsul", "Brend", "Kateqoriya", "Mağaza", "Qiymət", "Stok"].map((h) => (
+                        <th
+                          key={h}
+                          style={{
+                            textAlign: "left",
+                            padding: "10px 14px",
+                            fontSize: 11,
+                            color: "var(--color-text-muted)",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentProducts.map((p) => (
+                      <tr
+                        key={`${p.product_id}-${p.store_id}`}
+                        style={{ borderBottom: "1px solid var(--color-border-subtle)" }}
+                      >
+                        <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {p.url ? (
+                            <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-accent)", textDecoration: "none" }}>
+                              {p.name}
+                            </a>
+                          ) : p.name}
+                        </td>
+                        <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--color-text-secondary)" }}>
+                          {p.brand || "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--color-text-secondary)", textTransform: "capitalize" }}>
+                          {p.category || "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px", fontSize: 13 }}>
+                          {p.store_name}
+                        </td>
+                        <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600 }}>
+                          {p.price ? `${p.price.toFixed(2)} ₼` : "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              backgroundColor: p.in_stock
+                                ? "var(--color-success-subtle)"
+                                : "var(--color-danger-subtle)",
+                              color: p.in_stock
+                                ? "var(--color-success)"
+                                : "var(--color-danger)",
+                            }}
+                          >
+                            {p.in_stock ? "Var" : "Yox"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="admin-cards-mobile">
+                {recentProducts.map((p) => (
+                  <div
+                    key={`${p.product_id}-${p.store_id}`}
+                    style={{
+                      backgroundColor: "var(--color-bg-surface)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: 10,
+                      padding: 14,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6, lineHeight: 1.3 }}>
+                      {p.url ? (
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-accent)", textDecoration: "none" }}>
+                          {p.name}
+                        </a>
+                      ) : p.name}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+                      <span style={{ color: "var(--color-text-secondary)" }}>{p.store_name}</span>
+                      <span style={{ fontWeight: 600 }}>{p.price ? `${p.price.toFixed(2)} ₼` : "—"}</span>
+                    </div>
+                    {(p.brand || p.category) && (
+                      <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 4 }}>
+                        {[p.brand, p.category].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )
+        )}
+      </div>
     </div>
   );
 }

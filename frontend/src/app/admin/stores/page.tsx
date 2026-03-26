@@ -10,7 +10,7 @@ export default async function StoresPage() {
     return (
       <div>
         <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
-          🏪 Mağazalar
+          Mağazalar
         </h1>
         <div
           style={{
@@ -20,7 +20,7 @@ export default async function StoresPage() {
             color: "var(--color-danger)",
           }}
         >
-          ⚠️ API-yə qoşulmaq mümkün olmadı.
+          API-yə qoşulmaq mümkün olmadı.
         </div>
       </div>
     );
@@ -31,7 +31,7 @@ export default async function StoresPage() {
   return (
     <div>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>
-        🏪 Mağaza Sağlamlığı
+        Mağaza Sağlamlığı
       </h1>
 
       <div

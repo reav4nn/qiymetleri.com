@@ -73,6 +73,20 @@ export interface TriggerResponse {
   message: string;
 }
 
+export interface RecentProduct {
+  product_id: string;
+  name: string;
+  brand: string | null;
+  category: string | null;
+  image_url: string | null;
+  created_at: string | null;
+  price: number | null;
+  url: string | null;
+  in_stock: boolean | null;
+  store_name: string;
+  store_id: string;
+}
+
 async function adminFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}/api/v1/admin${path}`, {
     cache: "no-store",
@@ -107,4 +121,10 @@ export function fetchStoreHealth(): Promise<StoreHealth[]> {
 
 export function fetchAnomalies(threshold = 30, hours = 24): Promise<PriceAnomaly[]> {
   return adminFetch(`/anomalies?threshold=${threshold}&hours=${hours}`);
+}
+
+export function fetchRecentProducts(minutes = 60, storeId?: number): Promise<RecentProduct[]> {
+  const params = new URLSearchParams({ minutes: String(minutes) });
+  if (storeId !== undefined) params.set("store_id", String(storeId));
+  return adminFetch(`/products/recent?${params}`);
 }

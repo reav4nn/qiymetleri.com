@@ -71,7 +71,7 @@ export default async function AdminDashboard() {
             color: "var(--color-danger, #ef4444)",
           }}
         >
-          ⚠️ Backend API-yə qoşulmaq mümkün olmadı. Serverin işlədiyindən əmin olun.
+          Backend API-yə qoşulmaq mümkün olmadı. Serverin işlədiyindən əmin olun.
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export default async function AdminDashboard() {
   return (
     <div>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>
-        📊 Dashboard
+        Dashboard
       </h1>
 
       {/* Stat cards grid */}

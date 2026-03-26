@@ -96,6 +96,59 @@ async def get_store_health(db: AsyncSession) -> list[dict]:
     return health_list
 
 
+async def get_recent_products(
+    db: AsyncSession, minutes: int = 60, store_id: str | None = None
+) -> list[dict]:
+    """Get products added or updated recently, optionally filtered by store."""
+    where_clause = "WHERE cp.last_checked_at > NOW() - make_interval(mins => :minutes)"
+    params: dict = {"minutes": minutes}
+
+    if store_id is not None:
+        where_clause += " AND s.id = :store_id"
+        params["store_id"] = store_id
+
+    query = sa_text(f"""
+        SELECT
+            p.id::text,
+            p.name,
+            p.brand,
+            p.category,
+            p.image_url,
+            p.created_at,
+            cp.price_azn,
+            cp.url,
+            cp.in_stock,
+            s.name AS store_name,
+            s.id AS store_id
+        FROM products p
+        JOIN current_prices cp ON cp.product_id = p.id
+        JOIN stores s ON s.id = cp.store_id
+        {where_clause}
+        ORDER BY cp.last_checked_at DESC
+        LIMIT 100
+    """)
+
+    result = await db.execute(query, params)
+    rows = result.all()
+
+    return [
+        {
+            "product_id": row[0],
+            "name": row[1],
+            "brand": row[2],
+            "category": row[3],
+            "image_url": row[4],
+            "created_at": row[5],
+            "price": float(row[6]) if row[6] else None,
+            "url": row[7],
+            "in_stock": row[8],
+            "store_name": row[9],
+            "store_id": row[10],
+        }
+        for row in rows
+    ]
+
+
 async def get_price_anomalies(
     db: AsyncSession, threshold_pct: float = 30.0, hours: int = 24
 ) -> list[dict]:

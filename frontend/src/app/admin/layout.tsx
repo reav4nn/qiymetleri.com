@@ -7,10 +7,10 @@ export const metadata: Metadata = {
 };
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/scraper", label: "Scraper", icon: "🕷️" },
-  { href: "/admin/stores", label: "Mağazalar", icon: "🏪" },
-  { href: "/admin/anomalies", label: "Anomaliya", icon: "⚠️" },
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/scraper", label: "Scraper" },
+  { href: "/admin/stores", label: "Mağazalar" },
+  { href: "/admin/anomalies", label: "Anomaliya" },
 ];
 
 const adminCSS = `
@@ -69,7 +69,7 @@ const adminCSS = `
       font-size:10px; font-weight:600; min-height:48px; justify-content:center;
     }
     .admin-bottom-bar a:active { background:var(--color-bg-surface-hover); }
-    .admin-bottom-bar .tab-icon { font-size:20px; line-height:1; }
+    .admin-bottom-bar .tab-label { font-size:10px; font-weight:600; }
 
     .admin-table-desktop { display:none !important; }
     .admin-cards-mobile { display:block !important; }
@@ -132,7 +132,6 @@ export default function AdminLayout({
             <nav>
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href} className="admin-nav-link">
-                  <span>{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               ))}
@@ -151,8 +150,7 @@ export default function AdminLayout({
           <nav className="admin-bottom-bar">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
-                <span className="tab-icon">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className="tab-label">{item.label}</span>
               </Link>
             ))}
           </nav>

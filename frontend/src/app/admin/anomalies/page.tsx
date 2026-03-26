@@ -10,7 +10,7 @@ export default async function AnomaliesPage() {
     return (
       <div>
         <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
-          ⚠️ Qiymət Anomaliyaları
+          Qiymət Anomaliyaları
         </h1>
         <div
           style={{
@@ -20,7 +20,7 @@ export default async function AnomaliesPage() {
             color: "var(--color-danger)",
           }}
         >
-          ⚠️ API-yə qoşulmaq mümkün olmadı.
+          API-yə qoşulmaq mümkün olmadı.
         </div>
       </div>
     );
@@ -29,7 +29,7 @@ export default async function AnomaliesPage() {
   return (
     <div>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-        ⚠️ Qiymət Anomaliyaları
+        Qiymət Anomaliyaları
       </h1>
       <p
         style={{
@@ -53,7 +53,7 @@ export default async function AnomaliesPage() {
             fontWeight: 600,
           }}
         >
-          ✅ Anomaliya tapılmadı — bütün qiymətlər normal aralıqdadır.
+          Anomaliya tapılmadı — bütün qiymətlər normal aralıqdadır.
         </div>
       ) : (
         <>

@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.schemas.admin import (
     DashboardStats,
     PriceAnomaly,
+    RecentProduct,
     ScraperOverview,
     SpiderStatus,
     StoreHealth,
@@ -19,6 +20,7 @@ from app.schemas.admin import (
 from app.services.admin_service import (
     get_dashboard_stats,
     get_price_anomalies,
+    get_recent_products,
     get_store_health,
 )
 
@@ -174,6 +176,16 @@ async def anomalies(
     db: AsyncSession = Depends(get_db),
 ):
     return await get_price_anomalies(db, threshold_pct=threshold, hours=hours)
+
+
+@router.get("/products/recent", response_model=list[RecentProduct])
+async def recent_products(
+    minutes: int = Query(default=60, ge=1, le=1440),
+    store_id: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get products added or updated recently."""
+    return await get_recent_products(db, minutes=minutes, store_id=store_id)
 
 
 def _get_last_task_result(spider_name: str) -> dict | None:
