@@ -1,12 +1,11 @@
 """
 iSpace spider — scrapes Apple product listings from ispace.az
 
-Uses Playwright for JS-rendered content.
-Categories covered (MVP): Smartphones (iPhone), Laptops (MacBook),
-Headphones (AirPods), Smartwatches (Apple Watch).
+Vue.js app.  No pagination — all products rendered on category pages.
+Brand is always Apple.
+Categories covered (MVP): iPhones, Macs, AirPods, Apple Watches.
 """
 
-import re
 from datetime import datetime, timezone
 
 import scrapy
@@ -15,10 +14,10 @@ from scrapy_playwright.page import PageMethod
 from qiymetleri_scraper.items import ProductItem
 
 CATEGORY_URLS = {
-    "smartphones": "/iphone/",
-    "laptops": "/mac/",
-    "headphones": "/airpods/",
-    "smartwatches": "/apple-watch/",
+    "smartphones": "/category/iphone",
+    "laptops": "/category/mac",
+    "headphones": "/category/airpods",
+    "smartwatches": "/category/apple-watch",
 }
 
 
@@ -44,10 +43,13 @@ class ISpaceSpider(scrapy.Spider):
                     "playwright_page_methods": [
                         PageMethod(
                             "wait_for_selector",
-                            ".product-card, .product-item, [class*='product'], .catalog-item",
-                            timeout=15000,
+                            ".carousel-product",
+                            timeout=20000,
                         ),
                     ],
+                    "playwright_page_goto_kwargs": {
+                        "wait_until": "domcontentloaded",
+                    },
                     "category": category,
                 },
                 cb_kwargs={"category": category},
@@ -58,17 +60,11 @@ class ISpaceSpider(scrapy.Spider):
         page = response.meta.get("playwright_page")
 
         try:
-            product_cards = response.css(
-                ".product-card, .product-item, "
-                "[class*='ProductCard'], [class*='product-card'], "
-                ".catalog-item, .products-item"
-            )
-
-            if not product_cards:
-                product_cards = response.css("[class*='product']")
+            product_cards = response.css(".carousel-product")
 
             self.logger.info(
-                f"Found {len(product_cards)} products in {category} on {response.url}"
+                f"[iSpace] {len(product_cards)} products in {category} "
+                f"on {response.url}"
             )
 
             for card in product_cards:
@@ -77,11 +73,9 @@ class ISpaceSpider(scrapy.Spider):
                 item["category"] = category
                 item["scraped_at"] = datetime.now(timezone.utc).isoformat()
 
+                # Name: .entity-card_name
                 name = (
-                    card.css("[class*='name'] ::text").get()
-                    or card.css("[class*='title'] ::text").get()
-                    or card.css("h3 ::text, h4 ::text, a::text").get()
-                    or ""
+                    card.css(".entity-card_name::text").get() or ""
                 ).strip()
 
                 if not name or len(name) < 3:
@@ -89,61 +83,36 @@ class ISpaceSpider(scrapy.Spider):
 
                 item["original_title"] = name
 
+                # Price: .carousel-product_price-value
                 price_text = (
-                    card.css("[class*='price'] ::text").get()
-                    or card.css("[class*='Price'] ::text").get()
+                    card.css(
+                        ".carousel-product_price-value::text"
+                    ).get()
                     or ""
                 ).strip()
                 item["price_raw"] = price_text
 
-                link = card.css("a::attr(href)").get()
+                # URL: <a> with href containing /product/
+                link = card.css("a[href*='/product/']::attr(href)").get()
                 if link:
                     item["url"] = response.urljoin(link)
 
-                # iSpace is Apple-only
+                # Brand is always Apple
                 item["brand"] = "apple"
 
-                img = (
-                    card.css("img::attr(src)").get()
-                    or card.css("img::attr(data-src)").get()
-                )
-                if img:
+                # Image: .entity-card_image src
+                img = card.css(
+                    ".entity-card_image::attr(src)"
+                ).get()
+                if not img:
+                    img = card.css("img::attr(src)").get()
+                if img and "icon" not in img and "svg" not in img:
                     item["image_url"] = response.urljoin(img)
 
-                out_of_stock_el = card.css(
-                    "[class*='out-of-stock'], [class*='sold-out'], "
-                    "[class*='unavailable']"
-                )
-                item["in_stock"] = len(out_of_stock_el) == 0
+                # Assume in stock
+                item["in_stock"] = True
 
                 yield item
-
-            next_page = (
-                response.css("a.next::attr(href)").get()
-                or response.css(
-                    "[class*='pagination'] a[rel='next']::attr(href)"
-                ).get()
-                or response.css("a[class*='next']::attr(href)").get()
-            )
-            if next_page:
-                yield scrapy.Request(
-                    url=response.urljoin(next_page),
-                    callback=self.parse_listing,
-                    meta={
-                        "playwright": True,
-                        "playwright_include_page": True,
-                        "playwright_page_methods": [
-                            PageMethod(
-                                "wait_for_selector",
-                                ".product-card, .product-item, [class*='product']",
-                                timeout=15000,
-                            ),
-                        ],
-                        "category": category,
-                    },
-                    cb_kwargs={"category": category},
-                    errback=self.errback_close_page,
-                )
         finally:
             if page:
                 await page.close()

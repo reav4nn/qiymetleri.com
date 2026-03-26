@@ -1,7 +1,7 @@
 """
 Irshad Electronics spider — scrapes product listings from irshad.az
 
-Uses Playwright for JS-rendered content.
+Server-rendered HTML with BEM-style CSS classes (product__*).
 Categories covered (MVP): Smartphones, Laptops, Headphones, Smartwatches.
 """
 
@@ -14,10 +14,10 @@ from scrapy_playwright.page import PageMethod
 from qiymetleri_scraper.items import ProductItem
 
 CATEGORY_URLS = {
-    "smartphones": "/smartfonlar/",
-    "laptops": "/notbuklar/",
-    "headphones": "/qulaqclqlar/",
-    "smartwatches": "/smart-saatlar/",
+    "smartphones": "/az/telefon-ve-aksesuarlar/mobil-telefonlar",
+    "laptops": "/az/notbuk-planset-ve-komputer-texnikasi/notbuklar",
+    "headphones": "/az/telefon-ve-aksesuarlar/qulaqliqlar",
+    "smartwatches": "/az/telefon-ve-aksesuarlar/smart-saatlar",
 }
 
 
@@ -40,11 +40,15 @@ class IrshadElectronicsSpider(scrapy.Spider):
                 meta={
                     "playwright": True,
                     "playwright_include_page": True,
+                    "playwright_page_goto_kwargs": {
+                        "wait_until": "domcontentloaded",
+                    },
                     "playwright_page_methods": [
+                        PageMethod("wait_for_timeout", 5000),
                         PageMethod(
                             "wait_for_selector",
-                            ".product-card, .product-item, [class*='product'], .catalog-item",
-                            timeout=15000,
+                            ".product",
+                            timeout=20000,
                         ),
                     ],
                     "category": category,
@@ -57,17 +61,11 @@ class IrshadElectronicsSpider(scrapy.Spider):
         page = response.meta.get("playwright_page")
 
         try:
-            product_cards = response.css(
-                ".product-card, .product-item, "
-                "[class*='ProductCard'], [class*='product-card'], "
-                ".catalog-item, .products-item"
-            )
-
-            if not product_cards:
-                product_cards = response.css("[class*='product']")
+            product_cards = response.css("div.product")
 
             self.logger.info(
-                f"Found {len(product_cards)} products in {category} on {response.url}"
+                f"[IRSHAD] {len(product_cards)} products in {category} "
+                f"on {response.url}"
             )
 
             for card in product_cards:
@@ -76,11 +74,9 @@ class IrshadElectronicsSpider(scrapy.Spider):
                 item["category"] = category
                 item["scraped_at"] = datetime.now(timezone.utc).isoformat()
 
+                # Name: .product__name
                 name = (
-                    card.css("[class*='name'] ::text").get()
-                    or card.css("[class*='title'] ::text").get()
-                    or card.css("h3 ::text, h4 ::text, a::text").get()
-                    or ""
+                    card.css(".product__name::text").get() or ""
                 ).strip()
 
                 if not name or len(name) < 3:
@@ -88,40 +84,52 @@ class IrshadElectronicsSpider(scrapy.Spider):
 
                 item["original_title"] = name
 
-                price_text = (
-                    card.css("[class*='price'] ::text").get()
-                    or card.css("[class*='Price'] ::text").get()
+                # Price: .new-price is the current sale price,
+                # .old-price is the original (strikethrough) price.
+                # If no discount, .new-price may not exist — use
+                # .product__price__current text as fallback.
+                new_price = (
+                    card.css(".product__price__current .new-price::text").get()
                     or ""
                 ).strip()
-                item["price_raw"] = price_text
+                if not new_price:
+                    # No discount — try getting the only price shown
+                    price_text = (
+                        card.css(".product__price__current::text").get() or ""
+                    ).strip()
+                    new_price = price_text
 
-                link = card.css("a::attr(href)").get()
+                item["price_raw"] = new_price
+
+                # URL: link with class product-link
+                link = card.css("a.product-link::attr(href)").get()
                 if link:
                     item["url"] = response.urljoin(link)
 
+                # Brand
                 item["brand"] = self._extract_brand(name)
 
-                img = (
-                    card.css("img::attr(src)").get()
-                    or card.css("img::attr(data-src)").get()
-                )
-                if img:
+                # Image
+                img = card.css(".product__img img::attr(src)").get()
+                if not img:
+                    img = card.css(
+                        ".product__img img::attr(data-src)"
+                    ).get()
+                if img and "icon" not in img and "svg" not in img:
                     item["image_url"] = response.urljoin(img)
 
-                out_of_stock_el = card.css(
-                    "[class*='out-of-stock'], [class*='sold-out'], "
-                    "[class*='unavailable']"
-                )
-                item["in_stock"] = len(out_of_stock_el) == 0
+                # Stock: look for "Stokda var" text
+                card_text = " ".join(card.css("::text").getall())
+                item["in_stock"] = "Stokda var" in card_text
 
                 yield item
 
+            # Pagination: check for next page links
             next_page = (
-                response.css("a.next::attr(href)").get()
-                or response.css(
-                    "[class*='pagination'] a[rel='next']::attr(href)"
+                response.css(
+                    ".pagination a[rel='next']::attr(href)"
                 ).get()
-                or response.css("a[class*='next']::attr(href)").get()
+                or response.css("a.page-link[rel='next']::attr(href)").get()
             )
             if next_page:
                 yield scrapy.Request(
@@ -130,11 +138,15 @@ class IrshadElectronicsSpider(scrapy.Spider):
                     meta={
                         "playwright": True,
                         "playwright_include_page": True,
+                        "playwright_page_goto_kwargs": {
+                            "wait_until": "domcontentloaded",
+                        },
                         "playwright_page_methods": [
+                            PageMethod("wait_for_timeout", 5000),
                             PageMethod(
                                 "wait_for_selector",
-                                ".product-card, .product-item, [class*='product']",
-                                timeout=15000,
+                                ".product",
+                                timeout=20000,
                             ),
                         ],
                         "category": category,
@@ -155,14 +167,18 @@ class IrshadElectronicsSpider(scrapy.Spider):
     @staticmethod
     def _extract_brand(title: str) -> str | None:
         known_brands = [
-            "apple", "samsung", "xiaomi", "huawei", "honor",
-            "oppo", "vivo", "realme", "oneplus", "google",
+            "apple", "iphone", "samsung", "xiaomi", "huawei", "honor",
+            "oppo", "vivo", "realme", "oneplus", "google", "motorola",
             "sony", "lg", "asus", "lenovo", "hp", "dell",
             "acer", "msi", "jbl", "marshall", "beats",
             "bose", "sennheiser", "garmin", "fitbit",
+            "poco", "infinix", "tecno", "nokia", "nothing",
+            "haylou", "mibro",
         ]
         title_lower = title.lower()
         for brand in known_brands:
             if re.search(rf"\b{re.escape(brand)}\b", title_lower):
+                if brand == "iphone":
+                    return "apple"
                 return brand
         return None
