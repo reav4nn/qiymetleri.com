@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -35,6 +36,25 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
   const t = useTranslations("product");
   const locale = useLocale();
 
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const check = () => {
+      setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
+    };
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const gridStroke = isDark ? "#2a2a3e" : "#e0e0e5";
+  const tickFill = isDark ? "#9a9ab0" : "#6b6b80";
+  const tooltipBg = isDark ? "#16161e" : "#ffffff";
+  const tooltipBorder = isDark ? "#2a2a3e" : "#e0e0e5";
+  const tooltipColor = isDark ? "#f0f0f5" : "#1a1a2e";
+  const legendColor = isDark ? "#9a9ab0" : "#6b6b80";
+
   if (!data.length) {
     return (
       <div className="flex h-48 items-center justify-center rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-muted)]">
@@ -63,15 +83,15 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
-        <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#9a9ab0" }} stroke="#2a2a3e" />
+        <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+        <XAxis dataKey="date" tick={{ fontSize: 12, fill: tickFill }} stroke={gridStroke} />
         <YAxis
-          tick={{ fontSize: 12, fill: "#9a9ab0" }}
+          tick={{ fontSize: 12, fill: tickFill }}
           tickFormatter={(v: number) => `${v} ₼`}
-          stroke="#2a2a3e"
+          stroke={gridStroke}
         />
         <Tooltip
-          contentStyle={{ backgroundColor: "#16161e", border: "1px solid #2a2a3e", borderRadius: "8px", color: "#f0f0f5" }}
+          contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "8px", color: tooltipColor }}
           formatter={(value, name) => [
             `${Number(value).toFixed(2)} ₼`,
             STORE_NAMES[String(name)] || String(name),
@@ -79,7 +99,7 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
         />
         <Legend
           formatter={(value: string) => STORE_NAMES[value] || value}
-          wrapperStyle={{ color: "#9a9ab0" }}
+          wrapperStyle={{ color: legendColor }}
         />
         {storeIds.map((storeId) => (
           <Line

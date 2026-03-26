@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
 export function generateStaticParams() {
@@ -52,7 +53,12 @@ export default async function LocaleLayout({
   const messages = (await import(`@/messages/${locale}.json`)).default;
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.setAttribute('data-theme','dark')}}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();`
+        }} />
+      </head>
       <body className="font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <header className="border-b border-[var(--color-border)]">
@@ -87,6 +93,7 @@ export default async function LocaleLayout({
                     {t("headphones")}
                   </a>
                 </div>
+                <ThemeToggle />
                 <LanguageSwitcher />
               </div>
             </nav>
