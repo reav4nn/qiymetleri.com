@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "@/components/MobileNav";
+import { SITE_NAME, absoluteUrl, buildAlternates, ogLocale } from "@/lib/seo";
+import { organizationSchema, webSiteSchema } from "@/lib/schema";
 import "./globals.css";
 
 export function generateStaticParams() {
@@ -23,14 +25,27 @@ export async function generateMetadata({
   return {
     title: {
       default: t("title"),
-      template: "%s | qiymetleri.com",
+      template: `%s | ${SITE_NAME}`,
     },
     description: t("description"),
-    alternates: {
-      languages: {
-        az: "/az",
-        ru: "/ru",
-      },
+    metadataBase: new URL(absoluteUrl("/")),
+    alternates: buildAlternates(`/${locale}`),
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "website",
+      locale: ogLocale(locale),
+      title: t("title"),
+      description: t("description"),
+      url: absoluteUrl(`/${locale}`),
+    },
+    twitter: {
+      card: "summary",
+      title: t("title"),
+      description: t("description"),
+    },
+    robots: { index: true, follow: true },
+    other: {
+      "theme-color": "#4f46e5",
     },
   };
 }
@@ -69,6 +84,18 @@ export default async function LocaleLayout({
         }} />
       </head>
       <body className="font-sans antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(webSiteSchema()),
+          }}
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-bg-page)]/95 backdrop-blur-md">
             <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">

@@ -4,8 +4,86 @@ import { ProductCard } from "@/components/ProductCard";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterPanel } from "@/components/FilterPanel";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
+import type { Metadata } from "next";
 
 export const revalidate = 300;
+
+type SearchParams = {
+  q?: string;
+  category?: string;
+  brand?: string;
+  store_id?: string;
+  min_price?: string;
+  max_price?: string;
+  sort_by?: string;
+  page?: string;
+};
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const sp = await searchParams;
+  const t = await getTranslations({ locale, namespace: "meta" });
+
+  const query = sp.q || "";
+  const category = sp.category || "";
+
+  let title: string;
+  let description: string;
+
+  if (query) {
+    title = t("searchTitle", { query });
+    description = t("searchDescription", { query, total: "" });
+  } else if (category) {
+    title = t("searchCategoryTitle", { category });
+    description = t("searchCategoryDescription", { category });
+  } else {
+    title = t("searchAllTitle");
+    description = t("searchAllDescription");
+  }
+
+  // Build canonical with only meaningful params (exclude page, sort)
+  const canonicalParams = new URLSearchParams();
+  if (sp.q) canonicalParams.set("q", sp.q);
+  if (sp.category) canonicalParams.set("category", sp.category);
+  if (sp.brand) canonicalParams.set("brand", sp.brand);
+  const paramStr = canonicalParams.toString();
+  const searchPath = `/${locale}/search${paramStr ? `?${paramStr}` : ""}`;
+
+  // noindex deep filter combinations and paginated pages
+  const hasDeepFilters =
+    (sp.min_price || sp.max_price || sp.store_id) && sp.q;
+  const isPaginated = Number(sp.page) > 1;
+
+  return {
+    title,
+    description,
+    alternates: buildAlternates(searchPath),
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "website",
+      locale: ogLocale(locale),
+      title,
+      description,
+      url: absoluteUrl(searchPath),
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+    robots: {
+      index: !hasDeepFilters && !isPaginated,
+      follow: true,
+    },
+  };
+}
 
 export default async function SearchPage({
   params,

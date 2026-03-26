@@ -5,7 +5,15 @@
     "productTitle": "{name} цена в Азербайджане",
     "productDescriptionWithPrice": "{name} самая низкая цена: {price} ₼ — qiymetleri.com",
     "productDescriptionDefault": "Сравните цены на {name} — qiymetleri.com",
-    "productNotFound": "Товар не найден"
+    "productNotFound": "Товар не найден",
+    "searchTitle": "{query} — результаты поиска",
+    "searchCategoryTitle": "{category} — сравнение цен",
+    "searchAllTitle": "Все товары — сравнение цен",
+    "searchDescription": "{total} результатов для {query}. Сравните самые низкие цены в Азербайджане — qiymetleri.com",
+    "searchCategoryDescription": "Самые низкие цены в категории {category}. Сравнение Kontakt Home, Baku Electronics, Irshad, iSpace.",
+    "searchAllDescription": "Сравнение цен на электронику в Азербайджане. Сравните цены всех магазинов.",
+    "homeTitle": "qiymetleri.com — самый выгодный выбор в Азербайджане",
+    "homeDescription": "Смартфоны, ноутбуки, наушники, смарт-часы — сравните цены магазинов Азербайджана одним поиском."
   },
   "nav": {
     "home": "Главная",

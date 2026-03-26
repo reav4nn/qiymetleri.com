@@ -5,6 +5,8 @@ import { VariantSelector } from "@/components/VariantSelector";
 import { PriceTable } from "@/components/PriceTable";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
+import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
+import { productSchema } from "@/lib/schema";
 
 export const revalidate = 300;
 
@@ -30,19 +32,32 @@ export async function generateMetadata({
       .sort((a, b) => Number(a.price_azn) - Number(b.price_azn));
     const lowest = allPrices[0];
 
+    const title = t("productTitle", { name: product.name });
+    const description = lowest
+      ? t("productDescriptionWithPrice", {
+          name: product.name,
+          price: Number(lowest.price_azn).toFixed(2),
+        })
+      : t("productDescriptionDefault", { name: product.name });
+
     return {
-      title: t("productTitle", { name: product.name }),
-      description: lowest
-        ? t("productDescriptionWithPrice", {
-            name: product.name,
-            price: Number(lowest.price_azn).toFixed(2),
-          })
-        : t("productDescriptionDefault", { name: product.name }),
-      alternates: {
-        languages: {
-          az: `/az/products/${id}`,
-          ru: `/ru/products/${id}`,
-        },
+      title,
+      description,
+      alternates: buildAlternates(`/${locale}/products/${id}`),
+      openGraph: {
+        siteName: SITE_NAME,
+        type: "website",
+        locale: ogLocale(locale),
+        title,
+        description,
+        url: absoluteUrl(`/${locale}/products/${id}`),
+        ...(product.image_url ? { images: [{ url: product.image_url }] } : {}),
+      },
+      twitter: {
+        card: product.image_url ? "summary_large_image" : "summary",
+        title,
+        description,
+        ...(product.image_url ? { images: [product.image_url] } : {}),
       },
     };
   } catch {
@@ -79,8 +94,28 @@ export default async function ProductPage({
 
   const hasVariants = product.variants.length > 1;
 
+  const jsonLd = productSchema({
+    name: product.name,
+    image: product.image_url,
+    brand: product.brand,
+    description: `${product.name} — qiymetleri.com`,
+    url: absoluteUrl(`/${locale}/products/${id}`),
+    offers: product.variants.flatMap((v) =>
+      v.current_prices.map((p) => ({
+        storeName: STORE_NAMES[p.store_id] || p.store_id,
+        price: Number(p.price_azn),
+        inStock: p.in_stock,
+        url: p.url,
+      }))
+    ),
+  });
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mb-2 text-xs text-[var(--color-text-secondary)] sm:text-sm">
         {product.brand && (
           <span className="capitalize">{product.brand} / </span>

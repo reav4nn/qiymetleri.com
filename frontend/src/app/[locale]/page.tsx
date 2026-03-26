@@ -1,5 +1,7 @@
 import { SearchBar } from "@/components/SearchBar";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
+import type { Metadata } from "next";
 
 const CATEGORY_ICONS: Record<string, string> = {
   smartphones: "📱",
@@ -9,6 +11,34 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const CATEGORY_SLUGS = ["smartphones", "laptops", "headphones", "smartwatches"];
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta" });
+
+  return {
+    title: t("homeTitle"),
+    description: t("homeDescription"),
+    alternates: buildAlternates(`/${locale}`),
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "website",
+      locale: ogLocale(locale),
+      title: t("homeTitle"),
+      description: t("homeDescription"),
+      url: absoluteUrl(`/${locale}`),
+    },
+    twitter: {
+      card: "summary",
+      title: t("homeTitle"),
+      description: t("homeDescription"),
+    },
+  };
+}
 
 export default async function HomePage({
   params,
