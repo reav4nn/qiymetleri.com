@@ -8,10 +8,7 @@ import type {
   TriggerResponse,
 } from "@/lib/admin-api";
 
-const API_BASE =
-  typeof window !== "undefined"
-    ? process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-    : "http://localhost:8000";
+const API_BASE = "";
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return "—";
