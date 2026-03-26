@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { fetchProduct } from "@/lib/api";
+import { fetchProduct, fetchPriceHistory } from "@/lib/api";
+import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -41,8 +42,12 @@ export default async function ProductPage({
 }) {
   const { id } = await params;
   let product;
+  let priceHistory;
   try {
-    product = await fetchProduct(id);
+    [product, priceHistory] = await Promise.all([
+      fetchProduct(id),
+      fetchPriceHistory(id, 90),
+    ]);
   } catch {
     notFound();
   }
@@ -136,6 +141,16 @@ export default async function ProductPage({
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* Price history chart */}
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Qiymət tarixçəsi (90 gün)
+        </h2>
+        <div className="mt-4">
+          <PriceHistoryChart data={priceHistory} />
         </div>
       </section>
 

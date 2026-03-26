@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.product import (
     PaginatedResponse,
+    PriceHistorySchema,
     ProductDetailSchema,
     ProductListSchema,
 )
-from app.services.product_service import get_product_by_id, get_products
+from app.services.product_service import get_price_history, get_product_by_id, get_products
 
 router = APIRouter()
 
@@ -56,3 +57,15 @@ async def get_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
+
+
+@router.get("/{product_id}/history", response_model=list[PriceHistorySchema])
+async def get_product_price_history(
+    product_id: UUID,
+    days: int = Query(30, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
+):
+    product = await get_product_by_id(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return await get_price_history(db, product_id, days=days)

@@ -13,4 +13,7 @@ RUN playwright install --with-deps chromium
 
 COPY . .
 
+ENV SCRAPY_SETTINGS_MODULE=qiymetleri_scraper.settings
+ENV PYTHONPATH=/app
+
 CMD ["scrapy", "crawl", "kontakt_home"]

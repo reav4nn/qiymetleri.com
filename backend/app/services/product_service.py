@@ -94,13 +94,13 @@ async def get_price_history(
     product_id: UUID,
     days: int = 30,
 ) -> list[PriceHistory]:
+    from sqlalchemy import text as sa_text
+
     query = (
         select(PriceHistory)
         .where(PriceHistory.product_id == product_id)
         .where(
-            PriceHistory.time >= func.now() - func.cast(
-                f"{days} days", type_=func.text("interval")
-            )
+            PriceHistory.time >= func.now() - sa_text(f"interval '{days} days'")
         )
         .order_by(PriceHistory.time)
     )

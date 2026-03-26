@@ -42,6 +42,14 @@ export interface PaginatedResponse<T> {
   pages: number;
 }
 
+export interface PriceHistory {
+  time: string;
+  product_id: string;
+  store_id: string;
+  price_azn: number;
+  in_stock: boolean | null;
+}
+
 export async function fetchProducts(params: {
   page?: number;
   per_page?: number;
@@ -82,5 +90,17 @@ export async function searchProducts(
     { next: { revalidate: 180 } }
   );
   if (!res.ok) throw new Error("Failed to search products");
+  return res.json();
+}
+
+export async function fetchPriceHistory(
+  productId: string,
+  days: number = 30
+): Promise<PriceHistory[]> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/v1/products/${productId}/history?days=${days}`,
+    { next: { revalidate: 300 } }
+  );
+  if (!res.ok) throw new Error("Failed to fetch price history");
   return res.json();
 }

@@ -3,8 +3,8 @@ name = "qiymetleri-scraper"
 version = "0.1.0"
 description = "qiymetleri.com - Web scraper for Azerbaijan electronics stores"
 authors = ["qiymetleri <info@qiymetleri.com>"]
-readme = "README.md"
 packages = [{include = "qiymetleri_scraper"}]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.13"
