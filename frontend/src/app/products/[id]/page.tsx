@@ -15,12 +15,12 @@ export async function generateMetadata({
     const product = await fetchProduct(id);
     const lowestPrice = product.current_prices
       .filter((p) => p.in_stock)
-      .sort((a, b) => a.price_azn - b.price_azn)[0];
+      .sort((a, b) => Number(a.price_azn) - Number(b.price_azn))[0];
 
     return {
       title: `${product.name} Azərbaycanda qiymət`,
       description: lowestPrice
-        ? `${product.name} ən ucuz: ${lowestPrice.price_azn.toFixed(2)} ₼ — qiymetleri.com`
+        ? `${product.name} ən ucuz: ${Number(lowestPrice.price_azn).toFixed(2)} ₼ — qiymetleri.com`
         : `${product.name} qiymətini müqayisə edin — qiymetleri.com`,
     };
   } catch {
@@ -53,7 +53,7 @@ export default async function ProductPage({
   }
 
   const sortedPrices = [...product.current_prices].sort(
-    (a, b) => a.price_azn - b.price_azn
+    (a, b) => Number(a.price_azn) - Number(b.price_azn)
   );
   const lowestPrice = sortedPrices.find((p) => p.in_stock);
 
@@ -70,7 +70,7 @@ export default async function ProductPage({
         <div className="mt-4">
           <span className="text-sm text-gray-500">Ən ucuz qiymət: </span>
           <span className="text-2xl font-bold text-green-600">
-            {lowestPrice.price_azn.toFixed(2)} ₼
+            {Number(lowestPrice.price_azn).toFixed(2)} ₼
           </span>
           <span className="ml-2 text-sm text-gray-500">
             ({STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
@@ -109,7 +109,7 @@ export default async function ProductPage({
                     {STORE_NAMES[price.store_id] || price.store_id}
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                    {price.price_azn.toFixed(2)} ₼
+                    {Number(price.price_azn).toFixed(2)} ₼
                   </td>
                   <td className="px-4 py-3">
                     {price.in_stock ? (

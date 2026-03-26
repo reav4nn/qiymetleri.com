@@ -20,7 +20,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {product.lowest_price ? (
           <div>
             <span className="text-lg font-bold text-green-600">
-              {product.lowest_price.toFixed(2)} ₼
+              {Number(product.lowest_price).toFixed(2)} ₼
             </span>
             <span className="ml-2 text-xs text-gray-500">
               {product.store_count} mağazada
