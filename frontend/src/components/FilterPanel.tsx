@@ -97,12 +97,12 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       {/* Active filters indicator */}
       {hasActiveFilters && (
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-blue-600">
+          <span className="text-xs font-medium text-[var(--color-accent)]">
             {t("filtersActive")}
           </span>
           <button
             onClick={clearAllFilters}
-            className="text-xs text-red-500 hover:text-red-700 underline"
+            className="text-xs text-[var(--color-danger)] hover:brightness-125 underline"
           >
             {t("clearAll")}
           </button>
@@ -111,11 +111,11 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Sort */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">{t("sort")}</h3>
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{t("sort")}</h3>
         <select
           value={currentSort}
           onChange={(e) => applyFilter("sort_by", e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="w-full rounded-lg border border-[var(--color-border-hover)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -127,7 +127,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Categories */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
           {t("category")}
         </h3>
         <div className="space-y-1">
@@ -135,8 +135,8 @@ export function FilterPanel({ filters }: FilterPanelProps) {
             onClick={() => applyFilter("category", "")}
             className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
               !currentCategory
-                ? "bg-blue-50 font-medium text-blue-700"
-                : "text-gray-600 hover:bg-gray-50"
+                ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
             }`}
           >
             {t("all")}
@@ -149,15 +149,15 @@ export function FilterPanel({ filters }: FilterPanelProps) {
               }
               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
                 currentCategory === cat.id
-                  ? "bg-blue-50 font-medium text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
               }`}
             >
               <span>
                 {CATEGORY_ICONS[cat.id] ? `${CATEGORY_ICONS[cat.id]} ` : ""}
                 {tc.has(cat.id) ? tc(cat.id) : cat.name}
               </span>
-              <span className="text-xs text-gray-400">{cat.count}</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{cat.count}</span>
             </button>
           ))}
         </div>
@@ -165,14 +165,14 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Stores */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">{t("store")}</h3>
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{t("store")}</h3>
         <div className="space-y-1">
           <button
             onClick={() => applyFilter("store_id", "")}
             className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
               !currentStore
-                ? "bg-blue-50 font-medium text-blue-700"
-                : "text-gray-600 hover:bg-gray-50"
+                ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
             }`}
           >
             {t("all")}
@@ -188,12 +188,12 @@ export function FilterPanel({ filters }: FilterPanelProps) {
               }
               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
                 currentStore === store.id
-                  ? "bg-blue-50 font-medium text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
               }`}
             >
               <span>{store.name}</span>
-              <span className="text-xs text-gray-400">{store.count}</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{store.count}</span>
             </button>
           ))}
         </div>
@@ -201,14 +201,14 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Brands */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">{t("brand")}</h3>
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{t("brand")}</h3>
         <div className="max-h-56 space-y-1 overflow-y-auto">
           <button
             onClick={() => applyFilter("brand", "")}
             className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
               !currentBrand
-                ? "bg-blue-50 font-medium text-blue-700"
-                : "text-gray-600 hover:bg-gray-50"
+                ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
             }`}
           >
             {t("all")}
@@ -221,12 +221,12 @@ export function FilterPanel({ filters }: FilterPanelProps) {
               }
               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
                 currentBrand === brand.id
-                  ? "bg-blue-50 font-medium text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
               }`}
             >
               <span className="capitalize">{brand.name}</span>
-              <span className="text-xs text-gray-400">{brand.count}</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{brand.count}</span>
             </button>
           ))}
         </div>
@@ -234,7 +234,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Price Range */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
           {t("priceRange")}
         </h3>
         <div className="flex items-center gap-2">
@@ -244,30 +244,30 @@ export function FilterPanel({ filters }: FilterPanelProps) {
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-[var(--color-border-hover)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:outline-none"
             min={0}
           />
-          <span className="text-gray-400">—</span>
+          <span className="text-[var(--color-text-muted)]">—</span>
           <input
             type="number"
             placeholder={String(Math.ceil(filters.price_range.max))}
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-[var(--color-border-hover)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:outline-none"
             min={0}
           />
         </div>
         <button
           onClick={applyPriceRange}
-          className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-700"
+          className="mt-2 w-full rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[var(--color-accent-hover)]"
         >
           {t("apply")}
         </button>
       </div>
 
       {isPending && (
-        <div className="text-center text-xs text-gray-400">{t("loading")}</div>
+        <div className="text-center text-xs text-[var(--color-text-muted)]">{t("loading")}</div>
       )}
     </div>
   );
@@ -278,7 +278,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       <div className="lg:hidden mb-4">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
         >
           <svg
             className="h-4 w-4"
@@ -295,13 +295,13 @@ export function FilterPanel({ filters }: FilterPanelProps) {
           </svg>
           {t("mobileToggle")}
           {hasActiveFilters && (
-            <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-xs text-white">
+            <span className="rounded-full bg-[var(--color-accent)] px-1.5 py-0.5 text-xs text-white">
               ●
             </span>
           )}
         </button>
         {mobileOpen && (
-          <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
+          <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-lg">
             {filterContent}
           </div>
         )}
@@ -309,8 +309,8 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:block w-64 shrink-0">
-        <div className="sticky top-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-4 text-base font-bold text-gray-900">{t("title")}</h2>
+        <div className="sticky top-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
+          <h2 className="mb-4 text-base font-bold text-[var(--color-text-primary)]">{t("title")}</h2>
           {filterContent}
         </div>
       </aside>

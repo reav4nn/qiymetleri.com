@@ -24,38 +24,38 @@ export function PriceTable({ prices, storeNames, labels }: PriceTableProps) {
   );
 
   return (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
+    <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--color-border)]">
       <table className="w-full min-w-[500px]">
-        <thead className="bg-gray-50">
+        <thead className="bg-[var(--color-bg-surface)]">
           <tr>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+            <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
               {labels.store}
             </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+            <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
               {labels.price}
             </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+            <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
               {labels.status}
             </th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-[var(--color-border-subtle)]">
           {sorted.map((price, i) => (
-            <tr key={price.id} className={i === 0 ? "bg-green-50" : ""}>
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">
+            <tr key={price.id} className={i === 0 ? "bg-[var(--color-success-subtle)]" : ""}>
+              <td className="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">
                 {storeNames[price.store_id] || price.store_id}
               </td>
-              <td className="px-4 py-3 text-sm font-bold text-gray-900">
+              <td className="px-4 py-3 text-sm font-bold text-[var(--color-text-primary)]">
                 {Number(price.price_azn).toFixed(2)} ₼
               </td>
               <td className="px-4 py-3">
                 {price.in_stock ? (
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                  <span className="inline-flex items-center rounded-full bg-[var(--color-success-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]">
                     {labels.inStock}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                  <span className="inline-flex items-center rounded-full bg-[var(--color-danger-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-danger)]">
                     {labels.outOfStock}
                   </span>
                 )}
@@ -66,7 +66,7 @@ export function PriceTable({ prices, storeNames, labels }: PriceTableProps) {
                     href={price.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                    className="whitespace-nowrap rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-accent-hover)]"
                   >
                     {labels.goToStore}
                   </a>

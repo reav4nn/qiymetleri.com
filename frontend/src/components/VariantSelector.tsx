@@ -74,12 +74,12 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900">{t("selectVariant")}</h2>
+      <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{t("selectVariant")}</h2>
 
       {/* Storage selector */}
       {storages.length > 0 && (
         <div className="mt-4">
-          <h3 className="mb-2 text-sm font-medium text-gray-600">{t("storage")}</h3>
+          <h3 className="mb-2 text-sm font-medium text-[var(--color-text-secondary)]">{t("storage")}</h3>
           <div className="flex flex-wrap gap-2">
             {storages.map((s) => (
               <button
@@ -89,8 +89,8 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
                 }
                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
                   selectedStorage === s
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-gray-300 text-gray-700 hover:border-gray-400"
+                    ? "border-[var(--color-accent)] bg-[var(--color-accent-subtle)] text-[var(--color-accent)]"
+                    : "border-[var(--color-border-hover)] text-[var(--color-text-secondary)] hover:border-[var(--color-text-muted)]"
                 }`}
               >
                 {formatStorage(s)}
@@ -103,7 +103,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
       {/* Color selector */}
       {colors.length > 0 && (
         <div className="mt-4">
-          <h3 className="mb-2 text-sm font-medium text-gray-600">{t("color")}</h3>
+          <h3 className="mb-2 text-sm font-medium text-[var(--color-text-secondary)]">{t("color")}</h3>
           <div className="flex flex-wrap gap-2">
             {colors.map((c) => (
               <button
@@ -113,8 +113,8 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
                 }
                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
                   selectedColor === c
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-gray-300 text-gray-700 hover:border-gray-400"
+                    ? "border-[var(--color-accent)] bg-[var(--color-accent-subtle)] text-[var(--color-accent)]"
+                    : "border-[var(--color-border-hover)] text-[var(--color-text-secondary)] hover:border-[var(--color-text-muted)]"
                 }`}
               >
                 {c}
@@ -125,53 +125,53 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
       )}
 
       {/* Matching variants count */}
-      <p className="mt-4 text-sm text-gray-500">
+      <p className="mt-4 text-sm text-[var(--color-text-secondary)]">
         {t("matchCount", { variants: filteredVariants.length, offers: allPrices.length })}
       </p>
 
       {/* Price table */}
       {allPrices.length > 0 ? (
-        <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--color-border)]">
           <table className="w-full min-w-[500px]">
-            <thead className="bg-gray-50">
+            <thead className="bg-[var(--color-bg-surface)]">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
                   {tt("store")}
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
                   {tt("variant")}
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
                   {tt("price")}
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
                   {tt("status")}
                 </th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {allPrices.map((price, i) => (
                 <tr
                   key={`${price.store_id}-${price.variant_name}-${i}`}
-                  className={i === 0 ? "bg-green-50" : ""}
+                  className={i === 0 ? "bg-[var(--color-success-subtle)]" : ""}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                  <td className="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">
                     {storeNames[price.store_id] || price.store_id}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600">
+                  <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)]">
                     {price.variant_name}
                   </td>
-                  <td className="px-4 py-3 text-sm font-bold text-gray-900">
+                  <td className="px-4 py-3 text-sm font-bold text-[var(--color-text-primary)]">
                     {price.price_azn.toFixed(2)} ₼
                   </td>
                   <td className="px-4 py-3">
                     {price.in_stock ? (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                      <span className="inline-flex items-center rounded-full bg-[var(--color-success-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]">
                         {tp("inStock")}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                      <span className="inline-flex items-center rounded-full bg-[var(--color-danger-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-danger)]">
                         {tp("outOfStock")}
                       </span>
                     )}
@@ -182,7 +182,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
                         href={price.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                        className="whitespace-nowrap rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-accent-hover)]"
                       >
                         {tp("goToStore")}
                       </a>
@@ -194,7 +194,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
           </table>
         </div>
       ) : (
-        <div className="mt-4 text-center text-gray-400">
+        <div className="mt-4 text-center text-[var(--color-text-muted)]">
           {t("noMatch")}
         </div>
       )}

@@ -23,15 +23,15 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-0.5">
+    <div className="flex items-center gap-1 rounded-lg border border-[var(--color-border)] p-0.5">
       {LOCALES.map((locale) => (
         <a
           key={locale.code}
           href={switchLocale(locale.code)}
           className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
             currentLocale === locale.code
-              ? "bg-blue-600 text-white"
-              : "text-gray-500 hover:text-gray-900"
+              ? "bg-[var(--color-accent)] text-white"
+              : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           }`}
         >
           {locale.label}

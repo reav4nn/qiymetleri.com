@@ -77,8 +77,8 @@ export default async function SearchPage({
         <div className="min-w-0 flex-1">
           <div className="mb-4 flex items-baseline justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">{title}</h1>
+              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                 {t("resultsCount", { total: data.total })}
               </p>
             </div>
@@ -90,7 +90,7 @@ export default async function SearchPage({
                 {Array.from({ length: 9 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-48 animate-pulse rounded-xl bg-gray-100"
+                    className="h-48 animate-pulse rounded-xl bg-[var(--color-bg-surface)]"
                   />
                 ))}
               </div>
@@ -104,7 +104,7 @@ export default async function SearchPage({
           </Suspense>
 
           {data.items.length === 0 && (
-            <div className="mt-12 text-center text-gray-500">
+            <div className="mt-12 text-center text-[var(--color-text-secondary)]">
               {t("noResults")}
             </div>
           )}
@@ -117,7 +117,7 @@ export default async function SearchPage({
                   {t("prev")}
                 </PaginationLink>
               )}
-              <span className="px-3 py-2 text-sm text-gray-600">
+              <span className="px-3 py-2 text-sm text-[var(--color-text-secondary)]">
                 {page} / {totalPages}
               </span>
               {page < totalPages && (
@@ -153,7 +153,7 @@ function PaginationLink({
   return (
     <a
       href={`/${locale}/search?${sp.toString()}`}
-      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      className="rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-surface-hover)]"
     >
       {children}
     </a>
