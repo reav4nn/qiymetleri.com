@@ -1,0 +1,110 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export interface DashboardStats {
+  total_products: number;
+  total_variants: number;
+  total_stores: number;
+  active_stores: number;
+  total_prices: number;
+  price_range_min: number | null;
+  price_range_max: number | null;
+  products_with_images: number;
+  last_price_update: string | null;
+  categories: { name: string; count: number }[];
+}
+
+export interface SpiderStatus {
+  name: string;
+  display_name: string;
+  last_run: string | null;
+  last_status: string | null;
+  last_item_count: number | null;
+  last_duration: number | null;
+  schedule: string;
+  is_running: boolean;
+}
+
+export interface ScraperOverview {
+  spiders: SpiderStatus[];
+  worker_online: boolean;
+  active_tasks: number;
+  scheduled_tasks: number;
+}
+
+export interface TaskResult {
+  task_id: string;
+  spider: string;
+  status: string;
+  started_at: string | null;
+  completed_at: string | null;
+  item_count: number | null;
+  duration: number | null;
+  error: string | null;
+}
+
+export interface StoreHealth {
+  id: string;
+  name: string;
+  base_url: string;
+  is_active: boolean;
+  product_count: number;
+  in_stock_count: number;
+  avg_price: number | null;
+  min_price: number | null;
+  max_price: number | null;
+  last_crawl: string | null;
+  last_price_update: string | null;
+}
+
+export interface PriceAnomaly {
+  product_id: string;
+  product_name: string;
+  store_id: string;
+  old_price: number;
+  new_price: number;
+  change_pct: number;
+  detected_at: string;
+}
+
+export interface TriggerResponse {
+  task_id: string;
+  spider: string;
+  status: string;
+  message: string;
+}
+
+async function adminFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/admin${path}`, {
+    cache: "no-store",
+    ...options,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    throw new Error(`Admin API error ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+export function fetchDashboard(): Promise<DashboardStats> {
+  return adminFetch("/dashboard");
+}
+
+export function fetchScraperStatus(): Promise<ScraperOverview> {
+  return adminFetch("/scraper/status");
+}
+
+export function triggerSpider(name: string): Promise<TriggerResponse> {
+  return adminFetch(`/scraper/trigger/${name}`, { method: "POST" });
+}
+
+export function fetchScraperHistory(limit = 20): Promise<TaskResult[]> {
+  return adminFetch(`/scraper/history?limit=${limit}`);
+}
+
+export function fetchStoreHealth(): Promise<StoreHealth[]> {
+  return adminFetch("/stores");
+}
+
+export function fetchAnomalies(threshold = 30, hours = 24): Promise<PriceAnomaly[]> {
+  return adminFetch(`/anomalies?threshold=${threshold}&hours=${hours}`);
+}
