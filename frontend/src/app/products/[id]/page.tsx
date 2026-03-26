@@ -72,19 +72,38 @@ export default async function ProductPage({
         {product.category && <span>{product.category}</span>}
       </div>
 
-      <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-
-      {lowestPrice && (
-        <div className="mt-4">
-          <span className="text-sm text-gray-500">Ən ucuz qiymət: </span>
-          <span className="text-2xl font-bold text-green-600">
-            {Number(lowestPrice.price_azn).toFixed(2)} ₼
-          </span>
-          <span className="ml-2 text-sm text-gray-500">
-            ({STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
-          </span>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+        {/* Product image */}
+        <div className="flex h-48 w-48 flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl bg-gray-50 sm:h-56 sm:w-56 sm:self-start">
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="h-full w-auto object-contain"
+            />
+          ) : (
+            <svg className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+            </svg>
+          )}
         </div>
-      )}
+
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+
+          {lowestPrice && (
+            <div className="mt-4">
+              <span className="text-sm text-gray-500">Ən ucuz qiymət: </span>
+              <span className="text-2xl font-bold text-green-600">
+                {Number(lowestPrice.price_azn).toFixed(2)} ₼
+              </span>
+              <span className="ml-2 text-sm text-gray-500">
+                ({STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Variant selector + price table */}
       {hasVariants ? (

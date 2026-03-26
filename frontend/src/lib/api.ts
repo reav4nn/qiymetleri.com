@@ -7,6 +7,7 @@ export interface Product {
   category: string | null;
   model_family: string | null;
   name: string;
+  image_url: string | null;
   lowest_price: number | null;
   store_count: number;
   variant_count: number;
@@ -27,6 +28,7 @@ export interface ProductDetail {
   category: string | null;
   model_family: string | null;
   name: string;
+  image_url: string | null;
   attributes: Record<string, unknown> | null;
   current_prices: CurrentPrice[];
   variants: Variant[];

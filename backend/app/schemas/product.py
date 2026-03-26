@@ -34,6 +34,7 @@ class ProductListSchema(BaseModel):
     category: str | None = None
     model_family: str | None = None
     name: str
+    image_url: str | None = None
     lowest_price: float | None = None
     store_count: int = 0
     variant_count: int = 1
@@ -58,6 +59,7 @@ class ProductDetailSchema(BaseModel):
     category: str | None = None
     model_family: str | None = None
     name: str
+    image_url: str | None = None
     attributes: dict | None = None
     current_prices: list[CurrentPriceSchema] = []
     variants: list[VariantSchema] = []

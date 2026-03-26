@@ -76,6 +76,9 @@ async def get_products(
                 "category": rep.category,
                 "model_family": rep.model_family,
                 "name": rep.model_family or rep.name,
+                "image_url": next(
+                    (m.image_url for m in members if m.image_url), None
+                ),
                 "lowest_price": min(all_prices) if all_prices else None,
                 "store_count": len(all_store_ids),
                 "variant_count": len(members),

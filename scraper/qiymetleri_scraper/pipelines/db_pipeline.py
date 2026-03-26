@@ -52,6 +52,7 @@ class DatabasePipeline:
                     category VARCHAR(100),
                     model_family VARCHAR(200),
                     name VARCHAR(500) NOT NULL,
+                    image_url TEXT,
                     attributes JSONB DEFAULT '{}',
                     created_at TIMESTAMPTZ DEFAULT NOW(),
                     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -111,18 +112,26 @@ class DatabasePipeline:
     def _ensure_product_exists(
         self, session: Session, adapter: ItemAdapter, canonical_id: str
     ):
-        """Create the product if it doesn't exist yet."""
+        """Create the product if it doesn't exist, or update image_url if missing."""
         result = session.execute(
-            text("SELECT id FROM products WHERE canonical_id = :canonical_id"),
+            text("SELECT id, image_url FROM products WHERE canonical_id = :canonical_id"),
             {"canonical_id": canonical_id},
         )
-        if result.fetchone():
+        row = result.fetchone()
+        image_url = self._clean_image_url(adapter.get("image_url"))
+
+        if row:
+            if image_url and not row[1]:
+                session.execute(
+                    text("UPDATE products SET image_url = :image_url WHERE id = :pid"),
+                    {"image_url": image_url, "pid": str(row[0])},
+                )
             return
 
         session.execute(
             text("""
-                INSERT INTO products (id, canonical_id, brand, category, name, attributes)
-                VALUES (gen_random_uuid(), :canonical_id, :brand, :category, :name, CAST(:attributes AS jsonb))
+                INSERT INTO products (id, canonical_id, brand, category, name, image_url, attributes)
+                VALUES (gen_random_uuid(), :canonical_id, :brand, :category, :name, :image_url, CAST(:attributes AS jsonb))
                 ON CONFLICT (canonical_id) DO NOTHING
             """),
             {
@@ -130,10 +139,22 @@ class DatabasePipeline:
                 "brand": adapter.get("brand"),
                 "category": adapter.get("category"),
                 "name": adapter.get("original_title", ""),
+                "image_url": image_url,
                 "attributes": "{}",
             },
         )
         logger.info(f"Created new product: {canonical_id}")
+
+    @staticmethod
+    def _clean_image_url(url: str | None) -> str | None:
+        """Filter out placeholder/invalid image URLs."""
+        if not url:
+            return None
+        if url.startswith("data:"):
+            return None
+        if len(url) < 10:
+            return None
+        return url
 
     def _upsert_current_price(
         self, session: Session, adapter: ItemAdapter, canonical_id: str, now: datetime

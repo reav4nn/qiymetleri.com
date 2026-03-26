@@ -46,6 +46,7 @@ class Product(Base):
     category: Mapped[str | None] = mapped_column(String(100), index=True)
     model_family: Mapped[str | None] = mapped_column(String(200))
     name: Mapped[str] = mapped_column(String(500), nullable=False)
+    image_url: Mapped[str | None] = mapped_column(Text)
     attributes: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

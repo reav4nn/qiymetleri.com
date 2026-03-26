@@ -84,6 +84,9 @@ async def get_product(
         "category": product.category,
         "model_family": product.model_family,
         "name": product.model_family or product.name,
+        "image_url": product.image_url or next(
+            (v.image_url for v in family_members if v.image_url), None
+        ),
         "attributes": product.attributes,
         "current_prices": product.current_prices,
         "variants": variants,

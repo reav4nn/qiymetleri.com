@@ -119,13 +119,14 @@ class KontaktHomeSpider(scrapy.Spider):
                 if link and "#" not in link:
                     item["url"] = response.urljoin(link)
 
-                # Image
+                # Image (prefer data-src for lazy-loaded images)
                 img = (
-                    card.css("img.prodItem__img::attr(src)").get()
-                    or card.css("img::attr(src)").get()
+                    card.css("img.prodItem__img::attr(data-src)").get()
                     or card.css("img::attr(data-src)").get()
+                    or card.css("img.prodItem__img::attr(src)").get()
+                    or card.css("img::attr(src)").get()
                 )
-                if img and "icon" not in img and "svg" not in img:
+                if img and "icon" not in img and "svg" not in img and not img.startswith("data:"):
                     item["image_url"] = response.urljoin(img)
 
                 # Stock — assume in stock (kontakt.az typically hides out-of-stock)
