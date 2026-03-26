@@ -7,6 +7,16 @@ Pure Python, no database or async dependencies.
 
 import re
 
+# ─── AZ → EN product name translations ─────────────────────────────
+# Applied before normalization so AZ and EN names produce the same model_family.
+AZ_PRODUCT_TRANSLATIONS: list[tuple[str, str]] = [
+    ("aktiv səsboğma ilə", "with Active Noise Cancellation"),
+    ("aktiv səs-küy azaltma ilə", "with Active Noise Cancellation"),
+    ("səsboğma ilə", "with Noise Cancellation"),
+    ("aktiv səsboğma", "Active Noise Cancellation"),
+    ("səsboğma", "Noise Cancellation"),
+]
+
 # ─── Color dictionary ───────────────────────────────────────────────
 KNOWN_COLORS = [
     # English multi-word
@@ -22,12 +32,14 @@ KNOWN_COLORS = [
     "titanium gray", "titanium grey", "titanium black", "light gold",
     "light violet", "dark green", "midnight black", "desert gold",
     "meteor silver", "sleek blue", "sleek black",
+    "cosmic black", "deep blue",
     # English single-word
     "black", "white", "blue", "green", "pink", "yellow", "red",
     "gold", "silver", "gray", "grey", "orange",
     "purple", "brown", "beige", "cream", "coral", "teal",
     "mint", "lavender", "bronze", "graphite", "titanium", "amber",
     "citrus", "indigo", "blush", "plum", "denim", "sage", "mist",
+    "cosmic", "deep", "neon",
     # Azerbaijani colors
     "çəhrayı qızıl", "mavi göy",
     "ağ", "qara", "göy", "yaşıl", "qırmızı", "narıncı", "sarı",
@@ -121,6 +133,14 @@ def normalize_name(name: str) -> dict:
         if cleaned.startswith(prefix):
             cleaned = cleaned[len(prefix):]
             break
+
+    # Translate AZ product feature phrases to EN for consistent matching
+    for az_phrase, en_phrase in AZ_PRODUCT_TRANSLATIONS:
+        cleaned = re.sub(re.escape(az_phrase), en_phrase, cleaned, flags=re.IGNORECASE)
+
+    # Clean messy separators: "Pro, , Cosmic" → "Pro, Cosmic"
+    cleaned = re.sub(r",\s*,", ",", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
 
     # Extract color
     color_matches = list(COLOR_PATTERN.finditer(cleaned))
