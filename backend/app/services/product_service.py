@@ -29,7 +29,8 @@ async def get_products(
     if q:
         query = query.where(Product.name.ilike(f"%{q}%"))
 
-    if store_id or min_price is not None or max_price is not None:
+    price_join_needed = store_id or min_price is not None or max_price is not None
+    if price_join_needed:
         query = query.join(CurrentPrice)
         if store_id:
             query = query.where(CurrentPrice.store_id == store_id)
@@ -38,20 +39,24 @@ async def get_products(
         if max_price is not None:
             query = query.where(CurrentPrice.price_azn <= max_price)
 
-    # Count total
+    # Count total before sorting/pagination
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
 
-    # Sort
-    if sort_by == "price_asc":
-        query = query.order_by(
-            func.min(CurrentPrice.price_azn).asc()
-            if CurrentPrice in [c.entity for c in query.column_descriptions]
-            else Product.name
+    # Sort — use a correlated subquery for price sorts to avoid GROUP BY issues
+    if sort_by in ("price_asc", "price_desc"):
+        min_price_sub = (
+            select(func.min(CurrentPrice.price_azn))
+            .where(CurrentPrice.product_id == Product.id)
+            .where(CurrentPrice.in_stock.is_(True))
+            .correlate(Product)
+            .scalar_subquery()
         )
-    elif sort_by == "price_desc":
-        query = query.order_by(Product.name.desc())
+        if sort_by == "price_asc":
+            query = query.order_by(min_price_sub.asc().nulls_last())
+        else:
+            query = query.order_by(min_price_sub.desc().nulls_last())
     else:
         query = query.order_by(Product.name)
 
