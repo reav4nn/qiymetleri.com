@@ -1,8 +1,13 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL, LOCALES } from "@/lib/seo";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8000";
 
 interface ProductItem {
   id: string;
