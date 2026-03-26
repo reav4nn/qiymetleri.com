@@ -2,16 +2,26 @@ import { notFound } from "next/navigation";
 import { fetchProduct, fetchPriceHistory } from "@/lib/api";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { VariantSelector } from "@/components/VariantSelector";
+import { PriceTable } from "@/components/PriceTable";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
 
+const STORE_NAMES: Record<string, string> = {
+  kontakt_home: "Kontakt Home",
+  baku_electronics: "Baku Electronics",
+  irshad_electronics: "Irshad Electronics",
+  ispace: "iSpace",
+};
+
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { id, locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta" });
   try {
     const product = await fetchProduct(id);
     const allPrices = product.variants
@@ -21,29 +31,35 @@ export async function generateMetadata({
     const lowest = allPrices[0];
 
     return {
-      title: `${product.name} Azərbaycanda qiymət`,
+      title: t("productTitle", { name: product.name }),
       description: lowest
-        ? `${product.name} ən ucuz: ${Number(lowest.price_azn).toFixed(2)} ₼ — qiymetleri.com`
-        : `${product.name} qiymətini müqayisə edin — qiymetleri.com`,
+        ? t("productDescriptionWithPrice", {
+            name: product.name,
+            price: Number(lowest.price_azn).toFixed(2),
+          })
+        : t("productDescriptionDefault", { name: product.name }),
+      alternates: {
+        languages: {
+          az: `/az/products/${id}`,
+          ru: `/ru/products/${id}`,
+        },
+      },
     };
   } catch {
-    return { title: "Məhsul tapılmadı" };
+    return { title: t("productNotFound") };
   }
 }
-
-const STORE_NAMES: Record<string, string> = {
-  kontakt_home: "Kontakt Home",
-  baku_electronics: "Baku Electronics",
-  irshad_electronics: "Irshad Electronics",
-  ispace: "iSpace",
-};
 
 export default async function ProductPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }) {
-  const { id } = await params;
+  const { id, locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("product");
+  const tt = await getTranslations("table");
+
   let product;
   let priceHistory;
   try {
@@ -93,7 +109,7 @@ export default async function ProductPage({
 
           {lowestPrice && (
             <div className="mt-4">
-              <span className="text-sm text-gray-500">Ən ucuz qiymət: </span>
+              <span className="text-sm text-gray-500">{t("lowestPrice")} </span>
               <span className="text-2xl font-bold text-green-600">
                 {Number(lowestPrice.price_azn).toFixed(2)} ₼
               </span>
@@ -116,11 +132,19 @@ export default async function ProductPage({
       ) : (
         <section className="mt-8">
           <h2 className="text-xl font-semibold text-gray-900">
-            Qiymət müqayisəsi
+            {t("priceComparison")}
           </h2>
           <PriceTable
             prices={product.current_prices}
             storeNames={STORE_NAMES}
+            labels={{
+              store: tt("store"),
+              price: tt("price"),
+              status: tt("status"),
+              inStock: t("inStock"),
+              outOfStock: t("outOfStock"),
+              goToStore: t("goToStore"),
+            }}
           />
         </section>
       )}
@@ -128,80 +152,12 @@ export default async function ProductPage({
       {/* Price history chart */}
       <section className="mt-8">
         <h2 className="text-xl font-semibold text-gray-900">
-          Qiymət tarixçəsi (90 gün)
+          {t("priceHistory")}
         </h2>
         <div className="mt-4">
           <PriceHistoryChart data={priceHistory} />
         </div>
       </section>
-    </div>
-  );
-}
-
-function PriceTable({
-  prices,
-  storeNames,
-}: {
-  prices: { id: string; store_id: string; price_azn: number; in_stock: boolean; url: string | null; last_checked_at: string }[];
-  storeNames: Record<string, string>;
-}) {
-  const sorted = [...prices].sort(
-    (a, b) => Number(a.price_azn) - Number(b.price_azn)
-  );
-
-  return (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200">
-      <table className="w-full min-w-[500px]">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-              Mağaza
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-              Qiymət
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-              Status
-            </th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {sorted.map((price, i) => (
-            <tr key={price.id} className={i === 0 ? "bg-green-50" : ""}>
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                {storeNames[price.store_id] || price.store_id}
-              </td>
-              <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                {Number(price.price_azn).toFixed(2)} ₼
-              </td>
-              <td className="px-4 py-3">
-                {price.in_stock ? (
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                    Stokda var
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                    Stokda yoxdur
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-3">
-                {price.url && (
-                  <a
-                    href={price.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                  >
-                    Mağazaya keç →
-                  </a>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

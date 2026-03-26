@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "qiymetleri.com — Azərbaycanda ən ucuz texnikanı tap",
+    "description": "Azərbaycanda elektron məhsulların qiymət müqayisəsi. Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — bütün mağazaların qiymətlərini müqayisə edin.",
+    "productTitle": "{name} Azərbaycanda qiymət",
+    "productDescriptionWithPrice": "{name} ən ucuz: {price} ₼ — qiymetleri.com",
+    "productDescriptionDefault": "{name} qiymətini müqayisə edin — qiymetleri.com",
+    "productNotFound": "Məhsul tapılmadı"
+  },
+  "nav": {
+    "home": "Ana səhifə",
+    "smartphones": "Smartfonlar",
+    "laptops": "Noutbuklar",
+    "headphones": "Qulaqlıqlar"
+  },
+  "footer": {
+    "tagline": "qiymetleri.com — Azərbaycanda ən ucuz texnikanı tap"
+  },
+  "home": {
+    "heroTitle": "Azərbaycanda ən ucuz texnikanı tap",
+    "heroSubtitle": "Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — bütün mağazaların qiymətlərini bir axtarışla müqayisə et.",
+    "categories": "Kateqoriyalar"
+  },
+  "categories": {
+    "smartphones": "Smartfonlar",
+    "laptops": "Noutbuklar",
+    "headphones": "Qulaqlıqlar",
+    "smartwatches": "Smartwatch"
+  },
+  "search": {
+    "placeholder": "Məhsul axtar... (məs. iPhone 16, Galaxy S25)",
+    "button": "Axtar",
+    "allProducts": "Bütün məhsullar",
+    "resultsCount": "{total} nəticə tapıldı",
+    "noResults": "Heç bir nəticə tapılmadı. Fərqli filtrlərlə yenidən cəhd edin.",
+    "prev": "← Əvvəlki",
+    "next": "Növbəti →"
+  },
+  "product": {
+    "lowestPrice": "Ən ucuz qiymət:",
+    "priceComparison": "Qiymət müqayisəsi",
+    "priceHistory": "Qiymət tarixçəsi (90 gün)",
+    "priceHistoryEmpty": "Qiymət tarixçəsi hələ mövcud deyil",
+    "notFound": "Məhsul tapılmadı",
+    "inStock": "Stokda var",
+    "outOfStock": "Stokda yoxdur",
+    "goToStore": "Mağazaya keç →",
+    "inStores": "{count} mağazada",
+    "noPrice": "Qiymət yoxdur",
+    "variant": "variant"
+  },
+  "table": {
+    "store": "Mağaza",
+    "price": "Qiymət",
+    "status": "Status",
+    "variant": "Variant"
+  },
+  "filter": {
+    "title": "Filtrlər",
+    "filtersActive": "Filtrlər aktiv",
+    "clearAll": "Hamısını sil",
+    "sort": "Sıralama",
+    "category": "Kateqoriya",
+    "store": "Mağaza",
+    "brand": "Brend",
+    "all": "Hamısı",
+    "priceRange": "Qiymət aralığı (₼)",
+    "apply": "Tətbiq et",
+    "loading": "Yüklənir...",
+    "mobileToggle": "Filtrlər",
+    "sortNameAZ": "Ad (A-Z)",
+    "sortPriceAsc": "Qiymət: ucuzdan bahaya",
+    "sortPriceDesc": "Qiymət: bahadan ucuza"
+  },
+  "variants": {
+    "selectVariant": "Variant seçin",
+    "storage": "Yaddaş",
+    "color": "Rəng",
+    "matchCount": "{variants} variant, {offers} təklif tapıldı",
+    "noMatch": "Bu seçimə uyğun təklif tapılmadı."
+  }
+}

@@ -1,21 +1,16 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import type { FilterOptions } from "@/lib/api";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  smartphones: "📱 Smartfonlar",
-  laptops: "💻 Noutbuklar",
-  headphones: "🎧 Qulaqlıqlar",
-  smartwatches: "⌚ Smartwatch",
+const CATEGORY_ICONS: Record<string, string> = {
+  smartphones: "📱",
+  laptops: "💻",
+  headphones: "🎧",
+  smartwatches: "⌚",
 };
-
-const SORT_OPTIONS = [
-  { value: "name", label: "Ad (A-Z)" },
-  { value: "price_asc", label: "Qiymət: ucuzdan bahaya" },
-  { value: "price_desc", label: "Qiymət: bahadan ucuza" },
-];
 
 interface FilterPanelProps {
   filters: FilterOptions;
@@ -23,8 +18,13 @@ interface FilterPanelProps {
 
 export function FilterPanel({ filters }: FilterPanelProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("filter");
+  const tc = useTranslations("categories");
+
+  const locale = pathname.split("/")[1] || "az";
 
   const currentCategory = searchParams.get("category") || "";
   const currentBrand = searchParams.get("brand") || "";
@@ -49,10 +49,10 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       params.delete("page");
 
       startTransition(() => {
-        router.push(`/search?${params.toString()}`);
+        router.push(`/${locale}/search?${params.toString()}`);
       });
     },
-    [router, searchParams, startTransition]
+    [router, searchParams, startTransition, locale]
   );
 
   const applyPriceRange = useCallback(() => {
@@ -64,19 +64,19 @@ export function FilterPanel({ filters }: FilterPanelProps) {
     params.delete("page");
 
     startTransition(() => {
-      router.push(`/search?${params.toString()}`);
+      router.push(`/${locale}/search?${params.toString()}`);
     });
-  }, [router, searchParams, minPrice, maxPrice, startTransition]);
+  }, [router, searchParams, minPrice, maxPrice, startTransition, locale]);
 
   const clearAllFilters = useCallback(() => {
     const params = new URLSearchParams();
     if (currentQuery) params.set("q", currentQuery);
     startTransition(() => {
-      router.push(`/search?${params.toString()}`);
+      router.push(`/${locale}/search?${params.toString()}`);
     });
     setMinPrice("");
     setMaxPrice("");
-  }, [router, currentQuery, startTransition]);
+  }, [router, currentQuery, startTransition, locale]);
 
   const hasActiveFilters =
     currentCategory ||
@@ -86,26 +86,32 @@ export function FilterPanel({ filters }: FilterPanelProps) {
     currentMaxPrice ||
     currentSort !== "name";
 
+  const SORT_OPTIONS = [
+    { value: "name", label: t("sortNameAZ") },
+    { value: "price_asc", label: t("sortPriceAsc") },
+    { value: "price_desc", label: t("sortPriceDesc") },
+  ];
+
   const filterContent = (
     <div className="space-y-6">
       {/* Active filters indicator */}
       {hasActiveFilters && (
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-blue-600">
-            Filtrlər aktiv
+            {t("filtersActive")}
           </span>
           <button
             onClick={clearAllFilters}
             className="text-xs text-red-500 hover:text-red-700 underline"
           >
-            Hamısını sil
+            {t("clearAll")}
           </button>
         </div>
       )}
 
       {/* Sort */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">Sıralama</h3>
+        <h3 className="mb-2 text-sm font-semibold text-gray-700">{t("sort")}</h3>
         <select
           value={currentSort}
           onChange={(e) => applyFilter("sort_by", e.target.value)}
@@ -122,7 +128,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       {/* Categories */}
       <div>
         <h3 className="mb-2 text-sm font-semibold text-gray-700">
-          Kateqoriya
+          {t("category")}
         </h3>
         <div className="space-y-1">
           <button
@@ -133,7 +139,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
                 : "text-gray-600 hover:bg-gray-50"
             }`}
           >
-            Hamısı
+            {t("all")}
           </button>
           {filters.categories.map((cat) => (
             <button
@@ -147,7 +153,10 @@ export function FilterPanel({ filters }: FilterPanelProps) {
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <span>{CATEGORY_LABELS[cat.id] || cat.name}</span>
+              <span>
+                {CATEGORY_ICONS[cat.id] ? `${CATEGORY_ICONS[cat.id]} ` : ""}
+                {tc.has(cat.id) ? tc(cat.id) : cat.name}
+              </span>
               <span className="text-xs text-gray-400">{cat.count}</span>
             </button>
           ))}
@@ -156,7 +165,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Stores */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">Mağaza</h3>
+        <h3 className="mb-2 text-sm font-semibold text-gray-700">{t("store")}</h3>
         <div className="space-y-1">
           <button
             onClick={() => applyFilter("store_id", "")}
@@ -166,7 +175,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
                 : "text-gray-600 hover:bg-gray-50"
             }`}
           >
-            Hamısı
+            {t("all")}
           </button>
           {filters.stores.map((store) => (
             <button
@@ -192,7 +201,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
 
       {/* Brands */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-gray-700">Brend</h3>
+        <h3 className="mb-2 text-sm font-semibold text-gray-700">{t("brand")}</h3>
         <div className="max-h-56 space-y-1 overflow-y-auto">
           <button
             onClick={() => applyFilter("brand", "")}
@@ -202,7 +211,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
                 : "text-gray-600 hover:bg-gray-50"
             }`}
           >
-            Hamısı
+            {t("all")}
           </button>
           {filters.brands.map((brand) => (
             <button
@@ -226,7 +235,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       {/* Price Range */}
       <div>
         <h3 className="mb-2 text-sm font-semibold text-gray-700">
-          Qiymət aralığı (₼)
+          {t("priceRange")}
         </h3>
         <div className="flex items-center gap-2">
           <input
@@ -253,12 +262,12 @@ export function FilterPanel({ filters }: FilterPanelProps) {
           onClick={applyPriceRange}
           className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-700"
         >
-          Tətbiq et
+          {t("apply")}
         </button>
       </div>
 
       {isPending && (
-        <div className="text-center text-xs text-gray-400">Yüklənir...</div>
+        <div className="text-center text-xs text-gray-400">{t("loading")}</div>
       )}
     </div>
   );
@@ -284,7 +293,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
               d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
             />
           </svg>
-          Filtrlər
+          {t("mobileToggle")}
           {hasActiveFilters && (
             <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-xs text-white">
               ●
@@ -301,7 +310,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       {/* Desktop sidebar */}
       <aside className="hidden lg:block w-64 shrink-0">
         <div className="sticky top-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-4 text-base font-bold text-gray-900">Filtrlər</h2>
+          <h2 className="mb-4 text-base font-bold text-gray-900">{t("title")}</h2>
           {filterContent}
         </div>
       </aside>

@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useTranslations, useLocale } from "next-intl";
 import type { PriceHistory } from "@/lib/api";
 
 const STORE_NAMES: Record<string, string> = {
@@ -31,10 +32,13 @@ interface PriceHistoryChartProps {
 }
 
 export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
+  const t = useTranslations("product");
+  const locale = useLocale();
+
   if (!data.length) {
     return (
       <div className="flex h-48 items-center justify-center rounded-xl border border-gray-200 text-sm text-gray-400">
-        Qiymət tarixçəsi hələ mövcud deyil
+        {t("priceHistoryEmpty")}
       </div>
     );
   }
@@ -44,7 +48,7 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
   const grouped = new Map<string, Record<string, number | string>>();
 
   for (const entry of data) {
-    const dateKey = new Date(entry.time).toLocaleDateString("az-AZ", {
+    const dateKey = new Date(entry.time).toLocaleDateString(locale === "ru" ? "ru-RU" : "az-AZ", {
       day: "2-digit",
       month: "2-digit",
     });

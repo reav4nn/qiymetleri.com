@@ -3,12 +3,15 @@ import { fetchProducts, fetchFilters } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterPanel } from "@/components/FilterPanel";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export const revalidate = 300;
 
 export default async function SearchPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{
     q?: string;
     category?: string;
@@ -20,15 +23,18 @@ export default async function SearchPage({
     page?: string;
   }>;
 }) {
-  const params = await searchParams;
-  const query = params.q || "";
-  const category = params.category || "";
-  const brand = params.brand || "";
-  const storeId = params.store_id || "";
-  const minPrice = params.min_price || "";
-  const maxPrice = params.max_price || "";
-  const sortBy = params.sort_by || "name";
-  const page = Number(params.page) || 1;
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("search");
+  const sp = await searchParams;
+  const query = sp.q || "";
+  const category = sp.category || "";
+  const brand = sp.brand || "";
+  const storeId = sp.store_id || "";
+  const minPrice = sp.min_price || "";
+  const maxPrice = sp.max_price || "";
+  const sortBy = sp.sort_by || "name";
+  const page = Number(sp.page) || 1;
 
   const [data, filters] = await Promise.all([
     fetchProducts({
@@ -53,7 +59,7 @@ export default async function SearchPage({
       filters.stores.find((s) => s.id === storeId)?.name || storeId
     );
 
-  const title = titleParts.length > 0 ? titleParts.join(" · ") : "Bütün məhsullar";
+  const title = titleParts.length > 0 ? titleParts.join(" · ") : t("allProducts");
 
   const totalPages = data.pages;
 
@@ -73,7 +79,7 @@ export default async function SearchPage({
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
               <p className="mt-1 text-sm text-gray-500">
-                {data.total} nəticə tapıldı
+                {t("resultsCount", { total: data.total })}
               </p>
             </div>
           </div>
@@ -92,14 +98,14 @@ export default async function SearchPage({
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {data.items.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} locale={locale} />
               ))}
             </div>
           </Suspense>
 
           {data.items.length === 0 && (
             <div className="mt-12 text-center text-gray-500">
-              Heç bir nəticə tapılmadı. Fərqli filtrlərlə yenidən cəhd edin.
+              {t("noResults")}
             </div>
           )}
 
@@ -107,16 +113,16 @@ export default async function SearchPage({
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
               {page > 1 && (
-                <PaginationLink params={params} page={page - 1}>
-                  ← Əvvəlki
+                <PaginationLink params={sp} page={page - 1} locale={locale}>
+                  {t("prev")}
                 </PaginationLink>
               )}
               <span className="px-3 py-2 text-sm text-gray-600">
                 {page} / {totalPages}
               </span>
               {page < totalPages && (
-                <PaginationLink params={params} page={page + 1}>
-                  Növbəti →
+                <PaginationLink params={sp} page={page + 1} locale={locale}>
+                  {t("next")}
                 </PaginationLink>
               )}
             </div>
@@ -130,10 +136,12 @@ export default async function SearchPage({
 function PaginationLink({
   params,
   page,
+  locale,
   children,
 }: {
   params: Record<string, string | undefined>;
   page: number;
+  locale: string;
   children: React.ReactNode;
 }) {
   const sp = new URLSearchParams();
@@ -144,7 +152,7 @@ function PaginationLink({
 
   return (
     <a
-      href={`/search?${sp.toString()}`}
+      href={`/${locale}/search?${sp.toString()}`}
       className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
     >
       {children}

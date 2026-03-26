@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "qiymetleri.com — Найди самую низкую цену на технику в Азербайджане",
+    "description": "Сравнение цен на электронику в Азербайджане. Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — сравните цены всех магазинов.",
+    "productTitle": "{name} цена в Азербайджане",
+    "productDescriptionWithPrice": "{name} самая низкая цена: {price} ₼ — qiymetleri.com",
+    "productDescriptionDefault": "Сравните цены на {name} — qiymetleri.com",
+    "productNotFound": "Товар не найден"
+  },
+  "nav": {
+    "home": "Главная",
+    "smartphones": "Смартфоны",
+    "laptops": "Ноутбуки",
+    "headphones": "Наушники"
+  },
+  "footer": {
+    "tagline": "qiymetleri.com — Найди самую низкую цену на технику в Азербайджане"
+  },
+  "home": {
+    "heroTitle": "Найди самую низкую цену на технику в Азербайджане",
+    "heroSubtitle": "Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — сравните цены всех магазинов одним поиском.",
+    "categories": "Категории"
+  },
+  "categories": {
+    "smartphones": "Смартфоны",
+    "laptops": "Ноутбуки",
+    "headphones": "Наушники",
+    "smartwatches": "Смарт-часы"
+  },
+  "search": {
+    "placeholder": "Поиск товара... (напр. iPhone 16, Galaxy S25)",
+    "button": "Найти",
+    "allProducts": "Все товары",
+    "resultsCount": "{total} результатов найдено",
+    "noResults": "Ничего не найдено. Попробуйте с другими фильтрами.",
+    "prev": "← Назад",
+    "next": "Далее →"
+  },
+  "product": {
+    "lowestPrice": "Самая низкая цена:",
+    "priceComparison": "Сравнение цен",
+    "priceHistory": "История цен (90 дней)",
+    "priceHistoryEmpty": "История цен пока недоступна",
+    "notFound": "Товар не найден",
+    "inStock": "В наличии",
+    "outOfStock": "Нет в наличии",
+    "goToStore": "Перейти в магазин →",
+    "inStores": "в {count} магазинах",
+    "noPrice": "Цена не указана",
+    "variant": "вариант"
+  },
+  "table": {
+    "store": "Магазин",
+    "price": "Цена",
+    "status": "Статус",
+    "variant": "Вариант"
+  },
+  "filter": {
+    "title": "Фильтры",
+    "filtersActive": "Фильтры активны",
+    "clearAll": "Сбросить все",
+    "sort": "Сортировка",
+    "category": "Категория",
+    "store": "Магазин",
+    "brand": "Бренд",
+    "all": "Все",
+    "priceRange": "Ценовой диапазон (₼)",
+    "apply": "Применить",
+    "loading": "Загрузка...",
+    "mobileToggle": "Фильтры",
+    "sortNameAZ": "Название (А-Я)",
+    "sortPriceAsc": "Цена: от низкой к высокой",
+    "sortPriceDesc": "Цена: от высокой к низкой"
+  },
+  "variants": {
+    "selectVariant": "Выберите вариант",
+    "storage": "Память",
+    "color": "Цвет",
+    "matchCount": "{variants} вариантов, {offers} предложений найдено",
+    "noMatch": "Нет предложений для выбранных параметров."
+  }
+}

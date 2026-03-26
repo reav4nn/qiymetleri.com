@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import type { Variant } from "@/lib/api";
 
 interface VariantSelectorProps {
@@ -9,6 +10,9 @@ interface VariantSelectorProps {
 }
 
 export function VariantSelector({ variants, storeNames }: VariantSelectorProps) {
+  const t = useTranslations("variants");
+  const tp = useTranslations("product");
+  const tt = useTranslations("table");
   // Extract unique storages and colors
   const storages = useMemo(() => {
     const set = new Set<number>();
@@ -70,12 +74,12 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900">Variant seçin</h2>
+      <h2 className="text-xl font-semibold text-gray-900">{t("selectVariant")}</h2>
 
       {/* Storage selector */}
       {storages.length > 0 && (
         <div className="mt-4">
-          <h3 className="mb-2 text-sm font-medium text-gray-600">Yaddaş</h3>
+          <h3 className="mb-2 text-sm font-medium text-gray-600">{t("storage")}</h3>
           <div className="flex flex-wrap gap-2">
             {storages.map((s) => (
               <button
@@ -99,7 +103,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
       {/* Color selector */}
       {colors.length > 0 && (
         <div className="mt-4">
-          <h3 className="mb-2 text-sm font-medium text-gray-600">Rəng</h3>
+          <h3 className="mb-2 text-sm font-medium text-gray-600">{t("color")}</h3>
           <div className="flex flex-wrap gap-2">
             {colors.map((c) => (
               <button
@@ -122,7 +126,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
 
       {/* Matching variants count */}
       <p className="mt-4 text-sm text-gray-500">
-        {filteredVariants.length} variant, {allPrices.length} təklif tapıldı
+        {t("matchCount", { variants: filteredVariants.length, offers: allPrices.length })}
       </p>
 
       {/* Price table */}
@@ -132,16 +136,16 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Mağaza
+                  {tt("store")}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Variant
+                  {tt("variant")}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Qiymət
+                  {tt("price")}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Status
+                  {tt("status")}
                 </th>
                 <th className="px-4 py-3" />
               </tr>
@@ -164,11 +168,11 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
                   <td className="px-4 py-3">
                     {price.in_stock ? (
                       <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                        Stokda var
+                        {tp("inStock")}
                       </span>
                     ) : (
                       <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                        Stokda yoxdur
+                        {tp("outOfStock")}
                       </span>
                     )}
                   </td>
@@ -180,7 +184,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
                         rel="noopener noreferrer"
                         className="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                       >
-                        Mağazaya keç →
+                        {tp("goToStore")}
                       </a>
                     )}
                   </td>
@@ -191,7 +195,7 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
         </div>
       ) : (
         <div className="mt-4 text-center text-gray-400">
-          Bu seçimə uyğun təklif tapılmadı.
+          {t("noMatch")}
         </div>
       )}
     </div>

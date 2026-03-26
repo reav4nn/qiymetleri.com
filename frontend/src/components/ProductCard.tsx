@@ -1,14 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import type { Product } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface ProductCardProps {
   product: Product;
+  locale: string;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, locale }: ProductCardProps) {
+  const t = useTranslations("product");
+
   return (
     <a
-      href={`/products/${product.id}`}
+      href={`/${locale}/products/${product.id}`}
       className="flex flex-col rounded-xl border border-gray-200 p-4 transition hover:border-blue-300 hover:shadow-md"
     >
       <div className="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-gray-50">
@@ -38,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         {product.variant_count > 1 && (
           <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
-            {product.variant_count} variant
+            {product.variant_count} {t("variant")}
           </span>
         )}
       </div>
@@ -49,11 +55,11 @@ export function ProductCard({ product }: ProductCardProps) {
               {Number(product.lowest_price).toFixed(2)} ₼
             </span>
             <span className="ml-2 text-xs text-gray-500">
-              {product.store_count} mağazada
+              {t("inStores", { count: product.store_count })}
             </span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">Qiymət yoxdur</span>
+          <span className="text-sm text-gray-400">{t("noPrice")}</span>
         )}
       </div>
     </a>
