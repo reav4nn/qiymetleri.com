@@ -93,6 +93,33 @@ JUNK_KEYWORDS = [
     r"\btreadmill\b", r"\bwalkingpad\b",
 ]
 
+# Cross-category exclusions — brand may match but product belongs elsewhere
+CATEGORY_EXCLUSIONS = {
+    "smartphones": [
+        r"\bearbuds?\b", r"\bheadphones?\b", r"\bearphones?\b", r"\bheadset\b",
+        r"\bwatch\b", r"\bsmart saat\b", r"\bsaat\b", r"\bband\b",
+        r"\bpad\b", r"\btablet\b", r"\blaptop\b", r"\bnotebook\b",
+        r"\bmacbook\b", r"\bairpods\b", r"\bbuds\b",
+    ],
+    "laptops": [
+        r"\bearbuds?\b", r"\bheadphones?\b", r"\bearphones?\b", r"\bheadset\b",
+        r"\bwatch\b", r"\bsmart saat\b", r"\bsaat\b",
+        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bairpods\b", r"\bbuds\b",
+    ],
+    "headphones": [
+        r"\bwatch\b", r"\bsmart saat\b", r"\bsaat\b",
+        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bpad\b", r"\btablet\b",
+        r"\blaptop\b", r"\bnotebook\b", r"\bmacbook\b",
+        r"\bgame console\b",
+    ],
+    "smartwatches": [
+        r"\bearbuds?\b", r"\bheadphones?\b", r"\bearphones?\b", r"\bheadset\b",
+        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bpad\b", r"\btablet\b",
+        r"\blaptop\b", r"\bnotebook\b", r"\bmacbook\b",
+        r"\bairpods\b", r"\bbuds\b",
+    ],
+}
+
 
 class IrshadElectronicsSpider(scrapy.Spider):
     name = "irshad_electronics"
@@ -285,6 +312,12 @@ class IrshadElectronicsSpider(scrapy.Spider):
 
         # Reject if name matches obvious junk keywords
         for pattern in JUNK_KEYWORDS:
+            if re.search(pattern, name_lower):
+                return False
+
+        # Reject if name contains keywords from OTHER categories
+        exclusions = CATEGORY_EXCLUSIONS.get(category, [])
+        for pattern in exclusions:
             if re.search(pattern, name_lower):
                 return False
 
