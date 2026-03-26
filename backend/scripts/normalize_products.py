@@ -17,25 +17,49 @@ from sqlalchemy.orm import sessionmaker
 
 # ─── Color dictionary ───────────────────────────────────────────────
 KNOWN_COLORS = [
+    # English multi-word
     "midnight", "starlight", "sky blue", "space gray", "space grey",
+    "space black", "cloud white",
     "natural titanium", "black titanium", "white titanium", "desert titanium",
     "cobalt violet", "icyblue", "icy blue", "silver shadow",
     "phantom black", "ocean cyan", "mocha brown", "navy peony blue",
-    "navy blue", "dark blue", "light blue", "velvet black",
-    "dawning orange", "forest owl", "jade black", "sakura pink",
+    "navy blue", "dark blue", "light blue", "velvet black", "velvet grey",
+    "dawning orange", "forest owl", "forest green", "jade black", "sakura pink",
     "verona green", "mica silver", "jet black", "jetblack",
-    "titanium gray", "titanium grey", "light gold",
+    "titanium gray", "titanium grey", "titanium black", "light gold",
+    "light violet", "dark green", "midnight black", "desert gold",
+    "meteor silver", "sleek blue", "sleek black",
+    # English single-word
     "black", "white", "blue", "green", "pink", "yellow", "red",
     "gold", "silver", "gray", "grey", "orange",
     "purple", "brown", "beige", "cream", "coral", "teal",
-    "mint", "lavender", "bronze", "graphite", "titanium",
+    "mint", "lavender", "bronze", "graphite", "titanium", "amber",
+    # Azerbaijani colors
+    "çəhrayı qızıl", "mavi göy",
+    "ağ", "qara", "göy", "yaşıl", "qırmızı", "narıncı", "sarı",
+    "bənövşəyi", "bənövşəy", "gecəyarısı", "gecəyarı",
+    "gümüşü", "gümüş", "qızılı", "qızıl",
+    "çəhrayı", "boz", "mavi", "tünd",
 ]
 KNOWN_COLORS.sort(key=len, reverse=True)
 
 COLOR_PATTERN = re.compile(
-    r"\b(" + "|".join(re.escape(c) for c in KNOWN_COLORS) + r")\b",
+    r"(?:\b|(?<=[\s,]))(" + "|".join(re.escape(c) for c in KNOWN_COLORS) + r")(?:\b|(?=[\s,]))",
     re.IGNORECASE,
 )
+
+# Map AZ color names to English for consistent attribute storage
+AZ_COLOR_MAP = {
+    "ağ": "White", "qara": "Black", "göy": "Blue", "yaşıl": "Green",
+    "qırmızı": "Red", "narıncı": "Orange", "sarı": "Yellow",
+    "bənövşəyi": "Purple", "bənövşəy": "Purple",
+    "gecəyarısı": "Midnight", "gecəyarı": "Midnight",
+    "gümüşü": "Silver", "gümüş": "Silver",
+    "qızılı": "Gold", "qızıl": "Gold",
+    "çəhrayı qızıl": "Rose Gold", "çəhrayı": "Pink",
+    "boz": "Gray", "mavi": "Blue", "mavi göy": "Blue",
+    "tünd": "Dark",
+}
 
 # ─── Storage patterns ───────────────────────────────────────────────
 STORAGE_PATTERN = re.compile(
@@ -47,6 +71,21 @@ RAM_STORAGE_PATTERN = re.compile(
     r"(\d{1,3})\s*(?:GB)?\s*[/]\s*(\d{1,4})\s*([GT])B\b",
     re.IGNORECASE,
 )
+
+
+def _normalize_family_case(family: str) -> str:
+    """Normalize model family casing for consistent grouping."""
+    # Strip redundant brand prefix when product name already contains brand identity
+    # e.g., "APPLE iPhone Air" → "iPhone Air" (iPhone is already Apple)
+    apple_prefixed = re.match(r'^(?:APPLE|Apple)\s+((?:iPhone|iPad|MacBook|AirPods|Apple\s+Watch|EarPods|AirTag|HomePod|Mac\s+\w+).*)', family, re.IGNORECASE)
+    if apple_prefixed:
+        family = apple_prefixed.group(1)
+
+    parts = family.split()
+    if not parts:
+        return family
+
+    return family
 
 
 def normalize_name(name: str) -> dict:
@@ -62,7 +101,10 @@ def normalize_name(name: str) -> dict:
 
     for prefix in [
         "Smartfon ", "Notbuk ", "Noutbuk ",
-        "Simsiz qulaqlıq ", "Qulaqlıq ", "Qulaqlıqlar ",
+        "Simsiz qulaqlıq ", "Simsiz qulaqlıqlar ",
+        "Qulaqlıq ", "Qulaqlıqlar ",
+        "Smart saat ", "Klaviatura ", "Kabel ",
+        "Qidalanma adapteri ", "Trekpad ",
     ]:
         if cleaned.startswith(prefix):
             cleaned = cleaned[len(prefix):]
@@ -71,7 +113,9 @@ def normalize_name(name: str) -> dict:
     # Extract color
     color_matches = list(COLOR_PATTERN.finditer(cleaned))
     if color_matches:
-        result["color"] = color_matches[-1].group(1).strip().title()
+        raw_color = color_matches[-1].group(1).strip()
+        # Map AZ colors to English, otherwise title-case
+        result["color"] = AZ_COLOR_MAP.get(raw_color.lower(), raw_color.strip().title())
 
     # Extract RAM/Storage combined
     ram_storage_match = RAM_STORAGE_PATTERN.search(cleaned)
@@ -111,9 +155,13 @@ def normalize_name(name: str) -> dict:
     family = re.sub(r"\b\d*\s*[GT]B\b", "", family, flags=re.IGNORECASE).strip()
     family = re.sub(r"\s{2,}", " ", family).strip()
     family = re.sub(r"[\s,\-/]+$", "", family).strip()
+    # Remove trailing commas/spaces left by color removal
+    family = re.sub(r'[,\s"]+$', "", family).strip()
 
     if family:
-        result["model_family"] = family
+        # Normalize casing: uppercase brand + rest as-is
+        # Use a canonical form to avoid "HONOR X6C" vs "HONOR X6c" splits
+        result["model_family"] = _normalize_family_case(family)
 
     return result
 

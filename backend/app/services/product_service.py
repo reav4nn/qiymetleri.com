@@ -49,10 +49,10 @@ async def get_products(
     result = await db.execute(query)
     all_products = result.scalars().unique().all()
 
-    # Group by model_family
+    # Group by model_family (case-insensitive)
     families: dict[str, list[Product]] = defaultdict(list)
     for p in all_products:
-        key = p.model_family or p.canonical_id
+        key = (p.model_family or p.canonical_id).lower()
         families[key].append(p)
 
     # Build grouped items
@@ -117,14 +117,14 @@ async def get_product_by_id(db: AsyncSession, product_id: UUID) -> Product | Non
 async def get_family_variants(
     db: AsyncSession, product: Product
 ) -> list[Product]:
-    """Get all products in the same model_family."""
+    """Get all products in the same model_family (case-insensitive)."""
     if not product.model_family:
         return [product]
 
     query = (
         select(Product)
         .options(selectinload(Product.current_prices))
-        .where(Product.model_family == product.model_family)
+        .where(func.lower(Product.model_family) == product.model_family.lower())
         .order_by(Product.name)
     )
     result = await db.execute(query)
