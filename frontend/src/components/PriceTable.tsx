@@ -24,58 +24,103 @@ export function PriceTable({ prices, storeNames, labels }: PriceTableProps) {
   );
 
   return (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--color-border)]">
-      <table className="w-full min-w-[500px]">
-        <thead className="bg-[var(--color-bg-surface)]">
-          <tr>
-            <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
-              {labels.store}
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
-              {labels.price}
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
-              {labels.status}
-            </th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--color-border-subtle)]">
-          {sorted.map((price, i) => (
-            <tr key={price.id} className={i === 0 ? "bg-[var(--color-success-subtle)]" : ""}>
-              <td className="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">
+    <>
+      {/* Mobile: card layout */}
+      <div className="mt-4 space-y-3 sm:hidden">
+        {sorted.map((price, i) => (
+          <div
+            key={price.id}
+            className={`rounded-xl border border-[var(--color-border)] p-3 ${
+              i === 0 ? "bg-[var(--color-success-subtle)] border-[var(--color-success)]/30" : "bg-[var(--color-bg-surface)]"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">
                 {storeNames[price.store_id] || price.store_id}
-              </td>
-              <td className="px-4 py-3 text-sm font-bold text-[var(--color-text-primary)]">
+              </span>
+              {price.in_stock ? (
+                <span className="rounded-full bg-[var(--color-success-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-success)]">
+                  {labels.inStock}
+                </span>
+              ) : (
+                <span className="rounded-full bg-[var(--color-danger-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-danger)]">
+                  {labels.outOfStock}
+                </span>
+              )}
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-lg font-bold text-[var(--color-text-primary)]">
                 {Number(price.price_azn).toFixed(2)} ₼
-              </td>
-              <td className="px-4 py-3">
-                {price.in_stock ? (
-                  <span className="inline-flex items-center rounded-full bg-[var(--color-success-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]">
-                    {labels.inStock}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-[var(--color-danger-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-danger)]">
-                    {labels.outOfStock}
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-3">
-                {price.url && (
-                  <a
-                    href={price.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="whitespace-nowrap rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-accent-hover)]"
-                  >
-                    {labels.goToStore}
-                  </a>
-                )}
-              </td>
+              </span>
+              {price.url && (
+                <a
+                  href={price.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-xs font-medium text-white active:scale-95 hover:bg-[var(--color-accent-hover)]"
+                >
+                  {labels.goToStore}
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table layout */}
+      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-[var(--color-border)] sm:block">
+        <table className="w-full">
+          <thead className="bg-[var(--color-bg-surface)]">
+            <tr>
+              <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
+                {labels.store}
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
+                {labels.price}
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-secondary)]">
+                {labels.status}
+              </th>
+              <th className="px-4 py-3" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-[var(--color-border-subtle)]">
+            {sorted.map((price, i) => (
+              <tr key={price.id} className={i === 0 ? "bg-[var(--color-success-subtle)]" : ""}>
+                <td className="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">
+                  {storeNames[price.store_id] || price.store_id}
+                </td>
+                <td className="px-4 py-3 text-sm font-bold text-[var(--color-text-primary)]">
+                  {Number(price.price_azn).toFixed(2)} ₼
+                </td>
+                <td className="px-4 py-3">
+                  {price.in_stock ? (
+                    <span className="inline-flex items-center rounded-full bg-[var(--color-success-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]">
+                      {labels.inStock}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-[var(--color-danger-subtle)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-danger)]">
+                      {labels.outOfStock}
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {price.url && (
+                    <a
+                      href={price.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="whitespace-nowrap rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-accent-hover)]"
+                    >
+                      {labels.goToStore}
+                    </a>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

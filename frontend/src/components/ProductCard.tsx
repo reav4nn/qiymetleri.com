@@ -15,9 +15,9 @@ export function ProductCard({ product, locale }: ProductCardProps) {
   return (
     <a
       href={`/${locale}/products/${product.id}`}
-      className="flex flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 transition hover:border-[var(--color-accent)] hover:shadow-lg hover:shadow-[var(--color-accent-subtle)]"
+      className="flex flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-2 transition hover:border-[var(--color-accent)] hover:shadow-lg hover:shadow-[var(--color-accent-subtle)] active:scale-[0.98] sm:rounded-xl sm:p-4"
     >
-      <div className="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-white">
+      <div className="mb-1.5 flex h-32 items-center justify-center overflow-hidden rounded-md bg-white sm:mb-3 sm:h-36 sm:rounded-lg">
         {product.image_url ? (
           <Image
             src={product.image_url}
@@ -29,37 +29,37 @@ export function ProductCard({ product, locale }: ProductCardProps) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[var(--color-text-muted)]">
-            <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-10 w-10 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
             </svg>
           </div>
         )}
       </div>
-      <h3 className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
+      <h3 className="text-xs font-medium text-[var(--color-text-primary)] line-clamp-2 sm:text-sm">
         {product.name}
       </h3>
-      <div className="mt-1 flex items-center gap-2">
+      <div className="mt-1 flex flex-wrap items-center gap-1 sm:gap-2">
         {product.brand && (
-          <span className="text-xs text-[var(--color-text-secondary)] capitalize">{product.brand}</span>
+          <span className="text-[10px] text-[var(--color-text-secondary)] capitalize sm:text-xs">{product.brand}</span>
         )}
         {product.variant_count > 1 && (
-          <span className="rounded-full bg-[var(--color-accent-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--color-accent)]">
+          <span className="rounded-full bg-[var(--color-accent-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-accent)] sm:px-2 sm:text-xs">
             {product.variant_count} {t("variant")}
           </span>
         )}
       </div>
-      <div className="mt-auto pt-3">
+      <div className="mt-auto pt-2 sm:pt-3">
         {product.lowest_price ? (
           <div>
-            <span className="text-lg font-bold text-[var(--color-success)]">
+            <span className="text-base font-bold text-[var(--color-success)] sm:text-lg">
               {Number(product.lowest_price).toFixed(2)} ₼
             </span>
-            <span className="ml-2 text-xs text-[var(--color-text-secondary)]">
+            <span className="ml-1 text-[10px] text-[var(--color-text-secondary)] sm:ml-2 sm:text-xs">
               {t("inStores", { count: product.store_count })}
             </span>
           </div>
         ) : (
-          <span className="text-sm text-[var(--color-text-muted)]">{t("noPrice")}</span>
+          <span className="text-xs text-[var(--color-text-muted)] sm:text-sm">{t("noPrice")}</span>
         )}
       </div>
     </a>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import type { FilterOptions } from "@/lib/api";
 
@@ -38,6 +38,18 @@ export function FilterPanel({ filters }: FilterPanelProps) {
   const [maxPrice, setMaxPrice] = useState(currentMaxPrice);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Lock body scroll when mobile filter sheet is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   const applyFilter = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -48,6 +60,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
       }
       params.delete("page");
 
+      setMobileOpen(false);
       startTransition(() => {
         router.push(`/${locale}/search?${params.toString()}`);
       });
@@ -63,6 +76,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
     else params.delete("max_price");
     params.delete("page");
 
+    setMobileOpen(false);
     startTransition(() => {
       router.push(`/${locale}/search?${params.toString()}`);
     });
@@ -71,6 +85,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
   const clearAllFilters = useCallback(() => {
     const params = new URLSearchParams();
     if (currentQuery) params.set("q", currentQuery);
+    setMobileOpen(false);
     startTransition(() => {
       router.push(`/${locale}/search?${params.toString()}`);
     });
@@ -275,10 +290,10 @@ export function FilterPanel({ filters }: FilterPanelProps) {
   return (
     <>
       {/* Mobile filter toggle */}
-      <div className="lg:hidden mb-4">
+      <div className="mb-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-4 py-3 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)] active:scale-[0.98]"
         >
           <svg
             className="h-4 w-4"
@@ -301,15 +316,31 @@ export function FilterPanel({ filters }: FilterPanelProps) {
           )}
         </button>
         {mobileOpen && (
-          <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-lg">
-            {filterContent}
-          </div>
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+            />
+            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-2xl animate-in slide-in-from-bottom">
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--color-border-hover)]" />
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold text-[var(--color-text-primary)]">{t("title")}</h2>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-secondary)]"
+                >
+                  ✕
+                </button>
+              </div>
+              {filterContent}
+            </div>
+          </>
         )}
       </div>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-64 shrink-0">
-        <div className="sticky top-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
+      <aside className="hidden w-64 shrink-0 lg:block">
+        <div className="sticky top-16 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
           <h2 className="mb-4 text-base font-bold text-[var(--color-text-primary)]">{t("title")}</h2>
           {filterContent}
         </div>

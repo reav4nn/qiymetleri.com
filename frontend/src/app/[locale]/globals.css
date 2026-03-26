@@ -100,3 +100,19 @@ body {
   background-color: var(--color-bg-page);
   color: var(--color-text-primary);
 }
+
+/* ── Mobile optimizations ── */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+input, textarea, select {
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}

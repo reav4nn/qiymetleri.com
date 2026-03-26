@@ -64,21 +64,22 @@ export default async function SearchPage({
   const totalPages = data.pages;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6 max-w-xl">
+    <div className="mx-auto max-w-7xl px-2 py-3 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mb-3 max-w-xl px-1 sm:mb-6 sm:px-0">
         <SearchBar />
       </div>
 
-      <div className="flex gap-8">
+      {/* Filters + Products */}
+      <div className="lg:flex lg:gap-8">
         <Suspense fallback={null}>
           <FilterPanel filters={filters} />
         </Suspense>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-4 flex items-baseline justify-between">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">{title}</h1>
-              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+              <h1 className="text-xl font-bold text-[var(--color-text-primary)] sm:text-2xl">{title}</h1>
+              <p className="mt-1 text-xs text-[var(--color-text-secondary)] sm:text-sm">
                 {t("resultsCount", { total: data.total })}
               </p>
             </div>
@@ -86,8 +87,8 @@ export default async function SearchPage({
 
           <Suspense
             fallback={
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 9 }).map((_, i) => (
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
                     className="h-48 animate-pulse rounded-xl bg-[var(--color-bg-surface)]"
@@ -96,7 +97,7 @@ export default async function SearchPage({
               </div>
             }
           >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3">
               {data.items.map((product) => (
                 <ProductCard key={product.id} product={product} locale={locale} />
               ))}
@@ -111,7 +112,7 @@ export default async function SearchPage({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
+            <div className="mt-6 flex items-center justify-center gap-2 sm:mt-8">
               {page > 1 && (
                 <PaginationLink params={sp} page={page - 1} locale={locale}>
                   {t("prev")}
@@ -153,7 +154,7 @@ function PaginationLink({
   return (
     <a
       href={`/${locale}/search?${sp.toString()}`}
-      className="rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-surface-hover)]"
+      className="rounded-lg border border-[var(--color-border)] px-5 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-surface-hover)] active:scale-95"
     >
       {children}
     </a>

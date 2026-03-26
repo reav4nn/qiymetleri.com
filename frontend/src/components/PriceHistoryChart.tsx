@@ -37,15 +37,24 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
   const locale = useLocale();
 
   const [isDark, setIsDark] = useState(true);
+  const [chartHeight, setChartHeight] = useState(300);
 
   useEffect(() => {
     const check = () => {
       setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
     };
     check();
+    const updateHeight = () => {
+      setChartHeight(window.innerWidth < 640 ? 220 : 300);
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
     const observer = new MutationObserver(check);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
   }, []);
 
   const gridStroke = isDark ? "#2a2a3e" : "#e0e0e5";
@@ -81,8 +90,8 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
   const chartData = Array.from(grouped.values());
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={chartData}>
+    <ResponsiveContainer width="100%" height={chartHeight}>
+      <LineChart data={chartData} margin={{ left: -10, right: 5, top: 5, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
         <XAxis dataKey="date" tick={{ fontSize: 12, fill: tickFill }} stroke={gridStroke} />
         <YAxis

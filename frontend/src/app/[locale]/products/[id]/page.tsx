@@ -80,17 +80,17 @@ export default async function ProductPage({
   const hasVariants = product.variants.length > 1;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-2 text-sm text-[var(--color-text-secondary)]">
+    <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mb-2 text-xs text-[var(--color-text-secondary)] sm:text-sm">
         {product.brand && (
           <span className="capitalize">{product.brand} / </span>
         )}
         {product.category && <span>{product.category}</span>}
       </div>
 
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
         {/* Product image */}
-        <div className="flex h-48 w-48 flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl bg-white sm:h-56 sm:w-56 sm:self-start">
+        <div className="flex h-40 w-full max-w-[200px] flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl bg-white sm:h-56 sm:w-56 sm:self-start">
           {product.image_url ? (
             <img
               src={product.image_url}
@@ -104,16 +104,16 @@ export default async function ProductPage({
           )}
         </div>
 
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">{product.name}</h1>
+        <div className="flex-1 text-center sm:text-left">
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)] sm:text-3xl">{product.name}</h1>
 
           {lowestPrice && (
-            <div className="mt-4">
-              <span className="text-sm text-[var(--color-text-secondary)]">{t("lowestPrice")} </span>
-              <span className="text-2xl font-bold text-[var(--color-success)]">
+            <div className="mt-3 sm:mt-4">
+              <span className="text-xs text-[var(--color-text-secondary)] sm:text-sm">{t("lowestPrice")} </span>
+              <span className="text-xl font-bold text-[var(--color-success)] sm:text-2xl">
                 {Number(lowestPrice.price_azn).toFixed(2)} ₼
               </span>
-              <span className="ml-2 text-sm text-[var(--color-text-secondary)]">
+              <span className="ml-2 text-xs text-[var(--color-text-secondary)] sm:text-sm">
                 ({STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
               </span>
             </div>
@@ -123,15 +123,15 @@ export default async function ProductPage({
 
       {/* Variant selector + price table */}
       {hasVariants ? (
-        <section className="mt-8">
+        <section className="mt-6 sm:mt-8">
           <VariantSelector
             variants={product.variants}
             storeNames={STORE_NAMES}
           />
         </section>
       ) : (
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+        <section className="mt-6 sm:mt-8">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
             {t("priceComparison")}
           </h2>
           <PriceTable
@@ -150,11 +150,11 @@ export default async function ProductPage({
       )}
 
       {/* Price history chart */}
-      <section className="mt-8">
-        <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+      <section className="mt-6 sm:mt-8">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
           {t("priceHistory")}
         </h2>
-        <div className="mt-4">
+        <div className="mt-3 sm:mt-4">
           <PriceHistoryChart data={priceHistory} />
         </div>
       </section>
