@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "qiymetleri-scraper"
+version = "0.1.0"
+description = "qiymetleri.com - Web scraper for Azerbaijan electronics stores"
+authors = ["qiymetleri <info@qiymetleri.com>"]
+readme = "README.md"
+packages = [{include = "qiymetleri_scraper"}]
+
+[tool.poetry.dependencies]
+python = "^3.13"
+scrapy = ">=2.12.0"
+playwright = ">=1.49.0"
+scrapy-playwright = ">=0.0.43"
+sqlalchemy = ">=2.0.40"
+psycopg2-binary = ">=2.9.10"
+python-dotenv = ">=1.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0.0"
+ruff = ">=0.9.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
