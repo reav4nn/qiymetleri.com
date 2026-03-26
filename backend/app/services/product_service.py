@@ -1,6 +1,7 @@
+from collections import defaultdict
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -20,6 +21,11 @@ async def get_products(
     sort_by: str = "name",
     q: str | None = None,
 ) -> tuple[list[dict], int]:
+    """Return products grouped by model_family.
+    
+    Products with the same model_family are collapsed into one entry
+    showing the lowest price across all variants and stores.
+    """
     query = select(Product).options(selectinload(Product.current_prices))
 
     if category:
@@ -39,49 +45,63 @@ async def get_products(
         if max_price is not None:
             query = query.where(CurrentPrice.price_azn <= max_price)
 
-    # Count total before sorting/pagination
-    count_query = select(func.count()).select_from(query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar() or 0
-
-    # Sort — use a correlated subquery for price sorts to avoid GROUP BY issues
-    if sort_by in ("price_asc", "price_desc"):
-        min_price_sub = (
-            select(func.min(CurrentPrice.price_azn))
-            .where(CurrentPrice.product_id == Product.id)
-            .where(CurrentPrice.in_stock.is_(True))
-            .correlate(Product)
-            .scalar_subquery()
-        )
-        if sort_by == "price_asc":
-            query = query.order_by(min_price_sub.asc().nulls_last())
-        else:
-            query = query.order_by(min_price_sub.desc().nulls_last())
-    else:
-        query = query.order_by(Product.name)
-
-    # Paginate
-    query = query.offset((page - 1) * per_page).limit(per_page)
+    # Fetch all matching products (before pagination, for grouping)
     result = await db.execute(query)
-    products = result.scalars().unique().all()
+    all_products = result.scalars().unique().all()
 
-    items = []
-    for p in products:
-        prices = [cp.price_azn for cp in p.current_prices if cp.in_stock]
-        items.append(
+    # Group by model_family
+    families: dict[str, list[Product]] = defaultdict(list)
+    for p in all_products:
+        key = p.model_family or p.canonical_id
+        families[key].append(p)
+
+    # Build grouped items
+    grouped_items = []
+    for family_key, members in families.items():
+        all_prices = []
+        all_store_ids = set()
+        for m in members:
+            for cp in m.current_prices:
+                if cp.in_stock:
+                    all_prices.append(cp.price_azn)
+                all_store_ids.add(cp.store_id)
+
+        # Use first member as the representative
+        rep = members[0]
+        grouped_items.append(
             {
-                "id": p.id,
-                "canonical_id": p.canonical_id,
-                "brand": p.brand,
-                "category": p.category,
-                "model_family": p.model_family,
-                "name": p.name,
-                "lowest_price": min(prices) if prices else None,
-                "store_count": len(p.current_prices),
+                "id": rep.id,
+                "canonical_id": rep.canonical_id,
+                "brand": rep.brand,
+                "category": rep.category,
+                "model_family": rep.model_family,
+                "name": rep.model_family or rep.name,
+                "lowest_price": min(all_prices) if all_prices else None,
+                "store_count": len(all_store_ids),
+                "variant_count": len(members),
             }
         )
 
-    return items, total
+    # Sort grouped items
+    if sort_by == "price_asc":
+        grouped_items.sort(
+            key=lambda x: (x["lowest_price"] is None, x["lowest_price"] or 0)
+        )
+    elif sort_by == "price_desc":
+        grouped_items.sort(
+            key=lambda x: (x["lowest_price"] is None, -(x["lowest_price"] or 0))
+        )
+    else:
+        grouped_items.sort(key=lambda x: x["name"].lower())
+
+    total = len(grouped_items)
+
+    # Paginate
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_items = grouped_items[start:end]
+
+    return page_items, total
 
 
 async def get_product_by_id(db: AsyncSession, product_id: UUID) -> Product | None:
@@ -94,13 +114,28 @@ async def get_product_by_id(db: AsyncSession, product_id: UUID) -> Product | Non
     return result.scalars().first()
 
 
+async def get_family_variants(
+    db: AsyncSession, product: Product
+) -> list[Product]:
+    """Get all products in the same model_family."""
+    if not product.model_family:
+        return [product]
+
+    query = (
+        select(Product)
+        .options(selectinload(Product.current_prices))
+        .where(Product.model_family == product.model_family)
+        .order_by(Product.name)
+    )
+    result = await db.execute(query)
+    return list(result.scalars().unique().all())
+
+
 async def get_price_history(
     db: AsyncSession,
     product_id: UUID,
     days: int = 30,
 ) -> list[PriceHistory]:
-    from sqlalchemy import text as sa_text
-
     query = (
         select(PriceHistory)
         .where(PriceHistory.product_id == product_id)

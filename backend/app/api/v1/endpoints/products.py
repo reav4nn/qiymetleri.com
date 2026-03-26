@@ -11,7 +11,12 @@ from app.schemas.product import (
     ProductDetailSchema,
     ProductListSchema,
 )
-from app.services.product_service import get_price_history, get_product_by_id, get_products
+from app.services.product_service import (
+    get_family_variants,
+    get_price_history,
+    get_product_by_id,
+    get_products,
+)
 
 router = APIRouter()
 
@@ -58,7 +63,33 @@ async def get_product(
     product = await get_product_by_id(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    return product
+
+    # Get all variants in the same family
+    family_members = await get_family_variants(db, product)
+    variants = []
+    for v in family_members:
+        attrs = v.attributes or {}
+        variants.append({
+            "id": v.id,
+            "name": v.name,
+            "storage_gb": attrs.get("storage_gb"),
+            "color": attrs.get("color"),
+            "current_prices": v.current_prices,
+        })
+
+    return {
+        "id": product.id,
+        "canonical_id": product.canonical_id,
+        "brand": product.brand,
+        "category": product.category,
+        "model_family": product.model_family,
+        "name": product.model_family or product.name,
+        "attributes": product.attributes,
+        "current_prices": product.current_prices,
+        "variants": variants,
+        "created_at": product.created_at,
+        "updated_at": product.updated_at,
+    }
 
 
 @router.get("/{product_id}/history", response_model=list[PriceHistorySchema])

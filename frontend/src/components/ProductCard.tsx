@@ -13,9 +13,16 @@ export function ProductCard({ product }: ProductCardProps) {
       <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
         {product.name}
       </h3>
-      {product.brand && (
-        <span className="mt-1 text-xs text-gray-500">{product.brand}</span>
-      )}
+      <div className="mt-1 flex items-center gap-2">
+        {product.brand && (
+          <span className="text-xs text-gray-500 capitalize">{product.brand}</span>
+        )}
+        {product.variant_count > 1 && (
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+            {product.variant_count} variant
+          </span>
+        )}
+      </div>
       <div className="mt-auto pt-3">
         {product.lowest_price ? (
           <div>

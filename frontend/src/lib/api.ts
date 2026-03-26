@@ -9,6 +9,15 @@ export interface Product {
   name: string;
   lowest_price: number | null;
   store_count: number;
+  variant_count: number;
+}
+
+export interface Variant {
+  id: string;
+  name: string;
+  storage_gb: number | null;
+  color: string | null;
+  current_prices: CurrentPrice[];
 }
 
 export interface ProductDetail {
@@ -20,6 +29,7 @@ export interface ProductDetail {
   name: string;
   attributes: Record<string, unknown> | null;
   current_prices: CurrentPrice[];
+  variants: Variant[];
   created_at: string;
   updated_at: string;
 }

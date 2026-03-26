@@ -36,6 +36,17 @@ class ProductListSchema(BaseModel):
     name: str
     lowest_price: float | None = None
     store_count: int = 0
+    variant_count: int = 1
+
+
+class VariantSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    storage_gb: int | None = None
+    color: str | None = None
+    current_prices: list[CurrentPriceSchema] = []
 
 
 class ProductDetailSchema(BaseModel):
@@ -49,6 +60,7 @@ class ProductDetailSchema(BaseModel):
     name: str
     attributes: dict | None = None
     current_prices: list[CurrentPriceSchema] = []
+    variants: list[VariantSchema] = []
     created_at: datetime
     updated_at: datetime
 
