@@ -54,6 +54,17 @@ class BakuElectronicsSpider(scrapy.Spider):
                             "a[class*='ProductCard_Product']",
                             timeout=20000,
                         ),
+                        # Scroll to trigger lazy-loaded images
+                        PageMethod("evaluate", """
+                            async () => {
+                                const delay = ms => new Promise(r => setTimeout(r, ms));
+                                for (let y = 0; y < document.body.scrollHeight; y += 300) {
+                                    window.scrollTo(0, y);
+                                    await delay(150);
+                                }
+                                await delay(1000);
+                            }
+                        """),
                     ],
                     "category": category,
                     "page_num": 1,
@@ -67,11 +78,34 @@ class BakuElectronicsSpider(scrapy.Spider):
         page_num = response.meta.get("page_num", 1)
 
         try:
+            # Extract image URLs from live DOM (after scroll triggered lazy-load)
+            live_images = {}
+            if page:
+                try:
+                    live_images = await page.evaluate("""
+                        () => {
+                            const map = {};
+                            document.querySelectorAll("a[class*='ProductCard_Product']").forEach((card, i) => {
+                                const img = card.querySelector('img');
+                                if (img) {
+                                    const src = img.currentSrc || img.src || '';
+                                    if (src && !src.startsWith('data:') && !src.includes('icon') && !src.includes('.svg')) {
+                                        const alt = img.alt || i.toString();
+                                        map[alt] = src;
+                                    }
+                                }
+                            });
+                            return map;
+                        }
+                    """)
+                except Exception as e:
+                    self.logger.warning(f"Failed to extract live images: {e}")
+
             product_cards = response.css("a[class*='ProductCard_Product']")
 
             self.logger.info(
                 f"[BE] {len(product_cards)} products in {category} "
-                f"(page {page_num}) on {response.url}"
+                f"(page {page_num}) ({len(live_images)} live images)"
             )
 
             for card in product_cards:
@@ -116,12 +150,16 @@ class BakuElectronicsSpider(scrapy.Spider):
                 # Brand extraction
                 item["brand"] = self._extract_brand(name)
 
-                # Image
-                img_src = (
-                    card.css("img::attr(src)").get()
-                    or card.css("img::attr(data-src)").get()
-                )
-                if img_src and "icon" not in img_src and "svg" not in img_src:
+                # Image: prefer live DOM (post-scroll), fallback to response HTML
+                img_src = None
+                if name and name in live_images:
+                    img_src = live_images[name]
+                if not img_src:
+                    img_src = (
+                        card.css("img::attr(src)").get()
+                        or card.css("img::attr(data-src)").get()
+                    )
+                if img_src and "icon" not in img_src and "svg" not in img_src and not img_src.startswith("data:"):
                     item["image_url"] = response.urljoin(img_src)
 
                 # Assume in stock (out-of-stock items typically hidden)
@@ -154,6 +192,16 @@ class BakuElectronicsSpider(scrapy.Spider):
                                 "a[class*='ProductCard_Product']",
                                 timeout=20000,
                             ),
+                            PageMethod("evaluate", """
+                                async () => {
+                                    const delay = ms => new Promise(r => setTimeout(r, ms));
+                                    for (let y = 0; y < document.body.scrollHeight; y += 300) {
+                                        window.scrollTo(0, y);
+                                        await delay(150);
+                                    }
+                                    await delay(1000);
+                                }
+                            """),
                         ],
                         "category": category,
                         "page_num": next_page_num,
