@@ -36,3 +36,4 @@ poetry.lock
 
 # pnpm
 pnpm-debug.log
+frontend/tsconfig.tsbuildinfo
