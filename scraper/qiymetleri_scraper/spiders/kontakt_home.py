@@ -54,13 +54,39 @@ class KontaktHomeSpider(scrapy.Spider):
         page = response.meta.get("playwright_page")
 
         try:
+            # Extract image URLs from live DOM (after scroll triggered lazy-load)
+            live_images = {}
+            if page:
+                try:
+                    live_images = await page.evaluate("""
+                        () => {
+                            const map = {};
+                            document.querySelectorAll('.product-item').forEach((card, i) => {
+                                const img = card.querySelector('img.product-image') 
+                                         || card.querySelector('a.prodItem__img img');
+                                if (img) {
+                                    const src = img.currentSrc || img.src || img.getAttribute('data-src') || '';
+                                    if (src && !src.startsWith('data:') && !src.includes('icon') && !src.includes('.svg')) {
+                                        const gtm = card.getAttribute('data-gtm');
+                                        const key = gtm ? JSON.parse(gtm).item_name : i.toString();
+                                        map[key] = src;
+                                    }
+                                }
+                            });
+                            return map;
+                        }
+                    """)
+                except Exception as e:
+                    self.logger.warning(f"Failed to extract live images: {e}")
+
             product_cards = response.css("div.prodItem.product-item")
 
             if not product_cards:
                 product_cards = response.css(".product-item")
 
             self.logger.info(
-                f"Found {len(product_cards)} products in {category} on {response.url}"
+                f"Found {len(product_cards)} products in {category} on {response.url} "
+                f"({len(live_images)} live images)"
             )
 
             for card in product_cards:
@@ -119,13 +145,18 @@ class KontaktHomeSpider(scrapy.Spider):
                 if link and "#" not in link:
                     item["url"] = response.urljoin(link)
 
-                # Image (prefer data-src for lazy-loaded images)
-                img = (
-                    card.css("img.prodItem__img::attr(data-src)").get()
-                    or card.css("img::attr(data-src)").get()
-                    or card.css("img.prodItem__img::attr(src)").get()
-                    or card.css("img::attr(src)").get()
-                )
+                # Image: prefer live DOM (post-scroll), fallback to response HTML
+                img = None
+                item_name = gtm.get("item_name", "")
+                if item_name and item_name in live_images:
+                    img = live_images[item_name]
+                if not img:
+                    img = (
+                        card.css("img.product-image::attr(src)").get()
+                        or card.css("img.product-image::attr(data-src)").get()
+                        or card.css("a.prodItem__img img::attr(src)").get()
+                        or card.css("a.prodItem__img img::attr(data-src)").get()
+                    )
                 if img and "icon" not in img and "svg" not in img and not img.startswith("data:"):
                     item["image_url"] = response.urljoin(img)
 
