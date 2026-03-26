@@ -61,99 +61,88 @@ class IrshadElectronicsSpider(scrapy.Spider):
         page = response.meta.get("playwright_page")
 
         try:
-            product_cards = response.css("div.product")
+            # Click "daha çoxuna bax" (show more) until all products loaded
+            if page:
+                clicks = 0
+                while clicks < 30:
+                    btn = await page.query_selector(
+                        'button:has-text("daha çoxuna bax"), '
+                        'a:has-text("daha çoxuna bax")'
+                    )
+                    if not btn:
+                        break
+                    try:
+                        await btn.click()
+                        await page.wait_for_timeout(2000)
+                        clicks += 1
+                    except Exception:
+                        break
+
+            # Extract all products from live DOM (after load-more clicks)
+            products_data = []
+            if page:
+                products_data = await page.evaluate('''
+                    () => {
+                        const cards = document.querySelectorAll("div.product");
+                        return Array.from(cards).map(card => {
+                            const nameEl = card.querySelector(".product__name");
+                            const name = nameEl ? nameEl.textContent.trim() : "";
+
+                            const newPrice = card.querySelector(".product__price__current .new-price");
+                            const priceEl = card.querySelector(".product__price__current");
+                            const price = newPrice
+                                ? newPrice.textContent.trim()
+                                : (priceEl ? priceEl.textContent.trim() : "");
+
+                            const link = card.querySelector("a.product-link");
+                            const url = link ? link.href : "";
+
+                            const img = card.querySelector(".product__img img");
+                            let imgSrc = "";
+                            if (img) {
+                                const src = img.currentSrc || img.src || "";
+                                if (src && !src.startsWith("data:") &&
+                                    !src.includes("icon") && !src.includes(".svg")) {
+                                    imgSrc = src;
+                                }
+                            }
+
+                            const text = card.textContent || "";
+                            const inStock = text.includes("Stokda var");
+
+                            return {name, price, url, imgSrc, inStock};
+                        });
+                    }
+                ''')
 
             self.logger.info(
-                f"[IRSHAD] {len(product_cards)} products in {category} "
+                f"[IRSHAD] {len(products_data)} products in {category} "
                 f"on {response.url}"
             )
 
-            for card in product_cards:
+            for data in products_data:
+                name = data.get("name", "").strip()
+                if not name or len(name) < 3:
+                    continue
+
                 item = ProductItem()
                 item["store_id"] = self.store_id
                 item["category"] = category
                 item["scraped_at"] = datetime.now(timezone.utc).isoformat()
-
-                # Name: .product__name
-                name = (
-                    card.css(".product__name::text").get() or ""
-                ).strip()
-
-                if not name or len(name) < 3:
-                    continue
-
                 item["original_title"] = name
-
-                # Price: .new-price is the current sale price,
-                # .old-price is the original (strikethrough) price.
-                # If no discount, .new-price may not exist — use
-                # .product__price__current text as fallback.
-                new_price = (
-                    card.css(".product__price__current .new-price::text").get()
-                    or ""
-                ).strip()
-                if not new_price:
-                    # No discount — try getting the only price shown
-                    price_text = (
-                        card.css(".product__price__current::text").get() or ""
-                    ).strip()
-                    new_price = price_text
-
-                item["price_raw"] = new_price
-
-                # URL: link with class product-link
-                link = card.css("a.product-link::attr(href)").get()
-                if link:
-                    item["url"] = response.urljoin(link)
-
-                # Brand
+                item["price_raw"] = data.get("price", "")
                 item["brand"] = self._extract_brand(name)
+                item["in_stock"] = data.get("inStock", False)
 
-                # Image
-                img = card.css(".product__img img::attr(src)").get()
-                if not img:
-                    img = card.css(
-                        ".product__img img::attr(data-src)"
-                    ).get()
-                if img and "icon" not in img and "svg" not in img:
-                    item["image_url"] = response.urljoin(img)
+                url = data.get("url", "")
+                if url:
+                    item["url"] = url
 
-                # Stock: look for "Stokda var" text
-                card_text = " ".join(card.css("::text").getall())
-                item["in_stock"] = "Stokda var" in card_text
+                img_src = data.get("imgSrc", "")
+                if img_src:
+                    item["image_url"] = img_src
 
                 yield item
-
-            # Pagination: check for next page links
-            next_page = (
-                response.css(
-                    ".pagination a[rel='next']::attr(href)"
-                ).get()
-                or response.css("a.page-link[rel='next']::attr(href)").get()
-            )
-            if next_page:
-                yield scrapy.Request(
-                    url=response.urljoin(next_page),
-                    callback=self.parse_listing,
-                    meta={
-                        "playwright": True,
-                        "playwright_include_page": True,
-                        "playwright_page_goto_kwargs": {
-                            "wait_until": "domcontentloaded",
-                        },
-                        "playwright_page_methods": [
-                            PageMethod("wait_for_timeout", 5000),
-                            PageMethod(
-                                "wait_for_selector",
-                                ".product",
-                                timeout=20000,
-                            ),
-                        ],
-                        "category": category,
-                    },
-                    cb_kwargs={"category": category},
-                    errback=self.errback_close_page,
-                )
         finally:
             if page:
                 await page.close()
