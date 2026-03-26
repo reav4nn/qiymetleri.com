@@ -22,7 +22,8 @@ KNOWN_COLORS = [
     "space black", "cloud white",
     "natural titanium", "black titanium", "white titanium", "desert titanium",
     "cobalt violet", "icyblue", "icy blue", "silver shadow",
-    "phantom black", "ocean cyan", "mocha brown", "navy peony blue",
+    "phantom black", "midnight black", "ocean cyan", "mocha brown", "navy peony blue",
+    "titanium purple", "glacier blue",
     "navy blue", "dark blue", "light blue", "velvet black", "velvet grey",
     "dawning orange", "forest owl", "forest green", "jade black", "sakura pink",
     "verona green", "mica silver", "jet black", "jetblack",
@@ -34,6 +35,7 @@ KNOWN_COLORS = [
     "gold", "silver", "gray", "grey", "orange",
     "purple", "brown", "beige", "cream", "coral", "teal",
     "mint", "lavender", "bronze", "graphite", "titanium", "amber",
+    "citrus", "indigo", "blush", "plum", "denim", "sage", "mist",
     # Azerbaijani colors
     "çəhrayı qızıl", "mavi göy",
     "ağ", "qara", "göy", "yaşıl", "qırmızı", "narıncı", "sarı",
@@ -97,7 +99,8 @@ def normalize_name(name: str) -> dict:
         "color": None,
     }
 
-    cleaned = name.strip()
+    # Normalize whitespace: replace non-breaking spaces, tabs, etc.
+    cleaned = re.sub(r'[\u00a0\u200b\u2009\u2007\t]+', ' ', name).strip()
 
     for prefix in [
         "Smartfon ", "Notbuk ", "Noutbuk ",
@@ -148,14 +151,30 @@ def normalize_name(name: str) -> dict:
     # Remove colors from family string
     family = COLOR_PATTERN.sub("", family)
 
-    family = re.sub(r"\([^)]*\)", "", family)
+    # Remove parenthetical content that contains SKUs, specs, or model numbers
+    # but KEEP chip identifiers like (A18 Pro), (M4), etc.
+    def _should_remove_parens(match):
+        content = match.group(1).strip()
+        # Keep short chip identifiers: A18, A18 Pro, M4, M5, etc.
+        if re.match(r"^[AM]\d{1,2}(?:\s+Pro)?$", content):
+            return content  # return content without parens
+        return ""  # remove everything else
+    family = re.sub(r"\(([^)]*)\)", _should_remove_parens, family)
+    # Remove Apple SKU numbers (MHFA4RU/A, MFHP4ZE/A, MC6A4RU etc.)
+    family = re.sub(r"\bM[A-Z0-9]{4,7}(?:/[A-Z])?\b", "", family)
+    # Remove ASUS part numbers (90NR0EF5-M00AC0)
+    family = re.sub(r"\b\d{2}NR[A-Z0-9\-]+\b", "", family)
+    # Remove CPU/GPU specs like "6C CPU/5C GPU", "10C CPU/10C GPU"
+    family = re.sub(r"\d+C\s*CPU\s*/\s*\d+C\s*GPU", "", family, flags=re.IGNORECASE)
+    # Normalize inch marks: 13" → 13, 15" → 15
+    family = re.sub(r'(\d+)["\u2033\u201d]', r"\1", family)
     family = re.sub(r"[\s,\-/]+$", "", family)
     family = re.sub(r"\s{2,}", " ", family)
     family = family.strip()
     family = re.sub(r"\b\d*\s*[GT]B\b", "", family, flags=re.IGNORECASE).strip()
     family = re.sub(r"\s{2,}", " ", family).strip()
     family = re.sub(r"[\s,\-/]+$", "", family).strip()
-    # Remove trailing commas/spaces left by color removal
+    # Remove trailing commas/spaces/quotes left by color removal
     family = re.sub(r'[,\s"]+$', "", family).strip()
 
     if family:
