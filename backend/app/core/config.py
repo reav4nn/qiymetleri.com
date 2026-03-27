@@ -1,4 +1,5 @@
 from functools import lru_cache
+import os
 
 from pydantic_settings import BaseSettings
 
@@ -29,13 +30,17 @@ class Settings(BaseSettings):
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    # Redis
+    # Redis — supports full URL (Upstash/managed) or host/port (local Docker)
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
     @property
     def REDIS_URL(self) -> str:
+        # REDIS_URL env var takes priority (Upstash: rediss://...)
+        url = os.getenv("REDIS_URL", "")
+        if url:
+            return url
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     # CORS
