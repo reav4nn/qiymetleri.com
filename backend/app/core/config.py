@@ -6,9 +6,16 @@ from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
-_INSECURE_PASSWORDS = frozenset({
-    "changeme", "password", "admin", "admin123", "123456", "secret",
-})
+_INSECURE_PASSWORDS = frozenset(
+    {
+        "changeme",
+        "password",
+        "admin",
+        "admin123",
+        "123456",
+        "secret",
+    }
+)
 
 
 class Settings(BaseSettings):

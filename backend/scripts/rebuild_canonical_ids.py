@@ -82,7 +82,9 @@ async def run(dry_run: bool = False):
         # Report conflicts (multiple products mapping to same new canonical ID)
         merge_candidates = {k: v for k, v in new_ids.items() if len(v) > 1}
         if merge_candidates:
-            print(f"\nFound {len(merge_candidates)} merge candidates (same new canonical_id):")
+            print(
+                f"\nFound {len(merge_candidates)} merge candidates (same new canonical_id):"
+            )
             for cid, pids in list(merge_candidates.items())[:10]:
                 print(f"  {cid}: {len(pids)} products")
 

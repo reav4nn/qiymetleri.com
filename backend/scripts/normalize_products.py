@@ -110,8 +110,7 @@ async def run():
         if propagated:
             print(f"Propagated attributes to {propagated} products via SKU matching")
 
-        result = await session.execute(
-            text("""
+        result = await session.execute(text("""
                 SELECT model_family, COUNT(*) as cnt
                 FROM products
                 WHERE model_family IS NOT NULL
@@ -119,8 +118,7 @@ async def run():
                 HAVING COUNT(*) > 1
                 ORDER BY cnt DESC
                 LIMIT 20
-            """)
-        )
+            """))
         print("\nTop families with multiple variants:")
         for row in result.fetchall():
             print(f"  {row[0]}: {row[1]} variants")

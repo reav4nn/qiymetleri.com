@@ -70,8 +70,7 @@ def _build_fuzzy_query(q: str):
     fts_rank = func.ts_rank(Product.search_vector, tsquery)
 
     hybrid_score = (
-        cast(trgm_sim, Float) * TRGM_WEIGHT
-        + cast(fts_rank, Float) * FTS_WEIGHT
+        cast(trgm_sim, Float) * TRGM_WEIGHT + cast(fts_rank, Float) * FTS_WEIGHT
     )
 
     filter_clause = (trgm_sim >= TRGM_THRESHOLD) | (
@@ -126,9 +125,7 @@ async def get_products(
     if chip:
         query = query.where(Product.attributes["chip"].astext == chip)
     if size_mm is not None:
-        query = query.where(
-            Product.attributes["size_mm"].astext == str(size_mm)
-        )
+        query = query.where(Product.attributes["size_mm"].astext == str(size_mm))
 
     price_join_needed = store_id or min_price is not None or max_price is not None
     if price_join_needed:
@@ -228,9 +225,7 @@ async def get_product_by_id(db: AsyncSession, product_id: UUID) -> Product | Non
     return result.scalars().first()
 
 
-async def get_family_variants(
-    db: AsyncSession, product: Product
-) -> list[Product]:
+async def get_family_variants(db: AsyncSession, product: Product) -> list[Product]:
     """Get all products in the same model_family (case-insensitive)."""
     if not product.model_family:
         return [product]

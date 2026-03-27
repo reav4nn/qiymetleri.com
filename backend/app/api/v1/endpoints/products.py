@@ -26,9 +26,16 @@ PRODUCT_DETAIL_TTL = 300
 
 
 def _list_cache_key(
-    page: int, per_page: int, q: str | None, category: str | None,
-    brand: str | None, store_id: str | None, min_price: float | None,
-    max_price: float | None, sort_by: str, chip: str | None,
+    page: int,
+    per_page: int,
+    q: str | None,
+    category: str | None,
+    brand: str | None,
+    store_id: str | None,
+    min_price: float | None,
+    max_price: float | None,
+    sort_by: str,
+    chip: str | None,
     size_mm: int | None,
 ) -> str:
     raw = f"{page}:{per_page}:{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}:{sort_by}:{chip}:{size_mm}"
@@ -52,8 +59,17 @@ async def list_products(
     db: AsyncSession = Depends(get_db),
 ):
     cache_key = _list_cache_key(
-        page, per_page, q, category, brand, store_id, min_price, max_price,
-        sort_by, chip, size_mm,
+        page,
+        per_page,
+        q,
+        category,
+        brand,
+        store_id,
+        min_price,
+        max_price,
+        sort_by,
+        chip,
+        size_mm,
     )
     cached = await get_cache(cache_key)
     if cached:
@@ -99,13 +115,15 @@ async def get_product(
     variants = []
     for v in family_members:
         attrs = v.attributes or {}
-        variants.append({
-            "id": v.id,
-            "name": v.name,
-            "storage_gb": attrs.get("storage_gb"),
-            "color": attrs.get("color"),
-            "current_prices": v.current_prices,
-        })
+        variants.append(
+            {
+                "id": v.id,
+                "name": v.name,
+                "storage_gb": attrs.get("storage_gb"),
+                "color": attrs.get("color"),
+                "current_prices": v.current_prices,
+            }
+        )
 
     return {
         "id": product.id,
@@ -114,9 +132,8 @@ async def get_product(
         "category": product.category,
         "model_family": product.model_family,
         "name": product.model_family or product.name,
-        "image_url": product.image_url or next(
-            (v.image_url for v in family_members if v.image_url), None
-        ),
+        "image_url": product.image_url
+        or next((v.image_url for v in family_members if v.image_url), None),
         "attributes": product.attributes,
         "current_prices": product.current_prices,
         "variants": variants,
@@ -140,6 +157,7 @@ async def get_product_price_history(
     family_ids = [product_id]
     if product.model_family:
         from app.services.product_service import get_family_variants
+
         variants = await get_family_variants(db, product)
         family_ids = [v.id for v in variants]
 

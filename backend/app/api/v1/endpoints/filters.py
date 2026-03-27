@@ -14,8 +14,12 @@ FILTERS_TTL = 3600  # 1 hour
 
 
 def _filters_cache_key(
-    q: str | None, category: str | None, brand: str | None,
-    store_id: str | None, min_price: float | None, max_price: float | None,
+    q: str | None,
+    category: str | None,
+    brand: str | None,
+    store_id: str | None,
+    min_price: float | None,
+    max_price: float | None,
 ) -> str:
     raw = f"{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}"
     h = hashlib.md5(raw.encode()).hexdigest()[:12]
@@ -27,16 +31,32 @@ _TRGM_THRESHOLD = 0.15
 
 # Same aliases as product_service for consistency
 _SEARCH_ALIASES: dict[str, str] = {
-    "ayfon": "iphone", "aypad": "ipad", "makbuk": "macbook",
-    "mekbuk": "macbook", "eyrpods": "airpods", "eyrpodz": "airpods",
-    "qulaqliq": "headphones", "qulaqlıq": "headphones",
-    "notbuk": "laptop", "noutbuk": "laptop", "saat": "watch",
-    "planset": "tablet", "planşet": "tablet",
-    "huavey": "huawei", "syaomi": "xiaomi", "realmi": "realme",
-    "айфон": "iphone", "айпад": "ipad", "макбук": "macbook",
-    "самсунг": "samsung", "хуавей": "huawei", "сяоми": "xiaomi",
-    "наушники": "headphones", "ноутбук": "laptop",
-    "часы": "watch", "планшет": "tablet",
+    "ayfon": "iphone",
+    "aypad": "ipad",
+    "makbuk": "macbook",
+    "mekbuk": "macbook",
+    "eyrpods": "airpods",
+    "eyrpodz": "airpods",
+    "qulaqliq": "headphones",
+    "qulaqlıq": "headphones",
+    "notbuk": "laptop",
+    "noutbuk": "laptop",
+    "saat": "watch",
+    "planset": "tablet",
+    "planşet": "tablet",
+    "huavey": "huawei",
+    "syaomi": "xiaomi",
+    "realmi": "realme",
+    "айфон": "iphone",
+    "айпад": "ipad",
+    "макбук": "macbook",
+    "самсунг": "samsung",
+    "хуавей": "huawei",
+    "сяоми": "xiaomi",
+    "наушники": "headphones",
+    "ноутбук": "laptop",
+    "часы": "watch",
+    "планшет": "tablet",
 }
 
 
@@ -157,7 +177,9 @@ async def get_filters(
         .order_by(func.count(Product.id).desc())
     )
     chip_result = await db.execute(chip_q)
-    chip_values = [{"id": r.chip, "name": r.chip, "count": r.count} for r in chip_result]
+    chip_values = [
+        {"id": r.chip, "name": r.chip, "count": r.count} for r in chip_result
+    ]
     if chip_values:
         attributes["chip"] = chip_values
 
@@ -187,8 +209,12 @@ async def get_filters(
         "stores": stores,
         "categories": categories,
         "price_range": {
-            "min": float(price_row.min_price) if price_row and price_row.min_price else 0,
-            "max": float(price_row.max_price) if price_row and price_row.max_price else 0,
+            "min": (
+                float(price_row.min_price) if price_row and price_row.min_price else 0
+            ),
+            "max": (
+                float(price_row.max_price) if price_row and price_row.max_price else 0
+            ),
         },
         "attributes": attributes,
     }

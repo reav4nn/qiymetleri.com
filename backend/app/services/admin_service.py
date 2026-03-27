@@ -7,10 +7,13 @@ from app.models.product import CurrentPrice, PriceHistory, Product, Store
 async def get_dashboard_stats(db: AsyncSession) -> dict:
     product_count = await db.scalar(select(func.count(Product.id)))
     variant_count = await db.scalar(
-        select(func.count(func.distinct(func.lower(Product.model_family))))
-        .where(Product.model_family.isnot(None))
+        select(func.count(func.distinct(func.lower(Product.model_family)))).where(
+            Product.model_family.isnot(None)
+        )
     )
-    store_result = await db.execute(select(func.count(Store.id), func.count(Store.id).filter(Store.is_active)))
+    store_result = await db.execute(
+        select(func.count(Store.id), func.count(Store.id).filter(Store.is_active))
+    )
     store_row = store_result.one()
     total_stores, active_stores = store_row[0], store_row[1]
 
@@ -28,9 +31,7 @@ async def get_dashboard_stats(db: AsyncSession) -> dict:
         select(func.count(Product.id)).where(Product.image_url.isnot(None))
     )
 
-    last_update = await db.scalar(
-        select(func.max(CurrentPrice.last_checked_at))
-    )
+    last_update = await db.scalar(select(func.max(CurrentPrice.last_checked_at)))
 
     cat_result = await db.execute(
         select(Product.category, func.count(Product.id))
@@ -73,23 +74,24 @@ async def get_store_health(db: AsyncSession) -> list[dict]:
         row = stats.one()
 
         last_price_update = await db.scalar(
-            select(func.max(PriceHistory.time))
-            .where(PriceHistory.store_id == store.id)
+            select(func.max(PriceHistory.time)).where(PriceHistory.store_id == store.id)
         )
 
-        health_list.append({
-            "id": store.id,
-            "name": store.name,
-            "base_url": store.base_url,
-            "is_active": store.is_active,
-            "product_count": row[0],
-            "in_stock_count": row[1],
-            "avg_price": round(float(row[2]), 2) if row[2] else None,
-            "min_price": float(row[3]) if row[3] else None,
-            "max_price": float(row[4]) if row[4] else None,
-            "last_crawl": row[5],
-            "last_price_update": last_price_update,
-        })
+        health_list.append(
+            {
+                "id": store.id,
+                "name": store.name,
+                "base_url": store.base_url,
+                "is_active": store.is_active,
+                "product_count": row[0],
+                "in_stock_count": row[1],
+                "avg_price": round(float(row[2]), 2) if row[2] else None,
+                "min_price": float(row[3]) if row[3] else None,
+                "max_price": float(row[4]) if row[4] else None,
+                "last_crawl": row[5],
+                "last_price_update": last_price_update,
+            }
+        )
 
     return health_list
 
@@ -278,16 +280,16 @@ async def get_match_stats(db: AsyncSession) -> dict:
     }
 
 
-async def review_match(
-    db: AsyncSession, match_id: int, action: str
-) -> dict | None:
+async def review_match(db: AsyncSession, match_id: int, action: str) -> dict | None:
     """Accept or reject a product match.
 
     On accept: merge model_family of family_b into family_a (shorter/cleaner name).
     On reject: mark as rejected.
     """
     row = await db.execute(
-        sa_text("SELECT id, family_a, family_b, brand FROM product_matches WHERE id = :id"),
+        sa_text(
+            "SELECT id, family_a, family_b, brand FROM product_matches WHERE id = :id"
+        ),
         {"id": match_id},
     )
     match = row.first()
@@ -318,9 +320,16 @@ async def review_match(
         )
     else:
         await db.execute(
-            sa_text("UPDATE product_matches SET status = 'rejected', reviewed_at = NOW() WHERE id = :id"),
+            sa_text(
+                "UPDATE product_matches SET status = 'rejected', reviewed_at = NOW() WHERE id = :id"
+            ),
             {"id": match_id},
         )
 
     await db.commit()
-    return {"id": match_id, "status": action + "ed", "family_a": family_a, "family_b": family_b}
+    return {
+        "id": match_id,
+        "status": action + "ed",
+        "family_a": family_a,
+        "family_b": family_b,
+    }

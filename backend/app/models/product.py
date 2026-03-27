@@ -28,9 +28,7 @@ class Store(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    current_prices: Mapped[list["CurrentPrice"]] = relationship(
-        back_populates="store"
-    )
+    current_prices: Mapped[list["CurrentPrice"]] = relationship(back_populates="store")
 
 
 class Product(Base):
@@ -97,8 +95,6 @@ class PriceHistory(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, nullable=False, index=True
     )
-    store_id: Mapped[str] = mapped_column(
-        String(100), primary_key=True, nullable=False
-    )
+    store_id: Mapped[str] = mapped_column(String(100), primary_key=True, nullable=False)
     price_azn: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     in_stock: Mapped[bool | None] = mapped_column(Boolean)

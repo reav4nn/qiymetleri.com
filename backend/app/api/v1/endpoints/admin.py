@@ -39,8 +39,14 @@ celery_app = Celery("qiymetleri_scraper", broker=CELERY_BROKER, backend=CELERY_B
 
 SPIDER_META = {
     "kontakt_home": {"display_name": "Kontakt Home", "schedule": "Hər 2 saatda"},
-    "baku_electronics": {"display_name": "Baku Electronics", "schedule": "Hər 4 saatda"},
-    "irshad_electronics": {"display_name": "Irshad Electronics", "schedule": "Hər 4 saatda"},
+    "baku_electronics": {
+        "display_name": "Baku Electronics",
+        "schedule": "Hər 4 saatda",
+    },
+    "irshad_electronics": {
+        "display_name": "Irshad Electronics",
+        "schedule": "Hər 4 saatda",
+    },
     "ispace": {"display_name": "iSpace", "schedule": "Hər 4 saatda"},
 }
 
@@ -77,16 +83,18 @@ async def scraper_status():
     spiders = []
     for spider_name, meta in SPIDER_META.items():
         last = _get_last_task_result(spider_name)
-        spiders.append(SpiderStatus(
-            name=spider_name,
-            display_name=meta["display_name"],
-            last_run=last.get("completed_at") if last else None,
-            last_status=last.get("status") if last else None,
-            last_item_count=last.get("item_count") if last else None,
-            last_duration=last.get("duration") if last else None,
-            schedule=meta["schedule"],
-            is_running=spider_name in active_spiders,
-        ))
+        spiders.append(
+            SpiderStatus(
+                name=spider_name,
+                display_name=meta["display_name"],
+                last_run=last.get("completed_at") if last else None,
+                last_status=last.get("status") if last else None,
+                last_item_count=last.get("item_count") if last else None,
+                last_duration=last.get("duration") if last else None,
+                schedule=meta["schedule"],
+                is_running=spider_name in active_spiders,
+            )
+        )
 
     return ScraperOverview(
         spiders=spiders,
@@ -121,6 +129,7 @@ async def scraper_history(limit: int = Query(default=20, ge=1, le=100)):
 
     try:
         import redis as sync_redis
+
         r = sync_redis.from_url(CELERY_BROKER, decode_responses=True)
         keys = []
         for key in r.scan_iter(match="celery-task-meta-*", count=200):
@@ -128,6 +137,7 @@ async def scraper_history(limit: int = Query(default=20, ge=1, le=100)):
         keys = keys[:200]
 
         import json
+
         for key in keys:
             raw = r.get(key)
             if not raw:
@@ -151,16 +161,18 @@ async def scraper_history(limit: int = Query(default=20, ge=1, le=100)):
             status = data.get("status", "UNKNOWN")
             date_done = data.get("date_done")
 
-            results.append(TaskResult(
-                task_id=task_id,
-                spider=spider,
-                status=status,
-                started_at=None,
-                completed_at=date_done,
-                item_count=task_result.get("items"),
-                duration=task_result.get("elapsed_seconds"),
-                error=str(data.get("result")) if status == "FAILURE" else None,
-            ))
+            results.append(
+                TaskResult(
+                    task_id=task_id,
+                    spider=spider,
+                    status=status,
+                    started_at=None,
+                    completed_at=date_done,
+                    item_count=task_result.get("items"),
+                    duration=task_result.get("elapsed_seconds"),
+                    error=str(data.get("result")) if status == "FAILURE" else None,
+                )
+            )
     except Exception as e:
         logger.warning("Cannot read task history from Redis: %s", e)
 
@@ -204,25 +216,29 @@ async def scraper_health(db: AsyncSession = Depends(get_db)):
         WHERE started_at > NOW() - INTERVAL '24 hours'
         GROUP BY spider
     """))
-    failure_rates = {r.spider: {"total": r.total_runs, "failed": r.failed_runs}
-                     for r in failure_result.fetchall()}
+    failure_rates = {
+        r.spider: {"total": r.total_runs, "failed": r.failed_runs}
+        for r in failure_result.fetchall()
+    }
 
     spiders = []
     for row in rows:
         rates = failure_rates.get(row.spider, {"total": 0, "failed": 0})
         fail_pct = (rates["failed"] / rates["total"] * 100) if rates["total"] > 0 else 0
-        spiders.append({
-            "spider": row.spider,
-            "last_status": row.status,
-            "last_items": row.items_scraped,
-            "last_errors": row.errors,
-            "last_duration_s": row.duration_seconds,
-            "last_run": row.finished_at.isoformat() if row.finished_at else None,
-            "runs_24h": rates["total"],
-            "failures_24h": rates["failed"],
-            "failure_rate_pct": round(fail_pct, 1),
-            "healthy": fail_pct < 30,
-        })
+        spiders.append(
+            {
+                "spider": row.spider,
+                "last_status": row.status,
+                "last_items": row.items_scraped,
+                "last_errors": row.errors,
+                "last_duration_s": row.duration_seconds,
+                "last_run": row.finished_at.isoformat() if row.finished_at else None,
+                "runs_24h": rates["total"],
+                "failures_24h": rates["failed"],
+                "failure_rate_pct": round(fail_pct, 1),
+                "healthy": fail_pct < 30,
+            }
+        )
 
     return {"spiders": spiders}
 
@@ -260,7 +276,9 @@ async def review_product_match(
 ):
     """Accept or reject a product match."""
     if action not in ("accept", "reject"):
-        raise HTTPException(status_code=400, detail="Action must be 'accept' or 'reject'")
+        raise HTTPException(
+            status_code=400, detail="Action must be 'accept' or 'reject'"
+        )
     result = await review_match(db, match_id, action)
     if result is None:
         raise HTTPException(status_code=404, detail="Match not found")
@@ -272,6 +290,7 @@ def _get_last_task_result(spider_name: str) -> dict | None:
     try:
         import json
         import redis as sync_redis
+
         r = sync_redis.from_url(CELERY_BROKER, decode_responses=True)
 
         best = None
@@ -340,9 +359,7 @@ async def list_admin_products(
     from sqlalchemy import select, func as sa_func
     from app.models.product import Product, CurrentPrice
 
-    query = select(Product).options(
-        selectinload(Product.current_prices)
-    )
+    query = select(Product).options(selectinload(Product.current_prices))
 
     if q and len(q) >= 2:
         query = query.where(Product.name.ilike(f"%{q}%"))
@@ -358,35 +375,39 @@ async def list_admin_products(
     total = (await db.execute(count_q)).scalar() or 0
 
     # Paginate
-    query = query.order_by(Product.updated_at.desc()).offset(
-        (page - 1) * per_page
-    ).limit(per_page)
+    query = (
+        query.order_by(Product.updated_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
 
     result = await db.execute(query)
     products = result.scalars().unique().all()
 
     items = []
     for p in products:
-        items.append({
-            "id": str(p.id),
-            "canonical_id": p.canonical_id,
-            "name": p.name,
-            "brand": p.brand,
-            "category": p.category,
-            "model_family": p.model_family,
-            "image_url": p.image_url,
-            "created_at": p.created_at.isoformat() if p.created_at else None,
-            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
-            "prices": [
-                {
-                    "store_id": cp.store_id,
-                    "price_azn": float(cp.price_azn),
-                    "in_stock": cp.in_stock,
-                    "url": cp.url,
-                }
-                for cp in p.current_prices
-            ],
-        })
+        items.append(
+            {
+                "id": str(p.id),
+                "canonical_id": p.canonical_id,
+                "name": p.name,
+                "brand": p.brand,
+                "category": p.category,
+                "model_family": p.model_family,
+                "image_url": p.image_url,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+                "prices": [
+                    {
+                        "store_id": cp.store_id,
+                        "price_azn": float(cp.price_azn),
+                        "in_stock": cp.in_stock,
+                        "url": cp.url,
+                    }
+                    for cp in p.current_prices
+                ],
+            }
+        )
 
     return {"items": items, "total": total, "page": page, "per_page": per_page}
 
@@ -442,17 +463,11 @@ async def batch_delete_products(
     uuids = [UUID(pid) for pid in product_ids]
 
     # Get canonical_ids for cache invalidation
-    result = await db.execute(
-        select(Product.canonical_id).where(Product.id.in_(uuids))
-    )
+    result = await db.execute(select(Product.canonical_id).where(Product.id.in_(uuids)))
     canonical_ids = [r[0] for r in result.all()]
 
-    await db.execute(
-        sa_delete(CurrentPrice).where(CurrentPrice.product_id.in_(uuids))
-    )
-    del_result = await db.execute(
-        sa_delete(Product).where(Product.id.in_(uuids))
-    )
+    await db.execute(sa_delete(CurrentPrice).where(CurrentPrice.product_id.in_(uuids)))
+    del_result = await db.execute(sa_delete(Product).where(Product.id.in_(uuids)))
     await db.commit()
 
     for cid in canonical_ids:
@@ -479,9 +494,7 @@ async def delete_product(
     canonical_id = product.canonical_id
 
     # Delete current_prices first (may not cascade depending on DB setup)
-    await db.execute(
-        sa_delete(CurrentPrice).where(CurrentPrice.product_id == pid)
-    )
+    await db.execute(sa_delete(CurrentPrice).where(CurrentPrice.product_id == pid))
     await db.delete(product)
     await db.commit()
 
@@ -494,6 +507,7 @@ def _invalidate_product_cache(canonical_id: str | None):
     """Invalidate Redis cache for a product."""
     try:
         import redis as sync_redis
+
         r = sync_redis.from_url(settings.REDIS_URL, decode_responses=True)
         if canonical_id:
             r.delete(f"product:{canonical_id}")

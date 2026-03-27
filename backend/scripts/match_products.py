@@ -150,8 +150,12 @@ async def run(dry_run: bool = False, threshold: float = AUTO_MERGE_THRESHOLD):
 
             if sim >= threshold:
                 print(f"  AUTO-MERGE (sim={sim:.3f}): [{brand}]")
-                print(f"    '{other}' ({stores_b if canonical == family_a else stores_a})")
-                print(f"    → '{canonical}' ({stores_a if canonical == family_a else stores_b})")
+                print(
+                    f"    '{other}' ({stores_b if canonical == family_a else stores_a})"
+                )
+                print(
+                    f"    → '{canonical}' ({stores_a if canonical == family_a else stores_b})"
+                )
 
                 if not dry_run:
                     await session.execute(
