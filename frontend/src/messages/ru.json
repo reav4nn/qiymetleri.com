@@ -25,8 +25,18 @@
     "tagline": "qiymetleri.com — самый выгодный выбор."
   },
   "home": {
-    "heroTitle": "самый выгодный выбор.",
+    "heroTitlePrefix": "В Азербайджане",
+    "heroTitleAccent": "самый выгодный выбор.",
     "heroSubtitle": "Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — сравните цены всех магазинов одним поиском.",
+    "livePrices": "Цены обновляются в реальном времени",
+    "trending": "Популярные запросы:",
+    "trustedStores": "Официальные магазины",
+    "stores": {
+      "kontaktHome": "Kontakt Home",
+      "bakuElectronics": "Baku Electronics",
+      "irshadElectronics": "Irshad Electronics",
+      "ispace": "iSpace"
+    },
     "categories": "Категории"
   },
   "categories": {
@@ -78,7 +88,9 @@
     "mobileToggle": "Фильтры",
     "sortNameAZ": "Название (А-Я)",
     "sortPriceAsc": "Цена: от низкой к высокой",
-    "sortPriceDesc": "Цена: от высокой к низкой"
+    "sortPriceDesc": "Цена: от высокой к низкой",
+    "chip": "Процессор",
+    "size": "Размер"
   },
   "variants": {
     "selectVariant": "Выберите вариант",

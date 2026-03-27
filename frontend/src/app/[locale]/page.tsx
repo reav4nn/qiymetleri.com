@@ -1,14 +1,10 @@
 import { SearchBar } from "@/components/SearchBar";
+import { TrendingSearches } from "@/components/TrendingSearches";
+import { StoreLogos } from "@/components/StoreLogos";
+import { CategoryCard } from "@/components/CategoryCard";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
 import type { Metadata } from "next";
-
-const CATEGORY_ICONS: Record<string, string> = {
-  smartphones: "📱",
-  laptops: "💻",
-  headphones: "🎧",
-  smartwatches: "⌚",
-};
 
 const CATEGORY_SLUGS = ["smartphones", "laptops", "headphones", "smartwatches"];
 
@@ -48,41 +44,51 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("home");
-  const tc = await getTranslations("categories");
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-12 lg:px-8">
+    <div>
       {/* Hero */}
-      <section className="py-6 text-center sm:py-12">
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-4xl md:text-5xl">
-          {t("heroTitle")}
-        </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--color-text-secondary)] sm:mt-4 sm:text-lg">
-          {t("heroSubtitle")}
-        </p>
-        <div className="mx-auto mt-6 max-w-xl sm:mt-8">
-          <SearchBar />
+      <section className="hero-section relative overflow-hidden">
+        <div className="hero-bg-pattern" aria-hidden="true" />
+        <div className="hero-gradient" aria-hidden="true" />
+        <div className="relative mx-auto max-w-7xl px-4 py-10 text-center sm:px-6 sm:py-16 md:py-20 lg:px-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent)]/20 bg-[var(--color-accent-subtle)] px-3 py-1 text-xs font-medium text-[var(--color-accent)] sm:px-4 sm:py-1.5 sm:text-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-accent)] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-accent)]" />
+            </span>
+            {t("livePrices")}
+          </div>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight text-[var(--color-text-primary)] sm:mt-6 sm:text-5xl md:text-6xl">
+            {t("heroTitlePrefix")}{" "}
+            <span className="hero-gradient-text">{t("heroTitleAccent")}</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)] sm:mt-5 sm:text-lg">
+            {t("heroSubtitle")}
+          </p>
+          <div className="mx-auto mt-7 max-w-xl sm:mt-9">
+            <SearchBar />
+          </div>
+          <TrendingSearches />
         </div>
       </section>
 
+      {/* Trusted Stores */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <StoreLogos />
+      </div>
+
       {/* Categories */}
-      <section className="mt-8 sm:mt-16">
-        <h2 className="text-xl font-semibold text-[var(--color-text-primary)] sm:text-2xl">
-          {t("categories")}
-        </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-4 sm:gap-4">
-          {CATEGORY_SLUGS.map((slug) => (
-            <a
-              key={slug}
-              href={`/${locale}/search?category=${slug}`}
-              className="flex flex-col items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 transition hover:border-[var(--color-accent)] hover:shadow-lg hover:shadow-[var(--color-accent-subtle)] active:scale-[0.97] sm:p-6"
-            >
-              <span className="text-3xl sm:text-4xl">{CATEGORY_ICONS[slug]}</span>
-              <span className="mt-2 text-xs font-medium text-[var(--color-text-secondary)] sm:mt-3 sm:text-sm">
-                {tc(slug)}
-              </span>
-            </a>
-          ))}
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 sm:pb-16 lg:px-8">
+        <div className="mt-10 sm:mt-16">
+          <h2 className="text-center text-xl font-bold text-[var(--color-text-primary)] sm:text-2xl">
+            {t("categories")}
+          </h2>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-4 sm:gap-5">
+            {CATEGORY_SLUGS.map((slug) => (
+              <CategoryCard key={slug} slug={slug} locale={locale} />
+            ))}
+          </div>
         </div>
       </section>
     </div>

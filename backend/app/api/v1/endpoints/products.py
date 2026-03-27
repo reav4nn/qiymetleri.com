@@ -29,9 +29,10 @@ PRODUCT_DETAIL_TTL = 300
 def _list_cache_key(
     page: int, per_page: int, q: str | None, category: str | None,
     brand: str | None, store_id: str | None, min_price: float | None,
-    max_price: float | None, sort_by: str,
+    max_price: float | None, sort_by: str, chip: str | None,
+    size_mm: int | None,
 ) -> str:
-    raw = f"{page}:{per_page}:{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}:{sort_by}"
+    raw = f"{page}:{per_page}:{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}:{sort_by}:{chip}:{size_mm}"
     h = hashlib.md5(raw.encode()).hexdigest()[:12]
     return f"products:list:{h}"
 
@@ -47,10 +48,13 @@ async def list_products(
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),
     sort_by: str = Query("name", pattern="^(name|price_asc|price_desc)$"),
+    chip: str | None = None,
+    size_mm: int | None = Query(None, ge=1),
     db: AsyncSession = Depends(get_db),
 ):
     cache_key = _list_cache_key(
-        page, per_page, q, category, brand, store_id, min_price, max_price, sort_by
+        page, per_page, q, category, brand, store_id, min_price, max_price,
+        sort_by, chip, size_mm,
     )
     cached = await get_cache(cache_key)
     if cached:
@@ -67,6 +71,8 @@ async def list_products(
         min_price=min_price,
         max_price=max_price,
         sort_by=sort_by,
+        chip=chip,
+        size_mm=size_mm,
     )
     result = PaginatedResponse(
         items=items,

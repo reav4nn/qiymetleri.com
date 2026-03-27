@@ -33,6 +33,8 @@ export function FilterPanel({ filters }: FilterPanelProps) {
   const currentMinPrice = searchParams.get("min_price") || "";
   const currentMaxPrice = searchParams.get("max_price") || "";
   const currentQuery = searchParams.get("q") || "";
+  const currentChip = searchParams.get("chip") || "";
+  const currentSizeMm = searchParams.get("size_mm") || "";
 
   const [minPrice, setMinPrice] = useState(currentMinPrice);
   const [maxPrice, setMaxPrice] = useState(currentMaxPrice);
@@ -99,6 +101,8 @@ export function FilterPanel({ filters }: FilterPanelProps) {
     currentStore ||
     currentMinPrice ||
     currentMaxPrice ||
+    currentChip ||
+    currentSizeMm ||
     currentSort !== "name";
 
   const SORT_OPTIONS = [
@@ -246,6 +250,79 @@ export function FilterPanel({ filters }: FilterPanelProps) {
           ))}
         </div>
       </div>
+
+      {/* Dynamic attribute filters (chip, size_mm) */}
+      {filters.attributes?.chip && filters.attributes.chip.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+            {t("chip")}
+          </h3>
+          <div className="max-h-44 space-y-1 overflow-y-auto">
+            <button
+              onClick={() => applyFilter("chip", "")}
+              className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
+                !currentChip
+                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
+              }`}
+            >
+              {t("all")}
+            </button>
+            {filters.attributes.chip.map((item) => (
+              <button
+                key={item.id}
+                onClick={() =>
+                  applyFilter("chip", currentChip === item.id ? "" : item.id)
+                }
+                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
+                  currentChip === item.id
+                    ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
+                }`}
+              >
+                <span>{item.name}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">{item.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filters.attributes?.size_mm && filters.attributes.size_mm.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+            {t("size")}
+          </h3>
+          <div className="space-y-1">
+            <button
+              onClick={() => applyFilter("size_mm", "")}
+              className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
+                !currentSizeMm
+                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
+              }`}
+            >
+              {t("all")}
+            </button>
+            {filters.attributes.size_mm.map((item) => (
+              <button
+                key={item.id}
+                onClick={() =>
+                  applyFilter("size_mm", currentSizeMm === item.id ? "" : item.id)
+                }
+                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
+                  currentSizeMm === item.id
+                    ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
+                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
+                }`}
+              >
+                <span>{item.name}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">{item.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Price Range */}
       <div>

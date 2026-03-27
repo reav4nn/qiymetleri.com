@@ -25,8 +25,18 @@
     "tagline": "qiymetleri.com — ən sərfəli seçim."
   },
   "home": {
-    "heroTitle": "ən sərfəli seçim.",
+    "heroTitlePrefix": "Azərbaycanda",
+    "heroTitleAccent": "ən sərfəli seçim.",
     "heroSubtitle": "Kontakt Home, Baku Electronics, Irshad Electronics, iSpace — bütün mağazaların qiymətlərini bir axtarışla müqayisə et.",
+    "livePrices": "Qiymətlər real vaxtda yenilənir",
+    "trending": "Populyar axtarışlar:",
+    "trustedStores": "Rəsmi mağazalar",
+    "stores": {
+      "kontaktHome": "Kontakt Home",
+      "bakuElectronics": "Baku Electronics",
+      "irshadElectronics": "Irshad Electronics",
+      "ispace": "iSpace"
+    },
     "categories": "Kateqoriyalar"
   },
   "categories": {
@@ -78,7 +88,9 @@
     "mobileToggle": "Filtrlər",
     "sortNameAZ": "Ad (A-Z)",
     "sortPriceAsc": "Qiymət: ucuzdan bahaya",
-    "sortPriceDesc": "Qiymət: bahadan ucuza"
+    "sortPriceDesc": "Qiymət: bahadan ucuza",
+    "chip": "Prosessor",
+    "size": "Ölçü"
   },
   "variants": {
     "selectVariant": "Variant seçin",

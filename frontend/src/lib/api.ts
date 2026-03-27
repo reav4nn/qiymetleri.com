@@ -73,6 +73,7 @@ export interface FilterOptions {
   stores: FilterOption[];
   categories: FilterOption[];
   price_range: { min: number; max: number };
+  attributes?: Record<string, FilterOption[]>;
 }
 
 export interface ProductFilterParams {
@@ -85,12 +86,24 @@ export interface ProductFilterParams {
   max_price?: number;
   sort_by?: string;
   q?: string;
+  chip?: string;
+  size_mm?: number;
 }
 
-export async function fetchFilters(): Promise<FilterOptions> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/filters`, {
-    next: { revalidate: 600 },
-  });
+export async function fetchFilters(
+  params?: Partial<ProductFilterParams>,
+): Promise<FilterOptions> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+  const qs = searchParams.toString();
+  const url = `${API_BASE_URL}/api/v1/filters${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { next: { revalidate: 600 } });
   if (!res.ok) throw new Error("Failed to fetch filters");
   return res.json();
 }

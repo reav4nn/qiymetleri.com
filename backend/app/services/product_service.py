@@ -94,6 +94,8 @@ async def get_products(
     max_price: float | None = None,
     sort_by: str = "name",
     q: str | None = None,
+    chip: str | None = None,
+    size_mm: int | None = None,
 ) -> tuple[list[dict], int]:
     """Return products grouped by model_family.
 
@@ -122,6 +124,12 @@ async def get_products(
         query = query.where(Product.category == category)
     if brand:
         query = query.where(Product.brand == brand)
+    if chip:
+        query = query.where(Product.attributes["chip"].astext == chip)
+    if size_mm is not None:
+        query = query.where(
+            Product.attributes["size_mm"].astext == str(size_mm)
+        )
 
     price_join_needed = store_id or min_price is not None or max_price is not None
     if price_join_needed:

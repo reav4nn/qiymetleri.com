@@ -99,6 +99,8 @@ export default async function SearchPage({
     max_price?: string;
     sort_by?: string;
     page?: string;
+    chip?: string;
+    size_mm?: string;
   }>;
 }) {
   const { locale } = await params;
@@ -113,19 +115,28 @@ export default async function SearchPage({
   const maxPrice = sp.max_price || "";
   const sortBy = sp.sort_by || "name";
   const page = Number(sp.page) || 1;
+  const chip = sp.chip || "";
+  const sizeMm = sp.size_mm || "";
+
+  // Context params shared by both products and filters queries
+  const contextParams = {
+    q: query || undefined,
+    category: category || undefined,
+    brand: brand || undefined,
+    store_id: storeId || undefined,
+    min_price: minPrice ? Number(minPrice) : undefined,
+    max_price: maxPrice ? Number(maxPrice) : undefined,
+  };
 
   const [data, filters] = await Promise.all([
     fetchProducts({
-      q: query || undefined,
-      category: category || undefined,
-      brand: brand || undefined,
-      store_id: storeId || undefined,
-      min_price: minPrice ? Number(minPrice) : undefined,
-      max_price: maxPrice ? Number(maxPrice) : undefined,
+      ...contextParams,
       sort_by: sortBy,
       page,
+      chip: chip || undefined,
+      size_mm: sizeMm ? Number(sizeMm) : undefined,
     }),
-    fetchFilters(),
+    fetchFilters(contextParams),
   ]);
 
   const titleParts: string[] = [];

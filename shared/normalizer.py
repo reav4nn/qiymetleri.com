@@ -86,6 +86,15 @@ APPLE_SKU_PATTERN = re.compile(
     r"\b(M[A-Z0-9]{4,7})(?:/[A-Z])?\b",
 )
 
+# ─── Apple/Mac chip pattern ─────────────────────────────────────────
+CHIP_PATTERN = re.compile(
+    r"\b(M[1-9]\d?\s+(?:Max|Ultra|Pro)|M[1-9]\d?|A\d{1,2}\s+Pro|A\d{1,2})\b",
+    re.IGNORECASE,
+)
+
+# ─── Watch size pattern (40mm, 42mm, 44mm, 46mm, 49mm) ─────────────
+WATCH_SIZE_PATTERN = re.compile(r"\b(\d{2})m{1,2}\b", re.IGNORECASE)
+
 # ─── Storage patterns ───────────────────────────────────────────────
 STORAGE_PATTERN = re.compile(
     r"(?<!\d[/x])(\d{1,4})\s*([GT])B\b",
@@ -108,27 +117,28 @@ AZ_PREFIXES = [
 
 
 def _normalize_apple_watch_family(family: str) -> str:
-    """Simplify Apple Watch model_family to series + size only.
+    """Simplify Apple Watch model_family to series only (without size).
 
     'Apple Watch Series 11 GPS 46mm Jet Black Aluminium Case with Sport Band M/L'
-    → 'Apple Watch Series 11 46mm'
+    → 'Apple Watch Series 11'
     """
     m = re.match(
         r"(Apple\s+Watch\s+"
         r"(?:Ultra(?:\s+Series)?\s*\d?|Series\s+\d+|SE\b\s*\d?))"  # series part
-        r".*?(\b\d{2}m)m?\b",                                       # size (40mm or 40m typo)
+        r".*",
         family,
         re.IGNORECASE,
     )
     if m:
         series = re.sub(r"\s+", " ", m.group(1)).strip()
-        size = m.group(2) if m.group(2).endswith("mm") else m.group(2) + "m"
         # Normalize "Gen.2" / "Gen 2" / "(2024)" out of SE names
         series = re.sub(r"\s*Gen\.?\s*\d+", "", series)
         series = re.sub(r"\s*\(\d{4}\)", "", series)
         # Normalize "Ultra Series 2" → "Ultra 2"
         series = re.sub(r"Ultra\s+Series\s+(\d)", r"Ultra \1", series)
-        return f"{series} {size}"
+        # Clean trailing numbers from SE (SE 3, SE 2, etc. are marketing names)
+        series = re.sub(r"\bSE\s+\d+", "SE", series)
+        return series
     return family
 
 
@@ -164,6 +174,8 @@ def normalize_name(name: str) -> dict:
         "ram_gb": None,
         "color": None,
         "sku": None,
+        "chip": None,
+        "size_mm": None,
     }
 
     # Normalize whitespace: replace non-breaking spaces, tabs, etc.
@@ -238,6 +250,40 @@ def normalize_name(name: str) -> dict:
     family = re.sub(r'[,\s"]+$', "", family).strip()
 
     if family:
+        # Normalize "Pro Plus" → "Pro+" for consistent grouping
+        family = re.sub(r"\bPro\s+Plus\b", "Pro+", family, flags=re.IGNORECASE)
+
+        # Clean MacBook families: strip "chip with ...CPU...GPU" descriptors, trailing SSD
+        family = re.sub(
+            r"\s+chip\s+with\s+\d+-core\s+CPU[^,]*",
+            "", family, flags=re.IGNORECASE,
+        )
+        family = re.sub(r"[,\s/]*\bSSD\b", "", family, flags=re.IGNORECASE)
+
+        # Normalize MacBook screen sizes: 13.6 → 13, 14.2 → 14, 15.3 → 15, 16.2 → 16
+        family = re.sub(
+            r"\b(1[3-6])\.\d\b",
+            r"\1", family,
+        )
+
+        # Extract chip attribute ONLY for Mac products (M4, M5 Pro, M5 Max, etc.)
+        is_mac = bool(re.search(r"\bMac[Bb]ook\b", family, re.IGNORECASE))
+        if is_mac:
+            chip_match = CHIP_PATTERN.search(family)
+            if chip_match:
+                raw_chip = chip_match.group(1).strip()
+                result["chip"] = raw_chip[0].upper() + raw_chip[1:]
+
+        # Extract watch size attribute (40mm, 42mm, 44mm, 46mm, 49mm)
+        size_match = WATCH_SIZE_PATTERN.search(family)
+        if size_match and re.search(r"\bwatch\b", family, re.IGNORECASE):
+            result["size_mm"] = int(size_match.group(1))
+
+        # Strip trailing noise: lone "Color", "Edition", trailing punctuation
+        family = re.sub(r"\bColou?r\b", "", family, flags=re.IGNORECASE)
+        family = re.sub(r"\s{2,}", " ", family).strip()
+        family = re.sub(r"[\s,\-/]+$", "", family).strip()
+
         result["model_family"] = _normalize_family_case(family)
 
     return result
