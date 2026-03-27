@@ -8,20 +8,10 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      - key: POSTGRES_USER
+      - key: DATABASE_URL
         sync: false
-      - key: POSTGRES_PASSWORD
+      - key: REDIS_URL
         sync: false
-      - key: POSTGRES_HOST
-        sync: false
-      - key: POSTGRES_PORT
-        value: "5432"
-      - key: POSTGRES_DB
-        value: qiymetleri
-      - key: REDIS_HOST
-        sync: false
-      - key: REDIS_PORT
-        value: "6379"
 
   # Celery worker (scraper task queue)
   - type: worker

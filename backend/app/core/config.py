@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        url = os.getenv("DATABASE_URL", "")
+        if url:
+            # Supabase/Render provide postgresql:// — convert to asyncpg
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -25,6 +29,9 @@ class Settings(BaseSettings):
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
+        url = os.getenv("DATABASE_URL", "")
+        if url:
+            return url
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -48,6 +55,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8000",
         "https://qiymetleri.com",
+        "https://qiymetleri.vercel.app",
     ]
 
     class Config:
