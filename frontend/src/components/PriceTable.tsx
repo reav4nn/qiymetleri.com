@@ -18,6 +18,8 @@ interface PriceTableProps {
   };
 }
 
+import { STORE_LOGOS } from "@/lib/store-logos";
+
 export function PriceTable({ prices, storeNames, labels }: PriceTableProps) {
   const sorted = [...prices].sort(
     (a, b) => Number(a.price_azn) - Number(b.price_azn)
@@ -35,7 +37,10 @@ export function PriceTable({ prices, storeNames, labels }: PriceTableProps) {
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)]">
+                {STORE_LOGOS[price.store_id] && (
+                  <img src={STORE_LOGOS[price.store_id]} alt="" className="h-4 w-4 rounded-sm object-contain" />
+                )}
                 {storeNames[price.store_id] || price.store_id}
               </span>
               {price.in_stock ? (
@@ -88,7 +93,12 @@ export function PriceTable({ prices, storeNames, labels }: PriceTableProps) {
             {sorted.map((price, i) => (
               <tr key={price.id} className={i === 0 ? "bg-[var(--color-success-subtle)]" : ""}>
                 <td className="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">
-                  {storeNames[price.store_id] || price.store_id}
+                  <span className="inline-flex items-center gap-2">
+                    {STORE_LOGOS[price.store_id] && (
+                      <img src={STORE_LOGOS[price.store_id]} alt="" className="h-4 w-4 rounded-sm object-contain" />
+                    )}
+                    {storeNames[price.store_id] || price.store_id}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-sm font-bold text-[var(--color-text-primary)]">
                   {Number(price.price_azn).toFixed(2)} ₼

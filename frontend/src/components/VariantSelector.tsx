@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Variant } from "@/lib/api";
+import { STORE_LOGOS } from "@/lib/store-logos";
 
 interface VariantSelectorProps {
   variants: Variant[];
@@ -157,7 +158,12 @@ export function VariantSelector({ variants, storeNames }: VariantSelectorProps) 
                   className={i === 0 ? "bg-[var(--color-success-subtle)]" : ""}
                 >
                   <td className="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">
-                    {storeNames[price.store_id] || price.store_id}
+                    <span className="inline-flex items-center gap-2">
+                      {STORE_LOGOS[price.store_id] && (
+                        <img src={STORE_LOGOS[price.store_id]} alt="" className="h-4 w-4 rounded-sm object-contain" />
+                      )}
+                      {storeNames[price.store_id] || price.store_id}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)]">
                     {price.variant_name}

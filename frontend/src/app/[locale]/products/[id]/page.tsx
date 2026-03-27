@@ -7,6 +7,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
 import { productSchema } from "@/lib/schema";
+import { STORE_LOGOS } from "@/lib/store-logos";
 
 export const revalidate = 300;
 
@@ -148,8 +149,11 @@ export default async function ProductPage({
               <span className="text-xl font-bold text-[var(--color-success)] sm:text-2xl">
                 {Number(lowestPrice.price_azn).toFixed(2)} ₼
               </span>
-              <span className="ml-2 text-xs text-[var(--color-text-secondary)] sm:text-sm">
-                ({STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
+              <span className="ml-2 inline-flex items-center gap-1 text-xs text-[var(--color-text-secondary)] sm:text-sm">
+                ({STORE_LOGOS[lowestPrice.store_id] && (
+                  <img src={STORE_LOGOS[lowestPrice.store_id]} alt="" className="inline h-3.5 w-3.5 rounded-sm object-contain" />
+                )}
+                {STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
               </span>
             </div>
           )}
