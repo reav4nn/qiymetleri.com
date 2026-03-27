@@ -11,7 +11,6 @@ Usage:
 """
 
 import asyncio
-import json
 import os
 import re
 import sys
@@ -208,7 +207,7 @@ async def run(dry_run: bool = False, threshold: float = AUTO_MERGE_THRESHOLD):
         if not dry_run:
             await session.commit()
 
-        print(f"\nSummary:")
+        print("\nSummary:")
         print(f"  Auto-merged: {auto_merged}")
         print(f"  Flagged for review: {flagged_review}")
         if dry_run:

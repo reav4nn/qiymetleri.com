@@ -1,8 +1,7 @@
 from collections import defaultdict
-import re
 from uuid import UUID
 
-from sqlalchemy import Float, case, cast, func, literal, select, text as sa_text
+from sqlalchemy import Float, cast, func, select, text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 

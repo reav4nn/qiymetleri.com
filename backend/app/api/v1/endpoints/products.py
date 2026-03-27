@@ -11,7 +11,6 @@ from app.schemas.product import (
     PaginatedResponse,
     PriceHistorySchema,
     ProductDetailSchema,
-    ProductListSchema,
 )
 from app.services.product_service import (
     get_family_variants,

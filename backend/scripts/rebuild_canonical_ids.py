@@ -10,7 +10,6 @@ Usage:
 """
 
 import asyncio
-import json
 import os
 import re
 import sys
@@ -113,7 +112,7 @@ async def run(dry_run: bool = False):
                         {"new_cid": new_cid, "pid": pid},
                     )
                     updated += 1
-                except Exception as e:
+                except Exception:
                     await session.rollback()
                     conflicts += 1
 

@@ -2,10 +2,10 @@ import logging
 from uuid import UUID
 
 from celery import Celery
-from celery.result import AsyncResult
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import get_settings
 from app.core.database import get_db
@@ -143,7 +143,6 @@ async def scraper_history(limit: int = Query(default=20, ge=1, le=100)):
 
             spider = task_result.get("spider", "unknown")
             if spider == "unknown":
-                children = data.get("children", [])
                 args = data.get("args", [])
                 if args and isinstance(args, list):
                     spider = args[0]
@@ -355,7 +354,6 @@ async def list_admin_products(
         query = query.join(CurrentPrice).where(CurrentPrice.store_id == store_id)
 
     # Count
-    from sqlalchemy import select as sa_select
     count_q = select(sa_func.count()).select_from(query.subquery())
     total = (await db.execute(count_q)).scalar() or 0
 
@@ -391,9 +389,6 @@ async def list_admin_products(
         })
 
     return {"items": items, "total": total, "page": page, "per_page": per_page}
-
-
-from sqlalchemy.orm import selectinload
 
 
 @router.patch("/products/{product_id}")

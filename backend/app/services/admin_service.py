@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import func, select, text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession
 
