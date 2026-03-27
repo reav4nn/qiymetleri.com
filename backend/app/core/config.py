@@ -50,6 +50,10 @@ class Settings(BaseSettings):
             return url
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
+    # Admin credentials
+    ADMIN_USER: str = "admin"
+    ADMIN_PASSWORD: str = "changeme"
+
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:3000",

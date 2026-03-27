@@ -11,6 +11,10 @@ RUN poetry config virtualenvs.create false \
 COPY shared/ /app/shared/
 COPY backend/ .
 
+RUN groupadd -r appuser && useradd -r -g appuser appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

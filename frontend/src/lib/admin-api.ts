@@ -4,6 +4,29 @@ const API_BASE_URL =
     ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000")
     : "";
 
+function getAuthHeader(): string | null {
+  if (typeof window === "undefined") {
+    // Server-side: use env vars (not NEXT_PUBLIC — stays on server)
+    const user = process.env.ADMIN_USER;
+    const pass = process.env.ADMIN_PASSWORD;
+    if (user && pass) return `Basic ${Buffer.from(`${user}:${pass}`).toString("base64")}`;
+    return null;
+  }
+  const token = sessionStorage.getItem("admin_auth");
+  return token ? `Basic ${token}` : null;
+}
+
+function promptAndStoreCredentials(): string | null {
+  if (typeof window === "undefined") return null;
+  const user = window.prompt("Admin username:");
+  if (!user) return null;
+  const pass = window.prompt("Admin password:");
+  if (!pass) return null;
+  const token = btoa(`${user}:${pass}`);
+  sessionStorage.setItem("admin_auth", token);
+  return `Basic ${token}`;
+}
+
 export interface DashboardStats {
   total_products: number;
   total_variants: number;
@@ -92,11 +115,30 @@ export interface RecentProduct {
 }
 
 async function adminFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin${path}`, {
-    cache: "no-store",
-    credentials: "include",
-    ...options,
-  });
+  const headers: Record<string, string> = {
+    ...Object.fromEntries(
+      Object.entries(options?.headers || {})
+    ),
+  };
+  const auth = getAuthHeader();
+  if (auth) headers["Authorization"] = auth;
+
+  const url = `${API_BASE_URL}/api/v1/admin${path}`;
+  let res = await fetch(url, { cache: "no-store", ...options, headers });
+
+  // On 401, prompt for credentials and retry once
+  if (res.status === 401 && typeof window !== "undefined") {
+    const newAuth = promptAndStoreCredentials();
+    if (newAuth) {
+      headers["Authorization"] = newAuth;
+      res = await fetch(url, { cache: "no-store", ...options, headers });
+    }
+    if (res.status === 401) {
+      sessionStorage.removeItem("admin_auth");
+      throw new Error("Authentication failed — invalid credentials");
+    }
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`Admin API error ${res.status}: ${text}`);

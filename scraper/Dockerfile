@@ -8,11 +8,15 @@ COPY scraper/pyproject.toml scraper/poetry.lock* ./
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --only main
 
-# Install Playwright browsers
+# Install Playwright browsers (requires root, so do before USER switch)
 RUN playwright install --with-deps chromium
 
 COPY shared/ /app/shared/
 COPY scraper/ .
+
+RUN groupadd -r appuser && useradd -r -g appuser appuser \
+    && chown -R appuser:appuser /app
+USER appuser
 
 ENV SCRAPY_SETTINGS_MODULE=qiymetleri_scraper.settings
 ENV PYTHONPATH=/app

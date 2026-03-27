@@ -45,6 +45,8 @@ services:
       POSTGRES_DB: qiymetleri
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
       - "8000:8000"
     depends_on:

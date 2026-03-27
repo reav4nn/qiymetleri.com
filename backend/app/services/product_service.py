@@ -259,11 +259,11 @@ async def get_price_history(
         select(PriceHistory)
         .where(id_filter)
         .where(
-            PriceHistory.time >= func.now() - sa_text(f"interval '{days} days'")
+            PriceHistory.time >= func.now() - sa_text("make_interval(days => :days)")
         )
         .order_by(PriceHistory.time)
     )
-    result = await db.execute(query)
+    result = await db.execute(query, {"days": days})
     return list(result.scalars().all())
 
 
