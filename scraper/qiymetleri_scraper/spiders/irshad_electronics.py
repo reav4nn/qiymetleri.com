@@ -93,6 +93,12 @@ JUNK_KEYWORDS = [
     r"\btreadmill\b", r"\bwalkingpad\b",
     r"\bprojector\b", r"\bproyektor\b",
     r"\btaube\b.*\btv\b",
+    # Appliance brands — never electronics we track
+    r"\bbeko\b", r"\bbosch\b", r"\bmidea\b", r"\bdyson\b",
+    r"\bfujifilm\b", r"\binstax\b", r"\bhaier\b", r"\bvestel\b",
+    r"\barcelik\b", r"\btefal\b", r"\belectrolux\b", r"\bindesit\b",
+    r"\bwhirlpool\b", r"\bgorenje\b", r"\bphilips\b.*\b(iron|shaver|blender)\b",
+    r"\bdelonghi\b", r"\bkenwood\b",
 ]
 
 # Cross-category exclusions — brand may match but product belongs elsewhere
@@ -104,6 +110,8 @@ CATEGORY_EXCLUSIONS = {
         r"\bmacbook\b", r"\bairpods\b", r"\bbuds\b",
         r"\bcase\b", r"\bcover\b", r"\bfolio\b", r"\bsilicone\b",
         r"\btv\b", r"\btelevizor\b", r"\bled\b.*\bsmart\b",
+        r"\blg\s+g[rn]-",  # LG fridge model numbers (GR-xxx, GN-xxx)
+        r"\blg\s+f\d+v",   # LG washing machine model numbers (F4V...)
     ],
     "laptops": [
         r"\bearbuds?\b", r"\bheadphones?\b", r"\bearphones?\b", r"\bheadset\b",
