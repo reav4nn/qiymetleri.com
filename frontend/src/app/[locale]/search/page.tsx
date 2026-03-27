@@ -1,6 +1,7 @@
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { fetchProducts, fetchFilters } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
+import { AdBanner } from "@/components/AdBanner";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterPanel } from "@/components/FilterPanel";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -187,8 +188,19 @@ export default async function SearchPage({
             }
           >
             <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3">
-              {data.items.map((product) => (
-                <ProductCard key={product.id} product={product} locale={locale} />
+              {data.items.map((product, index) => (
+                <React.Fragment key={product.id}>
+                  <ProductCard product={product} locale={locale} />
+                  {index === 5 && data.items.length > 6 && (
+                    <div className="col-span-2 lg:col-span-3">
+                      <AdBanner
+                        slot={process.env.NEXT_PUBLIC_AD_SLOT_SEARCH || ""}
+                        format="horizontal"
+                        className="my-2 sm:my-4"
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           </Suspense>

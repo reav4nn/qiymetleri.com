@@ -3,6 +3,7 @@ import { fetchProduct, fetchPriceHistory } from "@/lib/api";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { VariantSelector } from "@/components/VariantSelector";
 import { PriceTable } from "@/components/PriceTable";
+import { AdBanner } from "@/components/AdBanner";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
@@ -187,6 +188,14 @@ export default async function ProductPage({
           />
         </section>
       )}
+
+      {/* Ad between price table and history chart */}
+      <div className="mt-6 sm:mt-8">
+        <AdBanner
+          slot={process.env.NEXT_PUBLIC_AD_SLOT_PRODUCT || ""}
+          format="horizontal"
+        />
+      </div>
 
       {/* Price history chart */}
       <section className="mt-6 sm:mt-8">

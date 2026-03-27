@@ -58,9 +58,18 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ADSENSE_ID: ${NEXT_PUBLIC_ADSENSE_ID:-}
+        NEXT_PUBLIC_AD_SLOT_HOME: ${NEXT_PUBLIC_AD_SLOT_HOME:-}
+        NEXT_PUBLIC_AD_SLOT_SEARCH: ${NEXT_PUBLIC_AD_SLOT_SEARCH:-}
+        NEXT_PUBLIC_AD_SLOT_PRODUCT: ${NEXT_PUBLIC_AD_SLOT_PRODUCT:-}
     container_name: qiymetleri_frontend
     environment:
       NEXT_PUBLIC_API_URL: http://backend:8000
+      NEXT_PUBLIC_ADSENSE_ID: ${NEXT_PUBLIC_ADSENSE_ID:-}
+      NEXT_PUBLIC_AD_SLOT_HOME: ${NEXT_PUBLIC_AD_SLOT_HOME:-}
+      NEXT_PUBLIC_AD_SLOT_SEARCH: ${NEXT_PUBLIC_AD_SLOT_SEARCH:-}
+      NEXT_PUBLIC_AD_SLOT_PRODUCT: ${NEXT_PUBLIC_AD_SLOT_PRODUCT:-}
     ports:
       - "3000:3000"
     depends_on:

@@ -2,6 +2,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { TrendingSearches } from "@/components/TrendingSearches";
 import { StoreLogos } from "@/components/StoreLogos";
 import { CategoryCard } from "@/components/CategoryCard";
+import { AdBanner } from "@/components/AdBanner";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -76,6 +77,14 @@ export default async function HomePage({
       {/* Trusted Stores */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <StoreLogos />
+      </div>
+
+      {/* Ad Banner */}
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-10 lg:px-8">
+        <AdBanner
+          slot={process.env.NEXT_PUBLIC_AD_SLOT_HOME || ""}
+          format="horizontal"
+        />
       </div>
 
       {/* Categories */}
