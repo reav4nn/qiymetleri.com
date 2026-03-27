@@ -11,6 +11,7 @@ const navItems = [
   { href: "/admin/scraper", label: "Scraper" },
   { href: "/admin/stores", label: "Mağazalar" },
   { href: "/admin/anomalies", label: "Anomaliya" },
+  { href: "/admin/matches", label: "Matching" },
 ];
 
 const adminCSS = `

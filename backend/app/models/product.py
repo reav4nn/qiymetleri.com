@@ -10,7 +10,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -48,6 +48,7 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     image_url: Mapped[str | None] = mapped_column(Text)
     attributes: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    search_vector = mapped_column(TSVECTOR)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

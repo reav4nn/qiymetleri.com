@@ -198,3 +198,113 @@ async def get_price_anomalies(
         }
         for row in rows
     ]
+
+
+async def get_pending_matches(db: AsyncSession, limit: int = 50) -> list[dict]:
+    """Get product matches pending review, with example products from each family."""
+    query = sa_text("""
+        SELECT
+            pm.id,
+            pm.family_a,
+            pm.family_b,
+            pm.brand,
+            pm.similarity,
+            pm.status,
+            pm.created_at,
+            (SELECT string_agg(DISTINCT cp.store_id, ', ')
+             FROM products p JOIN current_prices cp ON cp.product_id = p.id
+             WHERE p.model_family = pm.family_a AND p.brand = pm.brand) AS stores_a,
+            (SELECT string_agg(DISTINCT cp.store_id, ', ')
+             FROM products p JOIN current_prices cp ON cp.product_id = p.id
+             WHERE p.model_family = pm.family_b AND p.brand = pm.brand) AS stores_b,
+            (SELECT COUNT(*) FROM products p
+             WHERE p.model_family = pm.family_a AND p.brand = pm.brand) AS count_a,
+            (SELECT COUNT(*) FROM products p
+             WHERE p.model_family = pm.family_b AND p.brand = pm.brand) AS count_b
+        FROM product_matches pm
+        WHERE pm.status = 'pending'
+        ORDER BY pm.similarity DESC
+        LIMIT :limit
+    """)
+    result = await db.execute(query, {"limit": limit})
+    rows = result.all()
+
+    return [
+        {
+            "id": row[0],
+            "family_a": row[1],
+            "family_b": row[2],
+            "brand": row[3],
+            "similarity": float(row[4]),
+            "status": row[5],
+            "created_at": row[6],
+            "stores_a": row[7],
+            "stores_b": row[8],
+            "count_a": row[9],
+            "count_b": row[10],
+        }
+        for row in rows
+    ]
+
+
+async def get_match_stats(db: AsyncSession) -> dict:
+    """Get statistics about product matches."""
+    query = sa_text("""
+        SELECT status, COUNT(*) FROM product_matches GROUP BY status
+    """)
+    result = await db.execute(query)
+    stats = {row[0]: row[1] for row in result.all()}
+    return {
+        "pending": stats.get("pending", 0),
+        "accepted": stats.get("accepted", 0),
+        "rejected": stats.get("rejected", 0),
+        "total": sum(stats.values()),
+    }
+
+
+async def review_match(
+    db: AsyncSession, match_id: int, action: str
+) -> dict | None:
+    """Accept or reject a product match.
+
+    On accept: merge model_family of family_b into family_a (shorter/cleaner name).
+    On reject: mark as rejected.
+    """
+    row = await db.execute(
+        sa_text("SELECT id, family_a, family_b, brand FROM product_matches WHERE id = :id"),
+        {"id": match_id},
+    )
+    match = row.first()
+    if not match:
+        return None
+
+    _, family_a, family_b, brand = match
+
+    if action == "accept":
+        # Pick shorter/cleaner name as canonical
+        canonical = family_a if len(family_a) <= len(family_b) else family_b
+        other = family_b if canonical == family_a else family_a
+
+        await db.execute(
+            sa_text("""
+                UPDATE products SET model_family = :canonical
+                WHERE model_family = :other AND brand = :brand
+            """),
+            {"canonical": canonical, "other": other, "brand": brand},
+        )
+        await db.execute(
+            sa_text("""
+                UPDATE product_matches
+                SET status = 'accepted', merged_family = :canonical, reviewed_at = NOW()
+                WHERE id = :id
+            """),
+            {"canonical": canonical, "id": match_id},
+        )
+    else:
+        await db.execute(
+            sa_text("UPDATE product_matches SET status = 'rejected', reviewed_at = NOW() WHERE id = :id"),
+            {"id": match_id},
+        )
+
+    await db.commit()
+    return {"id": match_id, "status": action + "ed", "family_a": family_a, "family_b": family_b}

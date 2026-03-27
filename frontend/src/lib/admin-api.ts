@@ -128,3 +128,36 @@ export function fetchRecentProducts(minutes = 60, storeId?: number): Promise<Rec
   if (storeId !== undefined) params.set("store_id", String(storeId));
   return adminFetch(`/products/recent?${params}`);
 }
+
+export interface MatchStats {
+  pending: number;
+  accepted: number;
+  rejected: number;
+  total: number;
+}
+
+export interface ProductMatch {
+  id: number;
+  family_a: string;
+  family_b: string;
+  brand: string;
+  similarity: number;
+  status: string;
+  created_at: string;
+  stores_a: string | null;
+  stores_b: string | null;
+  count_a: number;
+  count_b: number;
+}
+
+export function fetchMatchStats(): Promise<MatchStats> {
+  return adminFetch("/matches/stats");
+}
+
+export function fetchPendingMatches(limit = 50): Promise<ProductMatch[]> {
+  return adminFetch(`/matches/pending?limit=${limit}`);
+}
+
+export function reviewMatch(id: number, action: "accept" | "reject"): Promise<{ id: number; status: string }> {
+  return adminFetch(`/matches/${id}/${action}`, { method: "POST" });
+}

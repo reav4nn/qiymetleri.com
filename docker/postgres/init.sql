@@ -4,6 +4,9 @@
 -- Enable TimescaleDB
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
+-- Enable trigram extension for fuzzy search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- ============================================================
 -- STORES — Registered electronics stores in Azerbaijan
 -- ============================================================
@@ -34,9 +37,8 @@ CREATE INDEX IF NOT EXISTS idx_products_brand ON products (brand);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
 CREATE INDEX IF NOT EXISTS idx_products_canonical_id ON products (canonical_id);
 CREATE INDEX IF NOT EXISTS idx_products_name_trgm ON products USING gin (name gin_trgm_ops);
-
--- Enable trigram extension for fuzzy search
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_products_model_family ON products (model_family);
+CREATE INDEX IF NOT EXISTS idx_products_model_family_trgm ON products USING gin (model_family gin_trgm_ops);
 
 -- Full-text search index
 ALTER TABLE products ADD COLUMN IF NOT EXISTS search_vector tsvector
@@ -96,6 +98,24 @@ INSERT INTO stores (id, name, base_url) VALUES
     ('irshad_electronics', 'Irshad Electronics', 'https://irshad.az'),
     ('ispace', 'iSpace', 'https://ispace.az')
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- PRODUCT_MATCHES — Cross-store fuzzy match tracking
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_matches (
+    id SERIAL PRIMARY KEY,
+    family_a VARCHAR(200) NOT NULL,
+    family_b VARCHAR(200) NOT NULL,
+    brand VARCHAR(100),
+    similarity DECIMAL(5,4) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    merged_family VARCHAR(200),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    reviewed_at TIMESTAMPTZ,
+    UNIQUE(family_a, family_b)
+);
+
+CREATE INDEX IF NOT EXISTS idx_product_matches_status ON product_matches (status);
 
 -- ============================================================
 -- USEFUL VIEWS

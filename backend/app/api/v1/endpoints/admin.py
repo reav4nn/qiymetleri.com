@@ -19,9 +19,12 @@ from app.schemas.admin import (
 )
 from app.services.admin_service import (
     get_dashboard_stats,
+    get_match_stats,
+    get_pending_matches,
     get_price_anomalies,
     get_recent_products,
     get_store_health,
+    review_match,
 )
 
 logger = logging.getLogger(__name__)
@@ -186,6 +189,36 @@ async def recent_products(
 ):
     """Get products added or updated recently."""
     return await get_recent_products(db, minutes=minutes, store_id=store_id)
+
+
+@router.get("/matches/stats")
+async def match_statistics(db: AsyncSession = Depends(get_db)):
+    """Get product match statistics."""
+    return await get_match_stats(db)
+
+
+@router.get("/matches/pending")
+async def pending_matches(
+    limit: int = Query(default=50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get product matches pending manual review."""
+    return await get_pending_matches(db, limit=limit)
+
+
+@router.post("/matches/{match_id}/{action}")
+async def review_product_match(
+    match_id: int,
+    action: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Accept or reject a product match."""
+    if action not in ("accept", "reject"):
+        raise HTTPException(status_code=400, detail="Action must be 'accept' or 'reject'")
+    result = await review_match(db, match_id, action)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Match not found")
+    return result
 
 
 def _get_last_task_result(spider_name: str) -> dict | None:

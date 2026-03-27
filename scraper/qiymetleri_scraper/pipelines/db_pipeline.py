@@ -237,8 +237,27 @@ class DatabasePipeline:
 
     @staticmethod
     def _build_canonical_id(adapter: ItemAdapter) -> str:
+        """Build a canonical ID using normalized attributes when available.
+
+        Uses model_family + storage + color for a more precise ID that
+        distinguishes variants while grouping cross-store duplicates.
+        Falls back to brand + title slug for unrecognized products.
+        """
         brand = (adapter.get("brand") or "unknown").lower().strip()
-        title = (adapter.get("original_title") or "").lower().strip()
-        # Simple canonical ID — will be improved with normalization pipeline
-        slug = re.sub(r"[^a-z0-9]+", "_", f"{brand}_{title}").strip("_")
+        title = adapter.get("original_title") or ""
+
+        if normalize_name:
+            parsed = normalize_name(title)
+            family = parsed.get("model_family")
+            if family:
+                parts = [brand, family.lower()]
+                if parsed.get("storage_gb"):
+                    parts.append(f"{parsed['storage_gb']}gb")
+                if parsed.get("color"):
+                    parts.append(parsed["color"].lower())
+                slug = re.sub(r"[^a-z0-9]+", "_", "_".join(parts)).strip("_")
+                return slug[:255]
+
+        # Fallback: simple brand + title slug
+        slug = re.sub(r"[^a-z0-9]+", "_", f"{brand}_{title}".lower()).strip("_")
         return slug[:255]

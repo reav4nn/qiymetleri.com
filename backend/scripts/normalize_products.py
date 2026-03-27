@@ -19,12 +19,14 @@ from shared.normalizer import normalize_name
 
 
 async def run():
-    database_url = os.environ.get(
-        "DATABASE_URL",
-        "postgresql+asyncpg://qiymetleri:qiymetleri_secret@localhost:5432/qiymetleri",
+    pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+    pg_port = os.environ.get("POSTGRES_PORT", "5432")
+    pg_user = os.environ.get("POSTGRES_USER", "qiymetleri")
+    pg_pass = os.environ.get("POSTGRES_PASSWORD", "qiymetleri_secret")
+    pg_db = os.environ.get("POSTGRES_DB", "qiymetleri")
+    database_url = (
+        f"postgresql+asyncpg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
     )
-    if "asyncpg" not in database_url:
-        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
 
     engine = create_async_engine(database_url, echo=False)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
