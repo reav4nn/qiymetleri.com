@@ -74,6 +74,12 @@ services:
     container_name: qiymetleri_scraper
     environment:
       DATABASE_URL: postgresql://qiymetleri:qiymetleri_secret@postgres:5432/qiymetleri
+      PROXY_ENABLED: ${PROXY_ENABLED:-false}
+      PROXY_HOST: ${PROXY_HOST:-brd.superproxy.io}
+      PROXY_PORT: ${PROXY_PORT:-22225}
+      PROXY_USERNAME: ${PROXY_USERNAME:-}
+      PROXY_PASSWORD: ${PROXY_PASSWORD:-}
+      PROXY_COUNTRY: ${PROXY_COUNTRY:-az}
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,6 +96,12 @@ services:
     environment:
       DATABASE_URL: postgresql://qiymetleri:qiymetleri_secret@postgres:5432/qiymetleri
       REDIS_URL: redis://redis:6379/0
+      PROXY_ENABLED: ${PROXY_ENABLED:-false}
+      PROXY_HOST: ${PROXY_HOST:-brd.superproxy.io}
+      PROXY_PORT: ${PROXY_PORT:-22225}
+      PROXY_USERNAME: ${PROXY_USERNAME:-}
+      PROXY_PASSWORD: ${PROXY_PASSWORD:-}
+      PROXY_COUNTRY: ${PROXY_COUNTRY:-az}
     depends_on:
       postgres:
         condition: service_healthy

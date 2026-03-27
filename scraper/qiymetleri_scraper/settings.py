@@ -20,6 +20,11 @@ RETRY_ENABLED = True
 RETRY_TIMES = 3
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
 
+# Proxy rotation (BrightData) — activated via PROXY_ENABLED=true env var
+DOWNLOADER_MIDDLEWARES = {
+    "qiymetleri_scraper.middlewares.proxy_middleware.BrightDataProxyMiddleware": 350,
+}
+
 # Playwright settings
 DOWNLOAD_HANDLERS = {
     "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
