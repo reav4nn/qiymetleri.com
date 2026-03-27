@@ -13,6 +13,7 @@ Usage:
 import asyncio
 import json
 import os
+import re
 import sys
 
 from sqlalchemy import text
@@ -21,6 +22,39 @@ from sqlalchemy.orm import sessionmaker
 
 AUTO_MERGE_THRESHOLD = 0.85
 REVIEW_THRESHOLD = 0.60
+
+# Regex to extract series/generation number from model families.
+# Prevents merging "Series 10" with "Series 11", "iPhone 16" with "iPhone 17", etc.
+_VERSION_PATTERNS = [
+    re.compile(r"Series\s+(\d+)", re.IGNORECASE),
+    re.compile(r"iPhone\s+(\d+)", re.IGNORECASE),
+    re.compile(r"iPad\s+(?:Air|Pro|mini)?\s*(\d+)", re.IGNORECASE),
+    re.compile(r"Galaxy\s+S(\d+)", re.IGNORECASE),
+    re.compile(r"Galaxy\s+A(\d+)", re.IGNORECASE),
+    re.compile(r"Pixel\s+(\d+)", re.IGNORECASE),
+    re.compile(r"MacBook\s+(?:Air|Pro)\s+M(\d+)", re.IGNORECASE),
+    re.compile(r"Ultra\s+(\d+)", re.IGNORECASE),
+    re.compile(r"SE\s+(\d+)", re.IGNORECASE),
+    re.compile(r"Redmi\s+(\d+)", re.IGNORECASE),
+    re.compile(r"Watch\s+(\d+)", re.IGNORECASE),
+    re.compile(r"AirPods\s+(\d+)", re.IGNORECASE),
+    re.compile(r"AirPods\s+Pro\s+(\d+)", re.IGNORECASE),
+]
+
+
+def _has_version_conflict(a: str, b: str) -> bool:
+    """Return True if a and b differ only by version/series number.
+
+    E.g. 'Apple Watch Series 10 46mm' vs 'Apple Watch Series 11 46mm' → True
+         'iPhone 16 Pro' vs 'iPhone 17 Pro' → True
+         'iPhone 16 128GB' vs 'iPhone 16 256GB' → False (same version)
+    """
+    for pat in _VERSION_PATTERNS:
+        ma = pat.search(a)
+        mb = pat.search(b)
+        if ma and mb and ma.group(1) != mb.group(1):
+            return True
+    return False
 
 
 def _pick_canonical_family(a: str, b: str) -> str:
@@ -107,6 +141,10 @@ async def run(dry_run: bool = False, threshold: float = AUTO_MERGE_THRESHOLD):
                 actual_b = merge_map.get(family_b, family_b)
                 if actual_a == actual_b:
                     continue
+
+            # Never merge different product versions/series
+            if _has_version_conflict(family_a, family_b):
+                continue
 
             canonical = _pick_canonical_family(family_a, family_b)
             other = family_b if canonical == family_a else family_a

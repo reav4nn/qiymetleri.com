@@ -1,5 +1,8 @@
-// Use relative URL so client-side fetches go through nginx proxy
-const API_BASE_URL = "";
+// Server components need full URL; client components use relative URL via nginx/rewrite
+const API_BASE_URL =
+  typeof window === "undefined"
+    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000")
+    : "";
 
 export interface DashboardStats {
   total_products: number;
