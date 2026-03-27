@@ -51,7 +51,7 @@ CATEGORY_BRANDS = {
 CATEGORY_KEYWORDS = {
     "smartphones": [
         r"\b\d+\s*gb\b", r"\b\d+\s*tb\b", r"\bphone\b", r"\btelefon\b",
-        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bredmi\b", r"\bnote \d",
+        r"\biphone\b", r"\bgalaxy [sazm]", r"\bredmi\b", r"\bnote \d",
         r"\b[45]g\b", r"\blte\b", r"\bdual sim\b", r"\bds\b", r"\bflip\b",
         r"\bfold\b", r"\bpro max\b",
     ],
@@ -91,6 +91,8 @@ JUNK_KEYWORDS = [
     r"\bmulti-styler\b", r"\bfootball\b", r"\bbasketball\b",
     r"\bflash drive\b", r"\bsandisk\b", r"\bgame console\b",
     r"\btreadmill\b", r"\bwalkingpad\b",
+    r"\bprojector\b", r"\bproyektor\b",
+    r"\btaube\b.*\btv\b",
 ]
 
 # Cross-category exclusions — brand may match but product belongs elsewhere
@@ -100,23 +102,44 @@ CATEGORY_EXCLUSIONS = {
         r"\bwatch\b", r"\bsmart saat\b", r"\bsaat\b", r"\bband\b",
         r"\bpad\b", r"\btablet\b", r"\blaptop\b", r"\bnotebook\b",
         r"\bmacbook\b", r"\bairpods\b", r"\bbuds\b",
+        r"\bcase\b", r"\bcover\b", r"\bfolio\b", r"\bsilicone\b",
+        r"\btv\b", r"\btelevizor\b", r"\bled\b.*\bsmart\b",
     ],
     "laptops": [
         r"\bearbuds?\b", r"\bheadphones?\b", r"\bearphones?\b", r"\bheadset\b",
+        r"\bqulaql[ıi]q\b", r"\bearpods\b",
         r"\bwatch\b", r"\bsmart saat\b", r"\bsaat\b",
-        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bairpods\b", r"\bbuds\b",
+        r"\biphone\b", r"\bgalaxy [sazm]", r"\bairpods\b", r"\bbuds\b",
+        r"\bredmi\s+\d", r"\bredmi\s+note\b", r"\bpoco\b",
+        r"\bhonor\s+x\d", r"\bhonor\s+magic\d", r"\bhonor\s+[0-9]",
+        r"\bmagic\s+mouse\b", r"\bmagic\s+keyboard\b", r"\bklaviatura\b",
+        r"\bcharger\b", r"\badapter\b", r"\bşarj\b", r"\bqidalanma\b",
+        r"\bconnector\b", r"\bçoxportlu\b",
     ],
     "headphones": [
         r"\bwatch\b", r"\bsmart saat\b", r"\bsaat\b",
-        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bpad\b", r"\btablet\b",
+        r"\biphone\b", r"\bgalaxy [sazm]", r"\bpad\b", r"\btablet\b",
         r"\blaptop\b", r"\bnotebook\b", r"\bmacbook\b",
         r"\bgame console\b",
+        r"\bprojector\b", r"\bproyektor\b",
+        r"\bmouse\b", r"\bsuperlight\b",
+        r"\bfolio\b", r"\bglass\b", r"\banty glass\b",
+        r"\bredmi\s+\d", r"\bredmi\s+note\b", r"\bpoco\b",
+        r"\bhonor\s+x\d", r"\bhonor\s+pad\b",
+        r"\btv\b", r"\btelevizor\b",
+        r"\b\d+\s*gb\s*/\s*\d+\s*gb\b",  # "8 GB / 256 GB" = phone pattern
     ],
     "smartwatches": [
         r"\bearbuds?\b", r"\bheadphones?\b", r"\bearphones?\b", r"\bheadset\b",
-        r"\biphone\b", r"\bgalaxy [sazm]\b", r"\bpad\b", r"\btablet\b",
+        r"\biphone\b", r"\bgalaxy [sazm]", r"\bpad\b", r"\btablet\b",
         r"\blaptop\b", r"\bnotebook\b", r"\bmacbook\b",
         r"\bairpods\b", r"\bbuds\b",
+        r"\bredmi\s+\d", r"\bredmi\s+note\b", r"\bpoco\b",
+        r"\bhonor\s+x\d", r"\bhonor\s+magic\d", r"\bhonor\s+[0-9]",
+        r"\btv\b", r"\btelevizor\b",
+        r"\bipad\b",
+        r"\bflip\b", r"\bfold\b",
+        r"\b\d+\s*gb\s*/\s*\d+\s*gb\b",  # "8 GB / 256 GB" = phone pattern
     ],
 }
 

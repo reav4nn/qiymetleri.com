@@ -6,6 +6,7 @@ Brand is always Apple.
 Categories covered (MVP): iPhones, Macs, AirPods, Apple Watches.
 """
 
+import re
 from datetime import datetime, timezone
 
 import scrapy
@@ -19,6 +20,17 @@ CATEGORY_URLS = {
     "headphones": "/category/airpods",
     "smartwatches": "/category/apple-watch",
 }
+
+# Patterns that indicate an accessory, not the main product category
+_ACCESSORY_PATTERNS = [
+    r"\bmouse\b", r"\bkeyboard\b", r"\bklaviatura\b",
+    r"\bcharger\b", r"\badapter\b", r"\bşarj\b", r"\bqidalanma\b",
+    r"\bçoxportlu\b", r"\bconnector\b", r"\bhub\b", r"\bdock\b",
+    r"\bcase\b", r"\bcover\b", r"\bfolio\b", r"\bsleeve\b",
+    r"\bcable\b", r"\bkabel\b", r"\bglass\b", r"\bfilm\b",
+    r"\bpencil\b", r"\bstylus\b", r"\btrackpad\b",
+    r"\bearPods\b", r"\bearpods\b",  # EarPods on Mac page
+]
 
 
 class ISpaceSpider(scrapy.Spider):
@@ -79,6 +91,17 @@ class ISpaceSpider(scrapy.Spider):
                 ).strip()
 
                 if not name or len(name) < 3:
+                    continue
+
+                # Filter out accessories mixed into category pages
+                name_lower = name.lower()
+                is_accessory = any(
+                    re.search(p, name_lower) for p in _ACCESSORY_PATTERNS
+                )
+                if is_accessory:
+                    self.logger.debug(
+                        f"[iSpace] Skipped accessory: '{name}' in {category}"
+                    )
                     continue
 
                 item["original_title"] = name
