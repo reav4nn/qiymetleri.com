@@ -1,7 +1,7 @@
 <!-- prettier-ignore -->
 <div align="center">
 
-<img src="./frontend/public/qiymetleriNonTransparentDark.png" alt="qiymetleri.com logo" height="80" />
+<img src="./frontend/public/qiymetleriTransparentWhite.png" alt="qiymetleri.com logo" height="80" />
 
 # qiymetleri.com
 
