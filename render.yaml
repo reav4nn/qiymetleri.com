@@ -1,0 +1,40 @@
+services:
+  # FastAPI backend
+  - type: web
+    name: qiymetleri-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: "5432"
+      - key: POSTGRES_DB
+        value: qiymetleri
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+
+  # Celery worker (scraper task queue)
+  - type: worker
+    name: qiymetleri-celery
+    runtime: docker
+    dockerfilePath: ./scraper/Dockerfile
+    dockerContext: .
+    plan: free
+    startCommand: celery -A celery_app worker --loglevel=info --concurrency=1 -Q scraping,celery
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: PROXY_ENABLED
+        value: "false"

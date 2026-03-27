@@ -1,8 +1,13 @@
 -- qiymetleri.com PostgreSQL Schema
--- TimescaleDB extension for price_history hypertable
 
--- Enable TimescaleDB
-CREATE EXTENSION IF NOT EXISTS timescaledb;
+-- Enable TimescaleDB if available (local/self-hosted), skip gracefully on managed PostgreSQL
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS timescaledb;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'TimescaleDB not available — using standard PostgreSQL (price_history will work without hypertable)';
+END;
+$$;
 
 -- Enable trigram extension for fuzzy search
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -70,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_current_prices_store ON current_prices (store_id)
 CREATE INDEX IF NOT EXISTS idx_current_prices_price ON current_prices (price_azn);
 
 -- ============================================================
--- PRICE_HISTORY — TimescaleDB hypertable for time-series data
+-- PRICE_HISTORY — time-series data (TimescaleDB hypertable if available)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS price_history (
     time TIMESTAMPTZ NOT NULL,
@@ -80,11 +85,17 @@ CREATE TABLE IF NOT EXISTS price_history (
     in_stock BOOLEAN
 );
 
--- Convert to hypertable (7-day chunks)
-SELECT create_hypertable('price_history', 'time',
-    chunk_time_interval => INTERVAL '7 days',
-    if_not_exists => TRUE
-);
+-- Convert to hypertable if TimescaleDB is available (7-day chunks)
+DO $$
+BEGIN
+    PERFORM create_hypertable('price_history', 'time',
+        chunk_time_interval => INTERVAL '7 days',
+        if_not_exists => TRUE
+    );
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'TimescaleDB not available — price_history uses standard table';
+END;
+$$;
 
 CREATE INDEX IF NOT EXISTS idx_price_history_product ON price_history (product_id, time DESC);
 CREATE INDEX IF NOT EXISTS idx_price_history_store ON price_history (store_id, time DESC);
