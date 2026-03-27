@@ -10,6 +10,8 @@ RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 
 # Build
 COPY . .
+ARG NEXT_PUBLIC_API_URL=http://backend:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm build
 
 # Production

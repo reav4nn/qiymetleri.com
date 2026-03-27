@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Use relative URL so client-side fetches go through nginx proxy
+const API_BASE_URL = "";
 
 export interface DashboardStats {
   total_products: number;
@@ -90,6 +91,7 @@ export interface RecentProduct {
 async function adminFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}/api/v1/admin${path}`, {
     cache: "no-store",
+    credentials: "include",
     ...options,
   });
   if (!res.ok) {
