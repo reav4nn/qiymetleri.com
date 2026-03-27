@@ -118,6 +118,22 @@ CREATE TABLE IF NOT EXISTS product_matches (
 CREATE INDEX IF NOT EXISTS idx_product_matches_status ON product_matches (status);
 
 -- ============================================================
+-- SCRAPER_RUNS — Scraper job history for health monitoring
+-- ============================================================
+CREATE TABLE IF NOT EXISTS scraper_runs (
+    id SERIAL PRIMARY KEY,
+    spider VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'running',
+    items_scraped INTEGER DEFAULT 0,
+    errors INTEGER DEFAULT 0,
+    duration_seconds REAL,
+    started_at TIMESTAMPTZ NOT NULL,
+    finished_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_scraper_runs_spider ON scraper_runs (spider, started_at DESC);
+
+-- ============================================================
 -- USEFUL VIEWS
 -- ============================================================
 

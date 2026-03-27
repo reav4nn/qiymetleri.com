@@ -2,15 +2,23 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import get_cache, set_cache
 from app.core.database import get_db
 from app.models.product import CurrentPrice, Product, Store
 
 router = APIRouter()
 
+FILTERS_CACHE_KEY = "filters:all"
+FILTERS_TTL = 3600  # 1 hour — changes only on scraper runs
+
 
 @router.get("")
 async def get_filters(db: AsyncSession = Depends(get_db)):
     """Return available filter options: brands, stores, categories, price range."""
+
+    cached = await get_cache(FILTERS_CACHE_KEY)
+    if cached:
+        return cached
 
     brands_q = (
         select(Product.brand, func.count(Product.id).label("count"))
@@ -54,7 +62,7 @@ async def get_filters(db: AsyncSession = Depends(get_db)):
     price_result = await db.execute(price_q)
     price_row = price_result.first()
 
-    return {
+    result = {
         "brands": brands,
         "stores": stores,
         "categories": categories,
@@ -63,3 +71,6 @@ async def get_filters(db: AsyncSession = Depends(get_db)):
             "max": float(price_row.max_price) if price_row and price_row.max_price else 0,
         },
     }
+
+    await set_cache(FILTERS_CACHE_KEY, result, ttl=FILTERS_TTL)
+    return result

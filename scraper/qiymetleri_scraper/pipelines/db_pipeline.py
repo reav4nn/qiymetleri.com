@@ -1,8 +1,10 @@
 import logging
 import json
+import os
 import re
 from datetime import datetime, timezone
 
+import redis
 from itemadapter import ItemAdapter
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -19,23 +21,90 @@ except ImportError:
 class DatabasePipeline:
     """Store scraped items in PostgreSQL."""
 
-    def __init__(self, database_url: str):
+    def __init__(self, database_url: str, redis_url: str):
         self.database_url = database_url
+        self.redis_url = redis_url
         self.engine = None
         self.session_factory = None
+        self._redis = None
+        self._invalidated_keys: set[str] = set()
 
     @classmethod
     def from_crawler(cls, crawler):
         return cls(
             database_url=crawler.settings.get("DATABASE_URL"),
+            redis_url=crawler.settings.get(
+                "REDIS_URL",
+                os.getenv("REDIS_URL", "redis://redis:6379/0"),
+            ),
         )
 
     def open_spider(self, spider):
         self.engine = create_engine(self.database_url)
         self.session_factory = sessionmaker(bind=self.engine)
         self._ensure_schema()
+        self._spider_name = spider.name
+        self._run_start = datetime.now(timezone.utc)
+        self._item_count = 0
+        self._error_count = 0
+        try:
+            self._redis = redis.from_url(self.redis_url, decode_responses=True)
+            self._redis.ping()
+            logger.info("Redis connected for cache invalidation")
+        except Exception as e:
+            logger.warning(f"Redis not available — cache won't be invalidated: {e}")
+            self._redis = None
 
     def close_spider(self, spider):
+        # Record scraper run result
+        run_end = datetime.now(timezone.utc)
+        duration_s = (run_end - self._run_start).total_seconds()
+        status = "success" if self._error_count == 0 else "partial"
+        if self._item_count == 0:
+            status = "failed"
+
+        try:
+            with self.session_factory() as session:
+                session.execute(
+                    text("""
+                        INSERT INTO scraper_runs (spider, status, items_scraped, errors, duration_seconds, started_at, finished_at)
+                        VALUES (:spider, :status, :items, :errors, :duration, :started, :finished)
+                    """),
+                    {
+                        "spider": self._spider_name,
+                        "status": status,
+                        "items": self._item_count,
+                        "errors": self._error_count,
+                        "duration": duration_s,
+                        "started": self._run_start,
+                        "finished": run_end,
+                    },
+                )
+                session.commit()
+            logger.info(
+                f"Scraper run recorded: {self._spider_name} — {status}, "
+                f"{self._item_count} items, {self._error_count} errors, {duration_s:.1f}s"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to record scraper run: {e}")
+
+        # Batch-invalidate broad cache patterns once per spider run
+        if self._redis and self._invalidated_keys:
+            try:
+                for pattern in ["filters:*", "products:list:*"]:
+                    cursor = 0
+                    while True:
+                        cursor, keys = self._redis.scan(cursor, match=pattern, count=200)
+                        if keys:
+                            self._redis.delete(*keys)
+                        if cursor == 0:
+                            break
+                logger.info(
+                    f"Cache invalidated: {len(self._invalidated_keys)} product keys "
+                    f"+ filters + product lists"
+                )
+            except Exception as e:
+                logger.warning(f"Cache invalidation failed: {e}")
         if self.engine:
             self.engine.dispose()
 
@@ -96,6 +165,26 @@ class DatabasePipeline:
                     ('ispace', 'iSpace', 'https://ispace.az')
                 ON CONFLICT (id) DO NOTHING
             """))
+            # Scraper run history
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS scraper_runs (
+                    id SERIAL PRIMARY KEY,
+                    spider VARCHAR(100) NOT NULL,
+                    status VARCHAR(20) NOT NULL DEFAULT 'running',
+                    items_scraped INTEGER DEFAULT 0,
+                    errors INTEGER DEFAULT 0,
+                    duration_seconds REAL,
+                    started_at TIMESTAMPTZ NOT NULL,
+                    finished_at TIMESTAMPTZ
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_scraper_runs_spider ON scraper_runs (spider, started_at DESC)"))
+            # Indexes for query performance
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_current_prices_product ON current_prices (product_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_current_prices_store ON current_prices (store_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_current_prices_price ON current_prices (price_azn)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_history_product ON price_history (product_id, time DESC)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_history_store ON price_history (store_id, time DESC)"))
         logger.info("Database schema verified/created")
 
     def process_item(self, item, spider):
@@ -103,16 +192,32 @@ class DatabasePipeline:
         price_azn = adapter.get("price_azn")
         if price_azn is None:
             logger.warning(f"Skipping item with no price: {adapter.get('url')}")
+            self._error_count += 1
             return item
 
         now = datetime.now(timezone.utc)
 
-        with self.session_factory() as session:
-            canonical_id = self._build_canonical_id(adapter)
-            self._ensure_product_exists(session, adapter, canonical_id)
-            self._upsert_current_price(session, adapter, canonical_id, now)
-            self._insert_price_history(session, adapter, canonical_id, now)
-            session.commit()
+        try:
+            with self.session_factory() as session:
+                canonical_id = self._build_canonical_id(adapter)
+                self._ensure_product_exists(session, adapter, canonical_id)
+                self._upsert_current_price(session, adapter, canonical_id, now)
+                self._insert_price_history(session, adapter, canonical_id, now)
+                session.commit()
+
+            self._item_count += 1
+
+            # Invalidate product-specific cache keys
+            if self._redis:
+                try:
+                    product_key = f"product:{canonical_id}"
+                    self._redis.delete(product_key)
+                    self._invalidated_keys.add(product_key)
+                except Exception:
+                    pass
+        except Exception as e:
+            self._error_count += 1
+            logger.error(f"Failed to process item {adapter.get('url')}: {e}")
 
         return item
 

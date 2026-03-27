@@ -181,6 +181,51 @@ async def anomalies(
     return await get_price_anomalies(db, threshold_pct=threshold, hours=hours)
 
 
+@router.get("/scraper/health")
+async def scraper_health(db: AsyncSession = Depends(get_db)):
+    """Get scraper health summary from DB-stored run history."""
+    from sqlalchemy import text as sa_text
+
+    result = await db.execute(sa_text("""
+        SELECT DISTINCT ON (spider) spider, status, items_scraped, errors,
+               duration_seconds, started_at, finished_at
+        FROM scraper_runs
+        ORDER BY spider, started_at DESC
+    """))
+    rows = result.fetchall()
+
+    # Recent failure rate per spider (last 24h)
+    failure_result = await db.execute(sa_text("""
+        SELECT spider,
+               COUNT(*) as total_runs,
+               COUNT(*) FILTER (WHERE status = 'failed') as failed_runs
+        FROM scraper_runs
+        WHERE started_at > NOW() - INTERVAL '24 hours'
+        GROUP BY spider
+    """))
+    failure_rates = {r.spider: {"total": r.total_runs, "failed": r.failed_runs}
+                     for r in failure_result.fetchall()}
+
+    spiders = []
+    for row in rows:
+        rates = failure_rates.get(row.spider, {"total": 0, "failed": 0})
+        fail_pct = (rates["failed"] / rates["total"] * 100) if rates["total"] > 0 else 0
+        spiders.append({
+            "spider": row.spider,
+            "last_status": row.status,
+            "last_items": row.items_scraped,
+            "last_errors": row.errors,
+            "last_duration_s": row.duration_seconds,
+            "last_run": row.finished_at.isoformat() if row.finished_at else None,
+            "runs_24h": rates["total"],
+            "failures_24h": rates["failed"],
+            "failure_rate_pct": round(fail_pct, 1),
+            "healthy": fail_pct < 30,
+        })
+
+    return {"spiders": spiders}
+
+
 @router.get("/products/recent", response_model=list[RecentProduct])
 async def recent_products(
     minutes: int = Query(default=60, ge=1, le=1440),

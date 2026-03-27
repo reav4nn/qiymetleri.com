@@ -32,7 +32,7 @@ class KontaktHomeSpider(scrapy.Spider):
         "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
     }
 
-    async def start(self):
+    def start_requests(self):
         base_url = "https://kontakt.az"
         for category, path in CATEGORY_URLS.items():
             yield scrapy.Request(

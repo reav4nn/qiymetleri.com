@@ -52,6 +52,9 @@ DATABASE_URL = os.getenv(
     "postgresql://qiymetleri:qiymetleri_secret@localhost:5432/qiymetleri",
 )
 
+# Redis (for cache invalidation)
+REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+
 # Logging
 LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"

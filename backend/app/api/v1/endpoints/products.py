@@ -1,9 +1,11 @@
+import hashlib
 import math
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import get_cache, set_cache
 from app.core.database import get_db
 from app.schemas.product import (
     PaginatedResponse,
@@ -20,6 +22,19 @@ from app.services.product_service import (
 
 router = APIRouter()
 
+PRODUCTS_LIST_TTL = 300  # 5 minutes
+PRODUCT_DETAIL_TTL = 300
+
+
+def _list_cache_key(
+    page: int, per_page: int, q: str | None, category: str | None,
+    brand: str | None, store_id: str | None, min_price: float | None,
+    max_price: float | None, sort_by: str,
+) -> str:
+    raw = f"{page}:{per_page}:{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}:{sort_by}"
+    h = hashlib.md5(raw.encode()).hexdigest()[:12]
+    return f"products:list:{h}"
+
 
 @router.get("", response_model=PaginatedResponse)
 async def list_products(
@@ -34,6 +49,13 @@ async def list_products(
     sort_by: str = Query("name", pattern="^(name|price_asc|price_desc)$"),
     db: AsyncSession = Depends(get_db),
 ):
+    cache_key = _list_cache_key(
+        page, per_page, q, category, brand, store_id, min_price, max_price, sort_by
+    )
+    cached = await get_cache(cache_key)
+    if cached:
+        return cached
+
     items, total = await get_products(
         db,
         page=page,
@@ -46,13 +68,16 @@ async def list_products(
         max_price=max_price,
         sort_by=sort_by,
     )
-    return PaginatedResponse(
+    result = PaginatedResponse(
         items=items,
         total=total,
         page=page,
         per_page=per_page,
         pages=math.ceil(total / per_page) if total > 0 else 0,
     )
+
+    await set_cache(cache_key, result.model_dump(), ttl=PRODUCTS_LIST_TTL)
+    return result
 
 
 @router.get("/{product_id}", response_model=ProductDetailSchema)
