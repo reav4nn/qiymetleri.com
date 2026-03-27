@@ -132,7 +132,7 @@ export default async function LocaleLayout({
                   alt=""
                   width={32}
                   height={32}
-                  className="logo-for-light h-8 w-8"
+                  className="logo-for-light h-8 w-8 translate-y-[1px]"
                   priority
                 />
                 <Image
@@ -140,7 +140,7 @@ export default async function LocaleLayout({
                   alt=""
                   width={32}
                   height={32}
-                  className="logo-for-dark h-8 w-8"
+                  className="logo-for-dark h-8 w-8 translate-y-[1px]"
                   priority
                 />
                 <span className="text-lg font-bold text-[var(--color-accent)] sm:text-xl">
