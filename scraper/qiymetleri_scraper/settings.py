@@ -51,11 +51,15 @@ ITEM_PIPELINES = {
     "qiymetleri_scraper.pipelines.db_pipeline.DatabasePipeline": 300,
 }
 
-# Database
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://qiymetleri:qiymetleri_secret@localhost:5432/qiymetleri",
-)
+# Database — always set DATABASE_URL in production
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+if not DATABASE_URL:
+    _pg_user = os.getenv("POSTGRES_USER", "qiymetleri")
+    _pg_pass = os.getenv("POSTGRES_PASSWORD", "qiymetleri")
+    _pg_host = os.getenv("POSTGRES_HOST", "localhost")
+    _pg_port = os.getenv("POSTGRES_PORT", "5432")
+    _pg_db = os.getenv("POSTGRES_DB", "qiymetleri")
+    DATABASE_URL = f"postgresql://{_pg_user}:{_pg_pass}@{_pg_host}:{_pg_port}/{_pg_db}"
 
 # Redis (for cache invalidation)
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")

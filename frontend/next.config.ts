@@ -7,14 +7,14 @@ const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
+      { protocol: "https", hostname: "kontakt.az" },
+      { protocol: "https", hostname: "**.kontakt.az" },
+      { protocol: "https", hostname: "bakuelectronics.az" },
+      { protocol: "https", hostname: "**.bakuelectronics.az" },
+      { protocol: "https", hostname: "irshad.az" },
+      { protocol: "https", hostname: "**.irshad.az" },
+      { protocol: "https", hostname: "ispace.az" },
+      { protocol: "https", hostname: "**.ispace.az" },
     ],
   },
   async rewrites() {

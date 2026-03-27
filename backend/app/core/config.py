@@ -1,7 +1,14 @@
+import logging
 from functools import lru_cache
 import os
 
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
+
+_INSECURE_PASSWORDS = frozenset({
+    "changeme", "password", "admin", "admin123", "123456", "secret",
+})
 
 
 class Settings(BaseSettings):
@@ -50,7 +57,7 @@ class Settings(BaseSettings):
             return url
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
-    # Admin credentials
+    # Admin credentials — MUST be set via environment variables in production
     ADMIN_USER: str = "admin"
     ADMIN_PASSWORD: str = "changeme"
 
@@ -59,8 +66,18 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8000",
         "https://qiymetleri.com",
+        "https://www.qiymetleri.com",
         "https://qiymetleri.vercel.app",
     ]
+
+    def validate_admin_credentials(self) -> None:
+        """Warn if admin credentials are insecure defaults."""
+        if self.ADMIN_PASSWORD.lower() in _INSECURE_PASSWORDS:
+            logger.warning(
+                "ADMIN_PASSWORD is set to an insecure default ('%s'). "
+                "Set a strong ADMIN_PASSWORD environment variable before deploying to production.",
+                self.ADMIN_PASSWORD,
+            )
 
     class Config:
         env_file = ".env"
@@ -69,4 +86,6 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    settings.validate_admin_credentials()
+    return settings
