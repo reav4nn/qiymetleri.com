@@ -107,6 +107,31 @@ AZ_PREFIXES = [
 ]
 
 
+def _normalize_apple_watch_family(family: str) -> str:
+    """Simplify Apple Watch model_family to series + size only.
+
+    'Apple Watch Series 11 GPS 46mm Jet Black Aluminium Case with Sport Band M/L'
+    → 'Apple Watch Series 11 46mm'
+    """
+    m = re.match(
+        r"(Apple\s+Watch\s+"
+        r"(?:Ultra(?:\s+Series)?\s*\d?|Series\s+\d+|SE\b\s*\d?))"  # series part
+        r".*?(\b\d{2}m)m?\b",                                       # size (40mm or 40m typo)
+        family,
+        re.IGNORECASE,
+    )
+    if m:
+        series = re.sub(r"\s+", " ", m.group(1)).strip()
+        size = m.group(2) if m.group(2).endswith("mm") else m.group(2) + "m"
+        # Normalize "Gen.2" / "Gen 2" / "(2024)" out of SE names
+        series = re.sub(r"\s*Gen\.?\s*\d+", "", series)
+        series = re.sub(r"\s*\(\d{4}\)", "", series)
+        # Normalize "Ultra Series 2" → "Ultra 2"
+        series = re.sub(r"Ultra\s+Series\s+(\d)", r"Ultra \1", series)
+        return f"{series} {size}"
+    return family
+
+
 def _normalize_family_case(family: str) -> str:
     """Normalize model family casing for consistent grouping."""
     apple_prefixed = re.match(
@@ -117,6 +142,9 @@ def _normalize_family_case(family: str) -> str:
     )
     if apple_prefixed:
         family = apple_prefixed.group(1)
+    # Simplify Apple Watch families to series + size
+    if re.match(r"Apple\s+Watch", family, re.IGNORECASE):
+        family = _normalize_apple_watch_family(family)
     return family
 
 

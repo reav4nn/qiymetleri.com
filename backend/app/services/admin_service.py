@@ -220,7 +220,23 @@ async def get_pending_matches(db: AsyncSession, limit: int = 50) -> list[dict]:
             (SELECT COUNT(*) FROM products p
              WHERE p.model_family = pm.family_a AND p.brand = pm.brand) AS count_a,
             (SELECT COUNT(*) FROM products p
-             WHERE p.model_family = pm.family_b AND p.brand = pm.brand) AS count_b
+             WHERE p.model_family = pm.family_b AND p.brand = pm.brand) AS count_b,
+            (SELECT json_agg(json_build_object(
+                'name', sub.name, 'store_id', sub.store_id, 'url', sub.url, 'price', sub.price_azn
+             )) FROM (
+                SELECT p.name, cp.store_id, cp.url, cp.price_azn
+                FROM products p JOIN current_prices cp ON cp.product_id = p.id
+                WHERE p.model_family = pm.family_a AND p.brand = pm.brand
+                ORDER BY cp.price_azn LIMIT 5
+             ) sub) AS products_a,
+            (SELECT json_agg(json_build_object(
+                'name', sub.name, 'store_id', sub.store_id, 'url', sub.url, 'price', sub.price_azn
+             )) FROM (
+                SELECT p.name, cp.store_id, cp.url, cp.price_azn
+                FROM products p JOIN current_prices cp ON cp.product_id = p.id
+                WHERE p.model_family = pm.family_b AND p.brand = pm.brand
+                ORDER BY cp.price_azn LIMIT 5
+             ) sub) AS products_b
         FROM product_matches pm
         WHERE pm.status = 'pending'
         ORDER BY pm.similarity DESC
@@ -242,6 +258,8 @@ async def get_pending_matches(db: AsyncSession, limit: int = 50) -> list[dict]:
             "stores_b": row[8],
             "count_a": row[9],
             "count_b": row[10],
+            "products_a": row[11] or [],
+            "products_b": row[12] or [],
         }
         for row in rows
     ]

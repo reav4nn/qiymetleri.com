@@ -7,7 +7,49 @@ import {
   reviewMatch,
   type MatchStats,
   type ProductMatch,
+  type MatchProduct,
 } from "@/lib/admin-api";
+
+function FamilyCard({ family, stores, count, products }: {
+  family: string;
+  stores: string | null;
+  count: number;
+  products: MatchProduct[];
+}) {
+  return (
+    <div
+      style={{
+        background: "var(--color-bg-main)",
+        padding: "10px 12px",
+        borderRadius: 6,
+        fontSize: 13,
+      }}
+    >
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>{family}</div>
+      <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 6 }}>
+        {stores || "N/A"} &middot; {count} variant{count !== 1 ? "s" : ""}
+      </div>
+      {products.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {products.map((p, i) => (
+            <div key={i} style={{ fontSize: 11, display: "flex", justifyContent: "space-between", gap: 6, alignItems: "baseline" }}>
+              <span style={{ color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                {p.url ? (
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-accent)", textDecoration: "none" }}>
+                    {p.name}
+                  </a>
+                ) : p.name}
+              </span>
+              <span style={{ color: "var(--color-text-muted)", whiteSpace: "nowrap", fontSize: 10 }}>
+                {p.store_id} · {Number(p.price).toFixed(0)} ₼
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MatchesPage() {
   const [stats, setStats] = useState<MatchStats | null>(null);
@@ -167,38 +209,14 @@ export default function MatchesPage() {
               </div>
 
               {/* Two families */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8, alignItems: "center" }}>
-                <div
-                  style={{
-                    background: "var(--color-bg-main)",
-                    padding: "10px 12px",
-                    borderRadius: 6,
-                    fontSize: 13,
-                  }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{m.family_a}</div>
-                  <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
-                    {m.stores_a || "N/A"} &middot; {m.count_a} variant{m.count_a !== 1 ? "s" : ""}
-                  </div>
-                </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8, alignItems: "start" }}>
+                <FamilyCard family={m.family_a} stores={m.stores_a} count={m.count_a} products={m.products_a} />
 
-                <div style={{ fontSize: 18, color: "var(--color-text-muted)", textAlign: "center" }}>
+                <div style={{ fontSize: 18, color: "var(--color-text-muted)", textAlign: "center", paddingTop: 12 }}>
                   =?
                 </div>
 
-                <div
-                  style={{
-                    background: "var(--color-bg-main)",
-                    padding: "10px 12px",
-                    borderRadius: 6,
-                    fontSize: 13,
-                  }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{m.family_b}</div>
-                  <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
-                    {m.stores_b || "N/A"} &middot; {m.count_b} variant{m.count_b !== 1 ? "s" : ""}
-                  </div>
-                </div>
+                <FamilyCard family={m.family_b} stores={m.stores_b} count={m.count_b} products={m.products_b} />
               </div>
 
               {/* Actions */}

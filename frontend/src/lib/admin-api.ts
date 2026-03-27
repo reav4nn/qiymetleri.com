@@ -138,6 +138,13 @@ export interface MatchStats {
   total: number;
 }
 
+export interface MatchProduct {
+  name: string;
+  store_id: string;
+  url: string | null;
+  price: number;
+}
+
 export interface ProductMatch {
   id: number;
   family_a: string;
@@ -150,6 +157,8 @@ export interface ProductMatch {
   stores_b: string | null;
   count_a: number;
   count_b: number;
+  products_a: MatchProduct[];
+  products_b: MatchProduct[];
 }
 
 export function fetchMatchStats(): Promise<MatchStats> {
