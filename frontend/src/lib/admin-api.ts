@@ -12,7 +12,7 @@ function getAuthHeader(): string | null {
     if (user && pass) return `Basic ${Buffer.from(`${user}:${pass}`).toString("base64")}`;
     return null;
   }
-  const token = sessionStorage.getItem("admin_auth");
+  const token = sessionStorage.getItem("admin_auth") || localStorage.getItem("admin_auth");
   return token ? `Basic ${token}` : null;
 }
 
@@ -24,6 +24,7 @@ function promptAndStoreCredentials(): string | null {
   if (!pass) return null;
   const token = btoa(`${user}:${pass}`);
   sessionStorage.setItem("admin_auth", token);
+  localStorage.setItem("admin_auth", token);
   return `Basic ${token}`;
 }
 
@@ -135,6 +136,7 @@ async function adminFetch<T>(path: string, options?: RequestInit): Promise<T> {
     }
     if (res.status === 401) {
       sessionStorage.removeItem("admin_auth");
+      localStorage.removeItem("admin_auth");
       throw new Error("Authentication failed — invalid credentials");
     }
   }

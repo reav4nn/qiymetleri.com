@@ -200,17 +200,17 @@ export default function ScraperPage() {
           marginBottom: 20,
           backgroundColor: overview?.worker_online
             ? "var(--color-success-subtle)"
-            : "var(--color-danger-subtle)",
+            : "rgba(234,179,8,0.12)",
           color: overview?.worker_online
             ? "var(--color-success)"
-            : "var(--color-danger)",
+            : "#a16207",
           fontSize: 14,
           fontWeight: 600,
         }}
       >
         {overview?.worker_online
           ? `Celery Worker aktiv — ${overview.active_tasks} aktiv task, ${overview.scheduled_tasks} planlaşdırılmış`
-          : "Celery Worker offline — spider-lar işləyə bilmir!"}
+          : "Celery Worker qoşulu deyil — spider-lar GitHub Actions ilə işləyir"}
       </div>
 
       {triggerMsg && (
