@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminAuthGate } from "@/components/AdminAuthGate";
 
 export const metadata: Metadata = {
   title: "Admin Panel | qiymetleri.com",
@@ -106,6 +107,7 @@ export default function AdminLayout({
         />
       </head>
       <body>
+        <AdminAuthGate>
         <div className="admin-shell">
           {/* Desktop sidebar */}
           <aside className="admin-sidebar">
@@ -157,6 +159,7 @@ export default function AdminLayout({
             ))}
           </nav>
         </div>
+        </AdminAuthGate>
       </body>
     </html>
   );
