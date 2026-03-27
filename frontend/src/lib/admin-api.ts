@@ -175,3 +175,76 @@ export function fetchPendingMatches(limit = 50): Promise<ProductMatch[]> {
 export function reviewMatch(id: number, action: "accept" | "reject"): Promise<{ id: number; status: string }> {
   return adminFetch(`/matches/${id}/${action}`, { method: "POST" });
 }
+
+// ── Product Management ──
+
+export interface AdminProduct {
+  id: string;
+  canonical_id: string | null;
+  name: string;
+  brand: string | null;
+  category: string | null;
+  model_family: string | null;
+  image_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  prices: {
+    store_id: string;
+    price_azn: number;
+    in_stock: boolean;
+    url: string | null;
+  }[];
+}
+
+export interface AdminProductList {
+  items: AdminProduct[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface ProductUpdatePayload {
+  name?: string;
+  brand?: string;
+  category?: string;
+  model_family?: string;
+  image_url?: string;
+}
+
+export function fetchAdminProducts(params: {
+  page?: number;
+  per_page?: number;
+  category?: string;
+  brand?: string;
+  store_id?: string;
+  q?: string;
+}): Promise<AdminProductList> {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", String(params.page));
+  if (params.per_page) qs.set("per_page", String(params.per_page));
+  if (params.category) qs.set("category", params.category);
+  if (params.brand) qs.set("brand", params.brand);
+  if (params.store_id) qs.set("store_id", params.store_id);
+  if (params.q) qs.set("q", params.q);
+  return adminFetch(`/products?${qs}`);
+}
+
+export function updateProduct(id: string, data: ProductUpdatePayload): Promise<{ id: string; updated: boolean }> {
+  return adminFetch(`/products/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteProduct(id: string): Promise<{ id: string; deleted: boolean }> {
+  return adminFetch(`/products/${id}`, { method: "DELETE" });
+}
+
+export function batchDeleteProducts(ids: string[]): Promise<{ deleted: number }> {
+  return adminFetch("/products/batch/delete", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(ids),
+  });
+}

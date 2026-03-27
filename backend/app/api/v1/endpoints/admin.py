@@ -1,8 +1,10 @@
 import logging
+from uuid import UUID
 
 from celery import Celery
 from celery.result import AsyncResult
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -299,3 +301,210 @@ def _get_last_task_result(spider_name: str) -> dict | None:
         return best
     except Exception:
         return None
+
+
+# ── Product Management ──────────────────────────────────────────────
+
+
+class ProductUpdate(BaseModel):
+    name: str | None = None
+    brand: str | None = None
+    category: str | None = None
+    model_family: str | None = None
+    image_url: str | None = None
+
+
+class AdminProduct(BaseModel):
+    id: str
+    canonical_id: str | None
+    name: str
+    brand: str | None
+    category: str | None
+    model_family: str | None
+    image_url: str | None
+    created_at: str | None
+    updated_at: str | None
+    prices: list[dict]
+
+
+@router.get("/products", response_model=dict)
+async def list_admin_products(
+    page: int = Query(default=1, ge=1),
+    per_page: int = Query(default=25, ge=1, le=100),
+    category: str | None = Query(default=None),
+    brand: str | None = Query(default=None),
+    store_id: str | None = Query(default=None),
+    q: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    """List products for admin management (not grouped by family)."""
+    from sqlalchemy import select, func as sa_func
+    from app.models.product import Product, CurrentPrice
+
+    query = select(Product).options(
+        selectinload(Product.current_prices)
+    )
+
+    if q and len(q) >= 2:
+        query = query.where(Product.name.ilike(f"%{q}%"))
+    if category:
+        query = query.where(Product.category == category)
+    if brand:
+        query = query.where(Product.brand == brand)
+    if store_id:
+        query = query.join(CurrentPrice).where(CurrentPrice.store_id == store_id)
+
+    # Count
+    from sqlalchemy import select as sa_select
+    count_q = select(sa_func.count()).select_from(query.subquery())
+    total = (await db.execute(count_q)).scalar() or 0
+
+    # Paginate
+    query = query.order_by(Product.updated_at.desc()).offset(
+        (page - 1) * per_page
+    ).limit(per_page)
+
+    result = await db.execute(query)
+    products = result.scalars().unique().all()
+
+    items = []
+    for p in products:
+        items.append({
+            "id": str(p.id),
+            "canonical_id": p.canonical_id,
+            "name": p.name,
+            "brand": p.brand,
+            "category": p.category,
+            "model_family": p.model_family,
+            "image_url": p.image_url,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+            "prices": [
+                {
+                    "store_id": cp.store_id,
+                    "price_azn": float(cp.price_azn),
+                    "in_stock": cp.in_stock,
+                    "url": cp.url,
+                }
+                for cp in p.current_prices
+            ],
+        })
+
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
+
+
+from sqlalchemy.orm import selectinload
+
+
+@router.patch("/products/{product_id}")
+async def update_product(
+    product_id: str,
+    updates: ProductUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update product fields (name, brand, category, model_family, image_url)."""
+    from sqlalchemy import select
+    from app.models.product import Product
+
+    pid = UUID(product_id)
+    result = await db.execute(select(Product).where(Product.id == pid))
+    product = result.scalars().first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    update_data = updates.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    for field, value in update_data.items():
+        setattr(product, field, value)
+
+    await db.commit()
+    await db.refresh(product)
+
+    # Invalidate cache
+    _invalidate_product_cache(product.canonical_id)
+
+    return {
+        "id": str(product.id),
+        "name": product.name,
+        "brand": product.brand,
+        "category": product.category,
+        "model_family": product.model_family,
+        "updated": True,
+    }
+
+
+@router.delete("/products/batch/delete")
+async def batch_delete_products(
+    product_ids: list[str] = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete multiple products at once."""
+    from sqlalchemy import select, delete as sa_delete
+    from app.models.product import Product, CurrentPrice
+
+    uuids = [UUID(pid) for pid in product_ids]
+
+    # Get canonical_ids for cache invalidation
+    result = await db.execute(
+        select(Product.canonical_id).where(Product.id.in_(uuids))
+    )
+    canonical_ids = [r[0] for r in result.all()]
+
+    await db.execute(
+        sa_delete(CurrentPrice).where(CurrentPrice.product_id.in_(uuids))
+    )
+    del_result = await db.execute(
+        sa_delete(Product).where(Product.id.in_(uuids))
+    )
+    await db.commit()
+
+    for cid in canonical_ids:
+        _invalidate_product_cache(cid)
+
+    return {"deleted": del_result.rowcount}
+
+
+@router.delete("/products/{product_id}")
+async def delete_product(
+    product_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a product and its current prices."""
+    from sqlalchemy import select, delete as sa_delete
+    from app.models.product import Product, CurrentPrice
+
+    pid = UUID(product_id)
+    result = await db.execute(select(Product).where(Product.id == pid))
+    product = result.scalars().first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    canonical_id = product.canonical_id
+
+    # Delete current_prices first (may not cascade depending on DB setup)
+    await db.execute(
+        sa_delete(CurrentPrice).where(CurrentPrice.product_id == pid)
+    )
+    await db.delete(product)
+    await db.commit()
+
+    _invalidate_product_cache(canonical_id)
+
+    return {"id": product_id, "deleted": True}
+
+
+def _invalidate_product_cache(canonical_id: str | None):
+    """Invalidate Redis cache for a product."""
+    try:
+        import redis as sync_redis
+        r = sync_redis.from_url(settings.REDIS_URL, decode_responses=True)
+        if canonical_id:
+            r.delete(f"product:{canonical_id}")
+        # Also clear list and filter caches
+        for pattern in ("products:list:*", "filters:*"):
+            for key in r.scan_iter(match=pattern, count=100):
+                r.delete(key)
+    except Exception:
+        logger.debug("Could not invalidate Redis cache")

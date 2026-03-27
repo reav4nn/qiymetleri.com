@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 
 const navItems = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/products", label: "Məhsullar" },
   { href: "/admin/scraper", label: "Scraper" },
   { href: "/admin/stores", label: "Mağazalar" },
   { href: "/admin/anomalies", label: "Anomaliya" },
