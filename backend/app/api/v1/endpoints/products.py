@@ -129,4 +129,13 @@ async def get_product_price_history(
     product = await get_product_by_id(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    return await get_price_history(db, product_id, days=days)
+
+    # Collect history from all products in the same model_family
+    # so the chart shows price lines from every store
+    family_ids = [product_id]
+    if product.model_family:
+        from app.services.product_service import get_family_variants
+        variants = await get_family_variants(db, product)
+        family_ids = [v.id for v in variants]
+
+    return await get_price_history(db, family_ids, days=days)

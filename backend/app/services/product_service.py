@@ -240,12 +240,17 @@ async def get_family_variants(
 
 async def get_price_history(
     db: AsyncSession,
-    product_id: UUID,
+    product_ids: UUID | list[UUID],
     days: int = 30,
 ) -> list[PriceHistory]:
+    if isinstance(product_ids, list):
+        id_filter = PriceHistory.product_id.in_(product_ids)
+    else:
+        id_filter = PriceHistory.product_id == product_ids
+
     query = (
         select(PriceHistory)
-        .where(PriceHistory.product_id == product_id)
+        .where(id_filter)
         .where(
             PriceHistory.time >= func.now() - sa_text(f"interval '{days} days'")
         )
