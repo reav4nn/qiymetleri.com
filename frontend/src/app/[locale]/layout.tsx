@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { NextIntlClientProvider, useMessages } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
@@ -38,13 +39,30 @@ export async function generateMetadata({
       title: t("title"),
       description: t("description"),
       url: absoluteUrl(`/${locale}`),
+      images: [
+        {
+          url: absoluteUrl("/qiymetleriNonTransparentDark.png"),
+          width: 1080,
+          height: 1080,
+          alt: SITE_NAME,
+        },
+      ],
     },
     twitter: {
       card: "summary",
       title: t("title"),
       description: t("description"),
+      images: [absoluteUrl("/qiymetleriNonTransparentDark.png")],
     },
     robots: { index: true, follow: true },
+    icons: {
+      icon: [
+        { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+        { url: "/favicon.ico", sizes: "16x16" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
+    manifest: "/site.webmanifest",
     other: {
       "theme-color": "#4f46e5",
     },
@@ -108,8 +126,26 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-bg-page)]/95 backdrop-blur-md">
             <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-              <a href={`/${locale}`} className="text-lg font-bold text-[var(--color-accent)] sm:text-xl">
-                qiymetleri.com
+              <a href={`/${locale}`} className="flex items-center gap-2">
+                <Image
+                  src="/qiymetleriTransparentDark.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="logo-for-light h-8 w-8"
+                  priority
+                />
+                <Image
+                  src="/qiymetleriTransparentWhite.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="logo-for-dark h-8 w-8"
+                  priority
+                />
+                <span className="text-lg font-bold text-[var(--color-accent)] sm:text-xl">
+                  qiymetleri.com
+                </span>
               </a>
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="hidden gap-6 md:flex">

@@ -67,10 +67,22 @@ export function MobileNav({ locale, links }: MobileNavProps) {
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-4">
           <a
             href={`/${locale}`}
-            className="text-xl font-bold text-[var(--color-accent)]"
+            className="flex items-center gap-2"
             onClick={() => setOpen(false)}
           >
-            qiymetleri.com
+            <img
+              src="/qiymetleriTransparentDark.png"
+              alt=""
+              className="logo-for-light h-7 w-7"
+            />
+            <img
+              src="/qiymetleriTransparentWhite.png"
+              alt=""
+              className="logo-for-dark h-7 w-7"
+            />
+            <span className="text-xl font-bold text-[var(--color-accent)]">
+              qiymetleri.com
+            </span>
           </a>
           <button
             onClick={() => setOpen(false)}

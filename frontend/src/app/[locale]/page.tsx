@@ -28,11 +28,20 @@ export async function generateMetadata({
       title: t("homeTitle"),
       description: t("homeDescription"),
       url: absoluteUrl(`/${locale}`),
+      images: [
+        {
+          url: absoluteUrl("/qiymetleriNonTransparentDark.png"),
+          width: 1080,
+          height: 1080,
+          alt: SITE_NAME,
+        },
+      ],
     },
     twitter: {
       card: "summary",
       title: t("homeTitle"),
       description: t("homeDescription"),
+      images: [absoluteUrl("/qiymetleriNonTransparentDark.png")],
     },
   };
 }

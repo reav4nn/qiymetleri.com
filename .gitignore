@@ -38,3 +38,4 @@ poetry.lock
 pnpm-debug.log
 frontend/tsconfig.tsbuildinfo
 docker/nginx/.htpasswd
+*.psd

@@ -80,6 +80,13 @@
   --color-danger-subtle: rgba(239, 68, 68, 0.15);
 }
 
+/* ── Logo theme switching ── */
+.logo-for-light { display: block; }
+.logo-for-dark  { display: none; }
+
+[data-theme="dark"] .logo-for-light { display: none; }
+[data-theme="dark"] .logo-for-dark  { display: block; }
+
 /* ── Smooth theme transitions ── */
 *,
 *::before,
