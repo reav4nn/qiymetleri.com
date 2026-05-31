@@ -75,6 +75,7 @@ services:
     env_file: .env.docker
     environment:
       NEXT_PUBLIC_API_URL: http://backend:8000
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_ADSENSE_ID: ${NEXT_PUBLIC_ADSENSE_ID:-}
       NEXT_PUBLIC_AD_SLOT_HOME: ${NEXT_PUBLIC_AD_SLOT_HOME:-}
       NEXT_PUBLIC_AD_SLOT_SEARCH: ${NEXT_PUBLIC_AD_SLOT_SEARCH:-}

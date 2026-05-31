@@ -15,16 +15,16 @@ export function ProductCard({ product, locale }: ProductCardProps) {
   return (
     <a
       href={`/${locale}/products/${product.id}`}
-      className="flex flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-2 transition hover:border-[var(--color-accent)] hover:shadow-lg hover:shadow-[var(--color-accent-subtle)] active:scale-[0.98] sm:rounded-xl sm:p-4"
+      className="flex flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 shadow-sm transition hover:border-[var(--color-border-hover)] hover:shadow-md active:scale-[0.98] sm:p-4"
     >
-      <div className="mb-1.5 flex h-32 items-center justify-center overflow-hidden rounded-md bg-white sm:mb-3 sm:h-36 sm:rounded-lg">
+      <div className="mb-2 flex h-28 items-center justify-center overflow-hidden rounded-lg bg-[var(--color-bg-page)] p-2 sm:mb-3 sm:h-36">
         {product.image_url ? (
           <Image
             src={product.image_url}
             alt={product.name}
             width={144}
             height={144}
-            className="h-full w-auto object-contain mix-blend-multiply"
+            className="h-full w-auto object-contain"
             unoptimized
           />
         ) : (
@@ -43,7 +43,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
           <span className="text-[10px] text-[var(--color-text-secondary)] capitalize sm:text-xs">{product.brand}</span>
         )}
         {product.variant_count > 1 && (
-          <span className="rounded-full bg-[var(--color-accent-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-accent)] sm:px-2 sm:text-xs">
+          <span className="text-[10px] text-[var(--color-text-muted)] sm:text-xs">
             {product.variant_count} {t("variant")}
           </span>
         )}
@@ -51,7 +51,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
       <div className="mt-auto pt-2 sm:pt-3">
         {product.lowest_price ? (
           <div>
-            <span className="text-base font-bold text-[var(--color-success)] sm:text-lg">
+            <span className="text-base font-semibold text-[var(--color-text-primary)] sm:text-lg">
               {Number(product.lowest_price).toFixed(2)} ₼
             </span>
             <span className="ml-1 text-[10px] text-[var(--color-text-secondary)] sm:ml-2 sm:text-xs">

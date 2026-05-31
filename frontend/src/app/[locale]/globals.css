@@ -38,46 +38,70 @@
   --font-sans: "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
-/* ── Light theme (default) ── */
+/* ── Light theme ── */
 :root {
-  --color-bg-page: #f5f5f7;
-  --color-bg-surface: #ffffff;
-  --color-bg-surface-hover: #ebebee;
-  --color-bg-input: #ebebee;
-  --color-border: #d0d0d8;
-  --color-border-subtle: rgba(0, 0, 0, 0.09);
-  --color-border-hover: #b4b4c0;
-  --color-text-primary: #1a1a2e;
-  --color-text-secondary: #585870;
-  --color-text-muted: #75758e;
-  --color-accent: #6366f1;
-  --color-accent-hover: #4f46e5;
-  --color-accent-subtle: rgba(99, 102, 241, 0.1);
+  --color-bg-page: #ffffff;
+  --color-bg-surface: #f9f9f9;
+  --color-bg-surface-hover: #f3f3f3;
+  --color-bg-input: #ffffff;
+  --color-border: #e5e5e5;
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-hover: #d4d4d4;
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #737373;
+  --color-text-muted: #a3a3a3;
+  --color-accent: #18181b;
+  --color-accent-hover: #3f3f46;
+  --color-accent-subtle: rgba(24, 24, 27, 0.06);
   --color-success: #16a34a;
-  --color-success-subtle: rgba(22, 163, 74, 0.1);
+  --color-success-subtle: rgba(22, 163, 74, 0.08);
   --color-danger: #dc2626;
-  --color-danger-subtle: rgba(220, 38, 38, 0.1);
+  --color-danger-subtle: rgba(220, 38, 38, 0.08);
+
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;
+  --color-input: #d4d4d4;
+  --color-popover: #ffffff;
+  --color-muted-foreground: #a3a3a3;
+  --color-accent-foreground: #ffffff;
+  --color-ring: #a1a1aa;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --radius-lg: 0.75rem;
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 
 /* ── Dark theme ── */
 [data-theme="dark"] {
-  --color-bg-page: #0a0a0f;
-  --color-bg-surface: #16161e;
-  --color-bg-surface-hover: #1e1e2e;
-  --color-bg-input: #1e1e2e;
-  --color-border: #2a2a3e;
+  --color-bg-page: #0a0a0a;
+  --color-bg-surface: #111111;
+  --color-bg-surface-hover: #1a1a1a;
+  --color-bg-input: #111111;
+  --color-border: #1f1f1f;
   --color-border-subtle: rgba(255, 255, 255, 0.06);
-  --color-border-hover: #3a3a4e;
-  --color-text-primary: #f0f0f5;
-  --color-text-secondary: #9a9ab0;
-  --color-text-muted: #6a6a80;
-  --color-accent: #6366f1;
-  --color-accent-hover: #818cf8;
-  --color-accent-subtle: rgba(99, 102, 241, 0.15);
+  --color-border-hover: #2a2a2a;
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #737373;
+  --color-accent: #fafafa;
+  --color-accent-hover: #e4e4e7;
+  --color-accent-subtle: rgba(250, 250, 250, 0.06);
   --color-success: #22c55e;
-  --color-success-subtle: rgba(34, 197, 94, 0.15);
+  --color-success-subtle: rgba(34, 197, 94, 0.08);
   --color-danger: #ef4444;
-  --color-danger-subtle: rgba(239, 68, 68, 0.15);
+  --color-danger-subtle: rgba(239, 68, 68, 0.08);
+
+  --color-background: #0a0a0a;
+  --color-foreground: #fafafa;
+  --color-input: #2a2a2a;
+  --color-popover: #111111;
+  --color-muted-foreground: #737373;
+  --color-accent-foreground: #0a0a0a;
+  --color-ring: #52525b;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fafafa;
+  --radius-lg: 0.75rem;
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
 }
 
 /* ── Logo theme switching ── */
@@ -91,7 +115,7 @@
 *,
 *::before,
 *::after {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, fill 0.3s ease, stroke 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 /* ── Base styles ── */
@@ -124,77 +148,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* ── Hero section ── */
-.hero-section {
-  background: var(--color-bg-page);
-  border-bottom: 1px solid var(--color-border-subtle);
+/* ── Skeleton loading pulse (functional only) ── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-.hero-gradient {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99, 102, 241, 0.08), transparent),
-              radial-gradient(ellipse 50% 80% at 80% 20%, rgba(99, 102, 241, 0.05), transparent),
-              radial-gradient(ellipse 50% 80% at 20% 20%, rgba(129, 140, 248, 0.04), transparent);
-  pointer-events: none;
-}
-
-[data-theme="dark"] .hero-gradient {
-  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99, 102, 241, 0.12), transparent),
-              radial-gradient(ellipse 50% 80% at 80% 20%, rgba(99, 102, 241, 0.07), transparent),
-              radial-gradient(ellipse 50% 80% at 20% 20%, rgba(129, 140, 248, 0.06), transparent);
-}
-
-.hero-bg-pattern {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.4;
-  mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black, transparent);
-  -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black, transparent);
-  pointer-events: none;
-}
-
-[data-theme="dark"] .hero-bg-pattern {
-  opacity: 0.25;
-}
-
-.hero-gradient-text {
-  background: linear-gradient(135deg, var(--color-accent) 0%, #818cf8 50%, #a78bfa 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* ── Category card hover glow ── */
-.category-card {
-  position: relative;
-}
-
-.category-card::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, transparent, rgba(99, 102, 241, 0.15), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
-}
-
-.category-card:hover::before {
-  opacity: 1;
-}
-
-/* ── Pulse animation for live indicator ── */
-@keyframes ping {
-  75%, 100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-.animate-ping {
-  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+.animate-skeleton {
+  animation: skeleton-pulse 2s ease-in-out infinite;
 }

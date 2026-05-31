@@ -52,7 +52,11 @@
     "resultsCount": "{total} nəticə tapıldı",
     "noResults": "Heç bir nəticə tapılmadı. Fərqli filtrlərlə yenidən cəhd edin.",
     "prev": "← Əvvəlki",
-    "next": "Növbəti →"
+    "next": "Növbəti →",
+    "searching": "Axtarılır...",
+    "results": "nəticə",
+    "autocompleteEmpty": "Nəticə tapılmadı",
+    "stores": "{count} mağaza"
   },
   "product": {
     "lowestPrice": "Ən ucuz qiymət:",

@@ -22,10 +22,10 @@ const STORE_NAMES: Record<string, string> = {
 };
 
 const STORE_COLORS: Record<string, string> = {
-  kontakt_home: "#2563eb",
-  baku_electronics: "#dc2626",
-  irshad_electronics: "#16a34a",
-  ispace: "#9333ea",
+  kontakt_home: "#737373",
+  baku_electronics: "#525252",
+  irshad_electronics: "#404040",
+  ispace: "#262626",
 };
 
 interface PriceHistoryChartProps {
@@ -57,22 +57,21 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
     };
   }, []);
 
-  const gridStroke = isDark ? "#2a2a3e" : "#e0e0e5";
-  const tickFill = isDark ? "#9a9ab0" : "#6b6b80";
-  const tooltipBg = isDark ? "#16161e" : "#ffffff";
-  const tooltipBorder = isDark ? "#2a2a3e" : "#e0e0e5";
-  const tooltipColor = isDark ? "#f0f0f5" : "#1a1a2e";
-  const legendColor = isDark ? "#9a9ab0" : "#6b6b80";
+  const gridStroke = isDark ? "#1f1f1f" : "#e5e5e5";
+  const tickFill = isDark ? "#a3a3a3" : "#737373";
+  const tooltipBg = isDark ? "#111111" : "#ffffff";
+  const tooltipBorder = isDark ? "#1f1f1f" : "#e5e5e5";
+  const tooltipColor = isDark ? "#fafafa" : "#0a0a0a";
+  const legendColor = isDark ? "#a3a3a3" : "#737373";
 
   if (!data.length) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-muted)]">
+      <div className="flex h-48 items-center justify-center text-sm text-[var(--color-text-muted)]">
         {t("priceHistoryEmpty")}
       </div>
     );
   }
 
-  // Group by date, pivot stores into columns
   const storeIds = [...new Set(data.map((d) => d.store_id))];
   const grouped = new Map<string, Record<string, number | string>>();
 
@@ -115,9 +114,9 @@ export function PriceHistoryChart({ data }: PriceHistoryChartProps) {
             key={storeId}
             type="monotone"
             dataKey={storeId}
-            stroke={STORE_COLORS[storeId] || "#6b7280"}
+            stroke={STORE_COLORS[storeId] || (isDark ? "#a3a3a3" : "#737373")}
             strokeWidth={2}
-            dot={{ r: 3 }}
+            dot={false}
             connectNulls
           />
         ))}

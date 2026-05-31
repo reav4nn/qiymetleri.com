@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { fetchProducts, fetchFilters } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import { AdBanner } from "@/components/AdBanner";
-import { SearchBar } from "@/components/SearchBar";
+import { ProductAutocomplete } from "@/components/ProductAutocomplete";
 import { FilterPanel } from "@/components/FilterPanel";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { buildAlternates, ogLocale, absoluteUrl, SITE_NAME } from "@/lib/seo";
@@ -49,7 +49,6 @@ export async function generateMetadata({
     description = t("searchAllDescription");
   }
 
-  // Build canonical with only meaningful params (exclude page, sort)
   const canonicalParams = new URLSearchParams();
   if (sp.q) canonicalParams.set("q", sp.q);
   if (sp.category) canonicalParams.set("category", sp.category);
@@ -57,7 +56,6 @@ export async function generateMetadata({
   const paramStr = canonicalParams.toString();
   const searchPath = `/${locale}/search${paramStr ? `?${paramStr}` : ""}`;
 
-  // noindex deep filter combinations and paginated pages
   const hasDeepFilters =
     (sp.min_price || sp.max_price || sp.store_id) && sp.q;
   const isPaginated = Number(sp.page) > 1;
@@ -119,7 +117,6 @@ export default async function SearchPage({
   const chip = sp.chip || "";
   const sizeMm = sp.size_mm || "";
 
-  // Context params shared by both products and filters queries
   const contextParams = {
     q: query || undefined,
     category: category || undefined,
@@ -154,12 +151,11 @@ export default async function SearchPage({
   const totalPages = data.pages;
 
   return (
-    <div className="mx-auto max-w-7xl px-2 py-3 sm:px-6 sm:py-8 lg:px-8">
+    <div className="px-2 py-3 sm:px-6 sm:py-8 lg:px-8">
       <div className="mb-3 max-w-xl px-1 sm:mb-6 sm:px-0">
-        <SearchBar />
+        <ProductAutocomplete locale={locale} />
       </div>
 
-      {/* Filters + Products */}
       <div className="lg:flex lg:gap-8">
         <Suspense fallback={null}>
           <FilterPanel filters={filters} />
@@ -168,7 +164,7 @@ export default async function SearchPage({
         <div className="min-w-0 flex-1">
           <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <div>
-              <h1 className="text-xl font-bold text-[var(--color-text-primary)] sm:text-2xl">{title}</h1>
+              <h1 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">{title}</h1>
               <p className="mt-1 text-xs text-[var(--color-text-secondary)] sm:text-sm">
                 {t("resultsCount", { total: data.total })}
               </p>
@@ -181,7 +177,7 @@ export default async function SearchPage({
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-48 animate-pulse rounded-xl bg-[var(--color-bg-surface)]"
+                    className="h-48 animate-skeleton rounded-xl bg-[var(--color-bg-surface)]"
                   />
                 ))}
               </div>
@@ -211,7 +207,6 @@ export default async function SearchPage({
             </div>
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-center gap-2 sm:mt-8">
               {page > 1 && (
@@ -255,7 +250,7 @@ function PaginationLink({
   return (
     <a
       href={`/${locale}/search?${sp.toString()}`}
-      className="rounded-lg border border-[var(--color-border)] px-5 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-surface-hover)] active:scale-95"
+      className="rounded-lg border border-[var(--color-border)] px-5 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-surface)] hover:text-[var(--color-text-primary)] active:scale-95"
     >
       {children}
     </a>

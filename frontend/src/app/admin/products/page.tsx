@@ -160,7 +160,7 @@ export default function ProductsPage() {
         {selected.size > 0 && (
           <button onClick={handleBatchDelete} style={{
             padding: "8px 16px", fontSize: 13, fontWeight: 600, borderRadius: 8, border: "none",
-            backgroundColor: "var(--color-danger)", color: "#fff", cursor: "pointer",
+            backgroundColor: "var(--color-danger)", color: "var(--color-bg-page)", cursor: "pointer",
           }}>
             Sil ({selected.size})
           </button>
@@ -428,7 +428,7 @@ function EditModal({
           </button>
           <button onClick={handleSave} disabled={saving} style={{
             padding: "8px 20px", fontSize: 13, fontWeight: 600, borderRadius: 8, border: "none",
-            backgroundColor: "var(--color-accent)", color: "#fff", cursor: "pointer",
+            backgroundColor: "var(--color-accent)", color: "var(--color-bg-page)", cursor: "pointer",
             opacity: saving ? 0.6 : 1,
           }}>
             {saving ? "Yadda saxlanılır..." : "Yadda saxla"}

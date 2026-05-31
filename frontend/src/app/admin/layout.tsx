@@ -19,20 +19,20 @@ const navItems = [
 const adminCSS = `
   /* ── Theme variables ── */
   :root {
-    --color-bg-page: #f5f5f7; --color-bg-surface: #ffffff; --color-bg-surface-hover: #f0f0f2;
-    --color-bg-input: #f0f0f2; --color-border: #e0e0e5; --color-border-subtle: rgba(0,0,0,0.06);
-    --color-text-primary: #1a1a2e; --color-text-secondary: #6b6b80; --color-text-muted: #9a9ab0;
-    --color-accent: #6366f1; --color-accent-hover: #4f46e5; --color-accent-subtle: rgba(99,102,241,0.1);
-    --color-success: #16a34a; --color-success-subtle: rgba(22,163,74,0.1);
-    --color-danger: #dc2626; --color-danger-subtle: rgba(220,38,38,0.1);
+    --color-bg-page: #f9f9f9; --color-bg-surface: #ffffff; --color-bg-surface-hover: #f0f0f0;
+    --color-bg-input: #f0f0f0; --color-border: #e5e5e5; --color-border-subtle: rgba(0,0,0,0.06);
+    --color-text-primary: #0a0a0a; --color-text-secondary: #737373; --color-text-muted: #a3a3a3;
+    --color-accent: #18181b; --color-accent-hover: #000000; --color-accent-subtle: rgba(24,24,27,0.08);
+    --color-success: #15803d; --color-success-subtle: rgba(21,128,61,0.08);
+    --color-danger: #b91c1c; --color-danger-subtle: rgba(185,28,28,0.08);
   }
   [data-theme="dark"] {
-    --color-bg-page: #0a0a0f; --color-bg-surface: #16161e; --color-bg-surface-hover: #1e1e2e;
-    --color-bg-input: #1e1e2e; --color-border: #2a2a3e; --color-border-subtle: rgba(255,255,255,0.06);
-    --color-text-primary: #f0f0f5; --color-text-secondary: #9a9ab0; --color-text-muted: #6a6a80;
-    --color-accent: #6366f1; --color-accent-hover: #818cf8; --color-accent-subtle: rgba(99,102,241,0.15);
-    --color-success: #22c55e; --color-success-subtle: rgba(34,197,94,0.15);
-    --color-danger: #ef4444; --color-danger-subtle: rgba(239,68,68,0.15);
+    --color-bg-page: #0a0a0a; --color-bg-surface: #111111; --color-bg-surface-hover: #1f1f1f;
+    --color-bg-input: #1f1f1f; --color-border: #1f1f1f; --color-border-subtle: rgba(255,255,255,0.06);
+    --color-text-primary: #fafafa; --color-text-secondary: #a3a3a3; --color-text-muted: #737373;
+    --color-accent: #fafafa; --color-accent-hover: #ffffff; --color-accent-subtle: rgba(250,250,250,0.1);
+    --color-success: #22c55e; --color-success-subtle: rgba(34,197,94,0.1);
+    --color-danger: #ef4444; --color-danger-subtle: rgba(239,68,68,0.1);
   }
   html[data-theme="dark"] { color-scheme: dark; }
 

@@ -14,8 +14,8 @@ function StatCard({
   return (
     <div
       style={{
-        backgroundColor: "var(--color-bg-surface, #16161e)",
-        border: "1px solid var(--color-border, #2a2a3e)",
+        backgroundColor: "var(--color-bg-surface)",
+        border: "1px solid var(--color-border)",
         borderRadius: 12,
         padding: "20px 24px",
       }}
@@ -23,7 +23,7 @@ function StatCard({
       <div
         style={{
           fontSize: 12,
-          color: "var(--color-text-muted, #6a6a80)",
+          color: "var(--color-text-muted)",
           textTransform: "uppercase",
           letterSpacing: 0.5,
           marginBottom: 8,
@@ -35,18 +35,18 @@ function StatCard({
         style={{
           fontSize: 28,
           fontWeight: 700,
-          color: "var(--color-text-primary, #f0f0f5)",
+          color: "var(--color-text-primary)",
         }}
       >
         {value}
       </div>
       {sub && (
         <div
-          style={{
-            fontSize: 12,
-            color: "var(--color-text-secondary, #9a9ab0)",
-            marginTop: 4,
-          }}
+        style={{
+          fontSize: 12,
+          color: "var(--color-text-secondary)",
+          marginTop: 4,
+        }}
         >
           {sub}
         </div>
@@ -66,9 +66,9 @@ export default async function AdminDashboard() {
         <div
           style={{
             padding: 24,
-            backgroundColor: "var(--color-danger-subtle, rgba(239, 68, 68, 0.15))",
+            backgroundColor: "var(--color-danger-subtle)",
             borderRadius: 12,
-            color: "var(--color-danger, #ef4444)",
+            color: "var(--color-danger)",
           }}
         >
           Backend API-yə qoşulmaq mümkün olmadı. Serverin işlədiyindən əmin olun.

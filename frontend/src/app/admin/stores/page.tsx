@@ -57,9 +57,9 @@ export default async function StoresPage() {
             crawlAge === null
               ? "var(--color-text-muted)"
               : crawlAge < 3
-                ? "var(--color-success)"
+                ? "var(--color-text-primary)"
                 : crawlAge < 6
-                  ? "#eab308"
+                  ? "var(--color-text-secondary)"
                   : "var(--color-danger)";
 
           return (
@@ -91,8 +91,8 @@ export default async function StoresPage() {
                     rel="noopener noreferrer"
                     style={{
                       fontSize: 11,
-                      color: "var(--color-accent)",
-                      textDecoration: "none",
+                      color: "var(--color-text-primary)",
+                      textDecoration: "underline",
                     }}
                   >
                     {store.base_url.replace(/https?:\/\//, "")}

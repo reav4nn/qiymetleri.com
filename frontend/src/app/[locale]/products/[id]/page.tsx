@@ -113,26 +113,37 @@ export default async function ProductPage({
   });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+    <div className="px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="mb-2 text-xs text-[var(--color-text-secondary)] sm:text-sm">
+
+      {/* Breadcrumb */}
+      <div className="mb-4 flex items-center gap-1 text-xs text-[var(--color-text-muted)] sm:text-sm">
+        <a href={`/${locale}`} className="hover:text-[var(--color-text-primary)]">{t("home")}</a>
+        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
         {product.brand && (
-          <span className="capitalize">{product.brand} / </span>
+          <>
+            <span className="capitalize">{product.brand}</span>
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </>
         )}
-        {product.category && <span>{product.category}</span>}
+        <span className="text-[var(--color-text-primary)]">{product.name}</span>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         {/* Product image */}
-        <div className="flex h-40 w-full max-w-[200px] flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl bg-white sm:h-56 sm:w-56 sm:self-start">
+        <div className="flex h-48 w-full max-w-[280px] flex-shrink-0 items-center justify-center self-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 sm:h-64 sm:self-start">
           {product.image_url ? (
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-auto object-contain mix-blend-multiply"
+              className="h-full w-auto object-contain"
             />
           ) : (
             <svg className="h-16 w-16 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,19 +153,19 @@ export default async function ProductPage({
         </div>
 
         <div className="flex-1 text-center sm:text-left">
-          <h1 className="text-xl font-bold text-[var(--color-text-primary)] sm:text-3xl">{product.name}</h1>
+          <h1 className="text-xl font-semibold text-[var(--color-text-primary)] sm:text-2xl">{product.name}</h1>
 
           {lowestPrice && (
             <div className="mt-3 sm:mt-4">
-              <span className="text-xs text-[var(--color-text-secondary)] sm:text-sm">{t("lowestPrice")} </span>
-              <span className="text-xl font-bold text-[var(--color-success)] sm:text-2xl">
+              <span className="text-sm text-[var(--color-text-secondary)]">{t("lowestPrice")} </span>
+              <span className="text-xl font-semibold text-[var(--color-text-primary)] sm:text-2xl">
                 {Number(lowestPrice.price_azn).toFixed(2)} ₼
               </span>
-              <span className="ml-2 inline-flex items-center gap-1 text-xs text-[var(--color-text-secondary)] sm:text-sm">
-                ({STORE_LOGOS[lowestPrice.store_id] && (
+              <span className="ml-2 inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
+                {STORE_LOGOS[lowestPrice.store_id] && (
                   <img src={STORE_LOGOS[lowestPrice.store_id]} alt="" className="inline h-3.5 w-3.5 rounded-sm object-contain" />
                 )}
-                {STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id})
+                {STORE_NAMES[lowestPrice.store_id] || lowestPrice.store_id}
               </span>
             </div>
           )}
@@ -171,7 +182,7 @@ export default async function ProductPage({
         </section>
       ) : (
         <section className="mt-6 sm:mt-8">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
+          <h2 className="text-base font-semibold text-[var(--color-text-primary)] sm:text-lg">
             {t("priceComparison")}
           </h2>
           <PriceTable
@@ -189,7 +200,6 @@ export default async function ProductPage({
         </section>
       )}
 
-      {/* Ad between price table and history chart */}
       <div className="mt-6 sm:mt-8">
         <AdBanner
           slot={process.env.NEXT_PUBLIC_AD_SLOT_PRODUCT || ""}
@@ -197,12 +207,11 @@ export default async function ProductPage({
         />
       </div>
 
-      {/* Price history chart */}
       <section className="mt-6 sm:mt-8">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] sm:text-xl">
+        <h2 className="text-base font-semibold text-[var(--color-text-primary)] sm:text-lg">
           {t("priceHistory")}
         </h2>
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 sm:mt-4">
           <PriceHistoryChart data={priceHistory} />
         </div>
       </section>

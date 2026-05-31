@@ -1,0 +1,124 @@
+[sudo] password for reavann: 2026-05-31 14:54:44 [scrapy.utils.log] INFO: Scrapy 2.16.0 started (bot: qiymetleri_scraper)
+2026-05-31 14:54:44 [scrapy.utils.log] INFO: Versions:
+{'lxml': '6.1.1',
+ 'libxml2': '2.14.6',
+ 'cssselect': '1.4.0',
+ 'parsel': '1.11.0',
+ 'w3lib': '2.4.1',
+ 'Twisted': '26.4.0',
+ 'Python': '3.13.13 (main, May 19 2026, 23:47:56) [GCC 14.2.0]',
+ 'pyOpenSSL': '26.2.0 (OpenSSL 4.0.0 14 Apr 2026)',
+ 'cryptography': '48.0.0',
+ 'Platform': 'Linux-7.0.10-2-cachyos-x86_64-with-glibc2.41'}
+2026-05-31 14:54:44 [scrapy.crawler] DEBUG: Using AsyncCrawlerProcess
+2026-05-31 14:54:44 [asyncio] DEBUG: Using selector: EpollSelector
+2026-05-31 14:54:44 [scrapy.addons] INFO: Enabled addons:
+[]
+2026-05-31 14:54:44 [scrapy.utils.log] DEBUG: Using reactor: twisted.internet.asyncioreactor.AsyncioSelectorReactor
+2026-05-31 14:54:44 [scrapy.utils.log] DEBUG: Using asyncio event loop: asyncio.unix_events._UnixSelectorEventLoop
+2026-05-31 14:54:44 [scrapy.extensions.telnet] INFO: Telnet Password: 8133ea197559c562
+2026-05-31 14:54:44 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.logcount.LogCount',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.logstats.LogStats',
+ 'scrapy.extensions.throttle.AutoThrottle']
+2026-05-31 14:54:44 [scrapy.crawler] INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 10,
+ 'AUTOTHROTTLE_START_DELAY': 1,
+ 'AUTOTHROTTLE_TARGET_CONCURRENCY': 2.0,
+ 'BOT_NAME': 'qiymetleri_scraper',
+ 'CONCURRENT_REQUESTS': 8,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 2,
+ 'DOWNLOAD_DELAY': 2,
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'NEWSPIDER_MODULE': 'qiymetleri_scraper.spiders',
+ 'RETRY_HTTP_CODES': [500, 502, 503, 504, 408, 429],
+ 'RETRY_TIMES': 3,
+ 'ROBOTSTXT_OBEY': True,
+ 'SPIDER_MODULES': ['qiymetleri_scraper.spiders'],
+ 'USER_AGENT': 'qiymetleri.com price comparison bot (+https://qiymetleri.com)'}
+2026-05-31 14:54:45 [qiymetleri_scraper.middlewares.proxy_middleware] INFO: Proxy disabled (PROXY_ENABLED != true). Direct connections.
+2026-05-31 14:54:45 [scrapy.middleware] WARNING: Disabled qiymetleri_scraper.middlewares.proxy_middleware.BrightDataProxyMiddleware: Proxy not enabled
+2026-05-31 14:54:45 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2026-05-31 14:54:45 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.start.StartSpiderMiddleware',
+ 'scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2026-05-31 14:54:46 [scrapy.middleware] INFO: Enabled item pipelines:
+['qiymetleri_scraper.pipelines.price_pipeline.PriceCleaningPipeline',
+ 'qiymetleri_scraper.pipelines.db_pipeline.DatabasePipeline']
+2026-05-31 14:54:46 [py.warnings] WARNING: /usr/local/lib/python3.13/site-packages/scrapy/pipelines/__init__.py:49: ScrapyDeprecationWarning: PriceCleaningPipeline.process_item() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.process_item)
+
+2026-05-31 14:54:46 [py.warnings] WARNING: /usr/local/lib/python3.13/site-packages/scrapy/pipelines/__init__.py:43: ScrapyDeprecationWarning: DatabasePipeline.open_spider() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.open_spider)
+
+2026-05-31 14:54:46 [py.warnings] WARNING: /usr/local/lib/python3.13/site-packages/scrapy/pipelines/__init__.py:46: ScrapyDeprecationWarning: DatabasePipeline.close_spider() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.close_spider)
+
+2026-05-31 14:54:46 [py.warnings] WARNING: /usr/local/lib/python3.13/site-packages/scrapy/pipelines/__init__.py:49: ScrapyDeprecationWarning: DatabasePipeline.process_item() requires a spider argument, this is deprecated and the argument will not be passed in future Scrapy versions. If you need to access the spider instance you can save the crawler instance passed to from_crawler() and use its spider attribute.
+  self._check_mw_method_spider_arg(mw.process_item)
+
+2026-05-31 14:54:46 [scrapy.core.engine] INFO: Spider opened
+2026-05-31 14:54:46 [qiymetleri_scraper.pipelines.db_pipeline] INFO: Database schema verified/created
+2026-05-31 14:54:46 [qiymetleri_scraper.pipelines.db_pipeline] INFO: Redis connected for cache invalidation
+2026-05-31 14:54:46 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+2026-05-31 14:54:46 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6023
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Starting download handler
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Starting download handler
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Launching 1 startup context(s)
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Launching browser chromium
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Launching 1 startup context(s)
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Launching browser chromium
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Browser chromium launched
+2026-05-31 14:54:46 [scrapy-playwright] DEBUG: Browser context started: 'default' (persistent=False, remote=False)
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Startup context(s) launched
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Browser chromium launched
+2026-05-31 14:54:46 [scrapy-playwright] DEBUG: Browser context started: 'default' (persistent=False, remote=False)
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Startup context(s) launched
+2026-05-31 14:54:46 [scrapy.core.engine] INFO: Closing spider (finished)
+2026-05-31 14:54:46 [qiymetleri_scraper.pipelines.db_pipeline] INFO: Scraper run recorded: ispace — failed, 0 items, 0 errors, 0.4s
+2026-05-31 14:54:46 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
+{'elapsed_time_seconds': 0.5325309079998988,
+ 'finish_reason': 'finished',
+ 'finish_time': datetime.datetime(2026, 5, 31, 14, 54, 46, 782007, tzinfo=datetime.timezone.utc),
+ 'items_per_minute': None,
+ 'log_count/DEBUG': 2,
+ 'log_count/INFO': 14,
+ 'memusage/max': 117428224,
+ 'memusage/startup': 117428224,
+ 'playwright/browser_count': 2,
+ 'playwright/context_count': 2,
+ 'playwright/context_count/max_concurrent': 1,
+ 'playwright/context_count/persistent/False': 2,
+ 'playwright/context_count/remote/False': 2,
+ 'playwright/page_count': 0,
+ 'responses_per_minute': None,
+ 'start_time': datetime.datetime(2026, 5, 31, 14, 54, 46, 249477, tzinfo=datetime.timezone.utc)}
+2026-05-31 14:54:46 [scrapy.core.engine] INFO: Spider closed (finished)
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Closing download handler
+2026-05-31 14:54:46 [scrapy-playwright] DEBUG: Browser context closed: 'default' (persistent=False, remote=False)
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Closing browser
+2026-05-31 14:54:46 [scrapy-playwright] DEBUG: Browser disconnected
+2026-05-31 14:54:46 [scrapy-playwright] INFO: Closing download handler
+2026-05-31 14:54:47 [scrapy-playwright] DEBUG: Browser context closed: 'default' (persistent=False, remote=False)
+2026-05-31 14:54:47 [scrapy-playwright] INFO: Closing browser
+2026-05-31 14:54:47 [scrapy-playwright] DEBUG: Browser disconnected

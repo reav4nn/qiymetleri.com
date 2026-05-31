@@ -44,6 +44,7 @@ class ISpaceSpider(scrapy.Spider):
     }
 
     def start_requests(self):
+        self.logger.warning("--- start_requests CALLED! ---")
         base_url = "https://ispace.az"
         for category, path in CATEGORY_URLS.items():
             yield scrapy.Request(

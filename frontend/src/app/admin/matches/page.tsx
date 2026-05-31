@@ -19,7 +19,7 @@ function FamilyCard({ family, stores, count, products }: {
   return (
     <div
       style={{
-        background: "var(--color-bg-main)",
+        background: "var(--color-bg-page)",
         padding: "10px 12px",
         borderRadius: 6,
         fontSize: 13,
@@ -123,10 +123,10 @@ export default function MatchesPage() {
           }}
         >
           {[
-            { label: "Pending", value: stats.pending, color: "#f59e0b" },
-            { label: "Accepted", value: stats.accepted, color: "#10b981" },
-            { label: "Rejected", value: stats.rejected, color: "#ef4444" },
-            { label: "Total", value: stats.total, color: "var(--color-accent)" },
+            { label: "Pending", value: stats.pending },
+            { label: "Accepted", value: stats.accepted },
+            { label: "Rejected", value: stats.rejected },
+            { label: "Total", value: stats.total },
           ].map((s) => (
             <div
               key={s.label}
@@ -140,7 +140,7 @@ export default function MatchesPage() {
               <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 4 }}>
                 {s.label}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: "var(--color-text-primary)" }}>{s.value}</div>
             </div>
           ))}
         </div>
@@ -187,11 +187,12 @@ export default function MatchesPage() {
                     style={{
                       fontSize: 11,
                       fontWeight: 600,
-                      background: "var(--color-accent)",
-                      color: "white",
+                      background: "var(--color-bg-page)",
+                      color: "var(--color-text-primary)",
                       padding: "2px 8px",
                       borderRadius: 4,
                       marginRight: 8,
+                      border: "1px solid var(--color-border)",
                     }}
                   >
                     {m.brand}
@@ -229,7 +230,7 @@ export default function MatchesPage() {
                     borderRadius: 6,
                     border: "1px solid var(--color-border)",
                     background: "transparent",
-                    color: "#ef4444",
+                    color: "var(--color-danger)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -245,8 +246,8 @@ export default function MatchesPage() {
                     padding: "6px 16px",
                     borderRadius: 6,
                     border: "none",
-                    background: "#10b981",
-                    color: "white",
+                    background: "var(--color-accent)",
+                    color: "var(--color-bg-page)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",

@@ -3,17 +3,86 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import {
+  Combobox,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import type { FilterOptions } from "@/lib/api";
-
-const CATEGORY_ICONS: Record<string, string> = {
-  smartphones: "📱",
-  laptops: "💻",
-  headphones: "🎧",
-  smartwatches: "⌚",
-};
 
 interface FilterPanelProps {
   filters: FilterOptions;
+}
+
+type Option = { value: string; label: string };
+
+function FilterCombobox({
+  label,
+  items,
+  value,
+  onValueChange,
+}: {
+  label: string;
+  items: Option[];
+  value: Option | null;
+  onValueChange: (item: Option | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Combobox
+      inline
+      items={items}
+      value={value}
+      itemToStringValue={(item: Option) => item.label}
+      isItemEqualToValue={(a: Option, b: Option) => a.value === b.value}
+      open={open}
+      onOpenChange={setOpen}
+      onValueChange={(item: Option | null) => {
+        onValueChange(item);
+        setOpen(false);
+      }}
+    >
+      <ComboboxInput
+        aria-label={label}
+        size="sm"
+        className="!border-gray-300 dark:!border-gray-600 !border has-focus-visible:!border-gray-400 dark:has-focus-visible:!border-gray-400 has-focus-visible:!ring-0 [&_input]:text-sm"
+      />
+      <div
+        style={{
+          overflow: "hidden",
+          maxHeight: open ? "400px" : "0px",
+          transition:
+            "max-height 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div
+          className="rounded-lg border border-gray-300 dark:border-gray-600 bg-[var(--color-bg-surface)] mt-1"
+          style={{
+            opacity: open ? 1 : 0,
+            transform: open ? "translateY(0)" : "translateY(-8px)",
+            transition:
+              "opacity 200ms ease-out 50ms, transform 200ms ease-out 50ms",
+          }}
+        >
+          <ComboboxEmpty>
+            <div className="px-2 py-3 text-xs text-[var(--color-text-muted)]">
+              No results
+            </div>
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(item: Option) => (
+              <ComboboxItem key={item.value} value={item}>
+                {item.label}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </div>
+      </div>
+    </Combobox>
+  );
 }
 
 export function FilterPanel({ filters }: FilterPanelProps) {
@@ -40,7 +109,6 @@ export function FilterPanel({ filters }: FilterPanelProps) {
   const [maxPrice, setMaxPrice] = useState(currentMaxPrice);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Lock body scroll when mobile filter sheet is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
@@ -105,228 +173,177 @@ export function FilterPanel({ filters }: FilterPanelProps) {
     currentSizeMm ||
     currentSort !== "name";
 
-  const SORT_OPTIONS = [
+  const SORT_OPTIONS: Option[] = [
     { value: "name", label: t("sortNameAZ") },
     { value: "price_asc", label: t("sortPriceAsc") },
     { value: "price_desc", label: t("sortPriceDesc") },
   ];
 
+  const categoryItems: Option[] = [
+    { value: "", label: t("all") },
+    ...filters.categories.map((cat) => ({
+      value: cat.id,
+      label: `${tc.has(cat.id) ? tc(cat.id) : cat.name} (${cat.count})`,
+    })),
+  ];
+
+  const storeItems: Option[] = [
+    { value: "", label: t("all") },
+    ...filters.stores.map((s) => ({
+      value: s.id,
+      label: `${s.name} (${s.count})`,
+    })),
+  ];
+
+  const brandItems: Option[] = [
+    { value: "", label: t("all") },
+    ...filters.brands.map((b) => ({
+      value: b.id,
+      label: `${b.name} (${b.count})`,
+    })),
+  ];
+
+  const currentSortValue = SORT_OPTIONS.find(
+    (o) => o.value === currentSort,
+  ) ?? null;
+  const currentCategoryValue = categoryItems.find(
+    (o) => o.value === currentCategory,
+  ) ?? null;
+  const currentStoreValue = storeItems.find(
+    (o) => o.value === currentStore,
+  ) ?? null;
+  const currentBrandValue = brandItems.find(
+    (o) => o.value === currentBrand,
+  ) ?? null;
+
+  const chipItems = filters.attributes?.chip?.length
+    ? [
+        { value: "", label: t("all") },
+        ...filters.attributes.chip.map((c) => ({
+          value: c.id,
+          label: `${c.name} (${c.count})`,
+        })),
+      ]
+    : null;
+  const currentChipValue = chipItems?.find((o) => o.value === currentChip) ?? null;
+
+  const sizeItems = filters.attributes?.size_mm?.length
+    ? [
+        { value: "", label: t("all") },
+        ...filters.attributes.size_mm.map((s) => ({
+          value: s.id,
+          label: `${s.name} (${s.count})`,
+        })),
+      ]
+    : null;
+  const currentSizeValue = sizeItems?.find((o) => o.value === currentSizeMm) ?? null;
+
   const filterContent = (
     <div className="space-y-6">
-      {/* Active filters indicator */}
       {hasActiveFilters && (
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-[var(--color-accent)]">
+          <span className="text-xs font-medium text-[var(--color-text-primary)]">
             {t("filtersActive")}
           </span>
           <button
             onClick={clearAllFilters}
-            className="text-xs text-[var(--color-danger)] hover:brightness-125 underline"
+            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] underline"
           >
             {t("clearAll")}
           </button>
         </div>
       )}
 
-      {/* Sort */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{t("sort")}</h3>
-        <select
-          value={currentSort}
-          onChange={(e) => applyFilter("sort_by", e.target.value)}
-          className="w-full rounded-lg border border-[var(--color-border-hover)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          {t("sort")}
+        </h3>
+        <FilterCombobox
+          label={t("sort")}
+          items={SORT_OPTIONS}
+          value={currentSortValue}
+          onValueChange={(item) =>
+            applyFilter("sort_by", item?.value ?? "")
+          }
+        />
       </div>
 
-      {/* Categories */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
           {t("category")}
         </h3>
-        <div className="space-y-1">
-          <button
-            onClick={() => applyFilter("category", "")}
-            className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
-              !currentCategory
-                ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-            }`}
-          >
-            {t("all")}
-          </button>
-          {filters.categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() =>
-                applyFilter("category", currentCategory === cat.id ? "" : cat.id)
-              }
-              className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
-                currentCategory === cat.id
-                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-              }`}
-            >
-              <span>
-                {CATEGORY_ICONS[cat.id] ? `${CATEGORY_ICONS[cat.id]} ` : ""}
-                {tc.has(cat.id) ? tc(cat.id) : cat.name}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)]">{cat.count}</span>
-            </button>
-          ))}
-        </div>
+        <FilterCombobox
+          label={t("category")}
+          items={categoryItems}
+          value={currentCategoryValue}
+          onValueChange={(item) =>
+            applyFilter("category", item?.value ?? "")
+          }
+        />
       </div>
 
-      {/* Stores */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{t("store")}</h3>
-        <div className="space-y-1">
-          <button
-            onClick={() => applyFilter("store_id", "")}
-            className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
-              !currentStore
-                ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-            }`}
-          >
-            {t("all")}
-          </button>
-          {filters.stores.map((store) => (
-            <button
-              key={store.id}
-              onClick={() =>
-                applyFilter(
-                  "store_id",
-                  currentStore === store.id ? "" : store.id
-                )
-              }
-              className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
-                currentStore === store.id
-                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-              }`}
-            >
-              <span>{store.name}</span>
-              <span className="text-xs text-[var(--color-text-muted)]">{store.count}</span>
-            </button>
-          ))}
-        </div>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          {t("store")}
+        </h3>
+        <FilterCombobox
+          label={t("store")}
+          items={storeItems}
+          value={currentStoreValue}
+          onValueChange={(item) =>
+            applyFilter("store_id", item?.value ?? "")
+          }
+        />
       </div>
 
-      {/* Brands */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">{t("brand")}</h3>
-        <div className="max-h-56 space-y-1 overflow-y-auto">
-          <button
-            onClick={() => applyFilter("brand", "")}
-            className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
-              !currentBrand
-                ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-            }`}
-          >
-            {t("all")}
-          </button>
-          {filters.brands.map((brand) => (
-            <button
-              key={brand.id}
-              onClick={() =>
-                applyFilter("brand", currentBrand === brand.id ? "" : brand.id)
-              }
-              className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
-                currentBrand === brand.id
-                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-              }`}
-            >
-              <span className="capitalize">{brand.name}</span>
-              <span className="text-xs text-[var(--color-text-muted)]">{brand.count}</span>
-            </button>
-          ))}
-        </div>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          {t("brand")}
+        </h3>
+        <FilterCombobox
+          label={t("brand")}
+          items={brandItems}
+          value={currentBrandValue}
+          onValueChange={(item) =>
+            applyFilter("brand", item?.value ?? "")
+          }
+        />
       </div>
 
-      {/* Dynamic attribute filters (chip, size_mm) */}
-      {filters.attributes?.chip && filters.attributes.chip.length > 0 && (
+      {chipItems && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
             {t("chip")}
           </h3>
-          <div className="max-h-44 space-y-1 overflow-y-auto">
-            <button
-              onClick={() => applyFilter("chip", "")}
-              className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
-                !currentChip
-                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-              }`}
-            >
-              {t("all")}
-            </button>
-            {filters.attributes.chip.map((item) => (
-              <button
-                key={item.id}
-                onClick={() =>
-                  applyFilter("chip", currentChip === item.id ? "" : item.id)
-                }
-                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
-                  currentChip === item.id
-                    ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-                }`}
-              >
-                <span>{item.name}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{item.count}</span>
-              </button>
-            ))}
-          </div>
+          <FilterCombobox
+            label={t("chip")}
+            items={chipItems}
+            value={currentChipValue}
+            onValueChange={(item) =>
+              applyFilter("chip", item?.value ?? "")
+            }
+          />
         </div>
       )}
 
-      {filters.attributes?.size_mm && filters.attributes.size_mm.length > 0 && (
+      {sizeItems && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
             {t("size")}
           </h3>
-          <div className="space-y-1">
-            <button
-              onClick={() => applyFilter("size_mm", "")}
-              className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
-                !currentSizeMm
-                  ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-              }`}
-            >
-              {t("all")}
-            </button>
-            {filters.attributes.size_mm.map((item) => (
-              <button
-                key={item.id}
-                onClick={() =>
-                  applyFilter("size_mm", currentSizeMm === item.id ? "" : item.id)
-                }
-                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition ${
-                  currentSizeMm === item.id
-                    ? "bg-[var(--color-accent-subtle)] font-medium text-[var(--color-accent)]"
-                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)]"
-                }`}
-              >
-                <span>{item.name}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{item.count}</span>
-              </button>
-            ))}
-          </div>
+          <FilterCombobox
+            label={t("size")}
+            items={sizeItems}
+            value={currentSizeValue}
+            onValueChange={(item) =>
+              applyFilter("size_mm", item?.value ?? "")
+            }
+          />
         </div>
       )}
 
-      {/* Price Range */}
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
           {t("priceRange")}
         </h3>
         <div className="flex items-center gap-2">
@@ -336,7 +353,7 @@ export function FilterPanel({ filters }: FilterPanelProps) {
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-            className="w-full rounded-lg border border-[var(--color-border-hover)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-hover)] focus:outline-none"
             min={0}
           />
           <span className="text-[var(--color-text-muted)]">—</span>
@@ -346,31 +363,32 @@ export function FilterPanel({ filters }: FilterPanelProps) {
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-            className="w-full rounded-lg border border-[var(--color-border-hover)] bg-[var(--color-bg-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-border-hover)] focus:outline-none"
             min={0}
           />
         </div>
         <button
           onClick={applyPriceRange}
-          className="mt-2 w-full rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[var(--color-accent-hover)]"
+          className="mt-2 w-full rounded-lg bg-[var(--color-text-primary)] px-3 py-2 text-sm font-medium text-[var(--color-bg-page)] transition hover:opacity-90"
         >
           {t("apply")}
         </button>
       </div>
 
       {isPending && (
-        <div className="text-center text-xs text-[var(--color-text-muted)]">{t("loading")}</div>
+        <div className="text-center text-xs text-[var(--color-text-muted)]">
+          {t("loading")}
+        </div>
       )}
     </div>
   );
 
   return (
     <>
-      {/* Mobile filter toggle */}
       <div className="mb-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-4 py-3 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-hover)] active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-4 py-3 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-surface)] active:scale-[0.98]"
         >
           <svg
             className="h-4 w-4"
@@ -387,26 +405,38 @@ export function FilterPanel({ filters }: FilterPanelProps) {
           </svg>
           {t("mobileToggle")}
           {hasActiveFilters && (
-            <span className="rounded-full bg-[var(--color-accent)] px-1.5 py-0.5 text-xs text-white">
-              ●
-            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-text-primary)]" />
           )}
         </button>
         {mobileOpen && (
           <>
             <div
-              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
-            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-2xl animate-in slide-in-from-bottom">
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--color-border-hover)]" />
+            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-bg-page)] p-4 shadow-lg">
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--color-border)]" />
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-base font-bold text-[var(--color-text-primary)]">{t("title")}</h2>
+                <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
+                  {t("title")}
+                </h2>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-secondary)]"
                 >
-                  ✕
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
               {filterContent}
@@ -415,10 +445,11 @@ export function FilterPanel({ filters }: FilterPanelProps) {
         )}
       </div>
 
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="sticky top-16 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
-          <h2 className="mb-4 text-base font-bold text-[var(--color-text-primary)]">{t("title")}</h2>
+      <aside className="hidden w-56 shrink-0 lg:block">
+        <div className="sticky top-16 py-2">
+          <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">
+            {t("title")}
+          </h2>
           {filterContent}
         </div>
       </aside>

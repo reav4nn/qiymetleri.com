@@ -200,12 +200,13 @@ export default function ScraperPage() {
           marginBottom: 20,
           backgroundColor: overview?.worker_online
             ? "var(--color-success-subtle)"
-            : "rgba(234,179,8,0.12)",
+            : "var(--color-bg-surface-hover)",
           color: overview?.worker_online
             ? "var(--color-success)"
-            : "#a16207",
+            : "var(--color-text-muted)",
           fontSize: 14,
           fontWeight: 600,
+          border: "1px solid var(--color-border)",
         }}
       >
         {overview?.worker_online
@@ -332,7 +333,7 @@ export default function ScraperPage() {
                       color:
                         triggering === s.name || s.is_running
                           ? "var(--color-text-muted)"
-                          : "#fff",
+                          : "var(--color-bg-page)",
                       cursor:
                         triggering === s.name || s.is_running
                           ? "not-allowed"
@@ -401,7 +402,7 @@ export default function ScraperPage() {
                 color:
                   triggering === s.name || s.is_running
                     ? "var(--color-text-muted)"
-                    : "#fff",
+                    : "var(--color-bg-page)",
                 cursor:
                   triggering === s.name || s.is_running
                     ? "not-allowed"
@@ -598,7 +599,7 @@ export default function ScraperPage() {
                 borderRadius: 8,
                 border: "none",
                 backgroundColor: "var(--color-accent)",
-                color: "#fff",
+                color: "var(--color-bg-page)",
                 cursor: recentLoading ? "not-allowed" : "pointer",
                 fontSize: 13,
                 fontWeight: 600,

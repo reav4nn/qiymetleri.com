@@ -52,7 +52,11 @@
     "resultsCount": "{total} результатов найдено",
     "noResults": "Ничего не найдено. Попробуйте с другими фильтрами.",
     "prev": "← Назад",
-    "next": "Далее →"
+    "next": "Далее →",
+    "searching": "Поиск...",
+    "results": "результатов",
+    "autocompleteEmpty": "Ничего не найдено",
+    "stores": "{count} маг."
   },
   "product": {
     "lowestPrice": "Самая низкая цена:",

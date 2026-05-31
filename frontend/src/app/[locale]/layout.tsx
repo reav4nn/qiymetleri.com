@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { NextIntlClientProvider, useMessages } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MobileNav } from "@/components/MobileNav";
+import { AdSenseScript } from "@/components/AdSenseScript";
 import { SITE_NAME, absoluteUrl, buildAlternates, ogLocale } from "@/lib/seo";
-import { organizationSchema, webSiteSchema } from "@/lib/schema";
-import Script from "next/script";
 import "./globals.css";
 
 export function generateStaticParams() {
@@ -64,7 +63,7 @@ export async function generateMetadata({
     },
     manifest: "/site.webmanifest",
     other: {
-      "theme-color": "#4f46e5",
+      "theme-color": "#0a0a0a",
     },
   };
 }
@@ -95,59 +94,37 @@ export default async function LocaleLayout({
   ];
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} data-theme="dark" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.setAttribute('data-theme','dark')}}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();`
-        }} />
-        {process.env.NEXT_PUBLIC_ADSENSE_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
       </head>
       <body className="font-sans antialiased">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema()),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(webSiteSchema()),
-          }}
-        />
+        <AdSenseScript />
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-bg-page)]/95 backdrop-blur-md">
-            <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 h-14 border-b border-[var(--color-border)] bg-[var(--color-bg-page)]/95 backdrop-blur-sm">
+            <nav className="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6">
               <a href={`/${locale}`} className="flex items-center gap-2">
                 <Image
                   src="/qiymetleriTransparentDark.png"
                   alt=""
-                  width={32}
-                  height={32}
-                  className="logo-for-light h-8 w-8 translate-y-[1px]"
+                  width={28}
+                  height={28}
+                  className="logo-for-light h-7 w-7"
                   priority
                 />
                 <Image
                   src="/qiymetleriTransparentWhite.png"
                   alt=""
-                  width={32}
-                  height={32}
-                  className="logo-for-dark h-8 w-8 translate-y-[1px]"
+                  width={28}
+                  height={28}
+                  className="logo-for-dark h-7 w-7"
                   priority
                 />
-                <span className="text-lg font-bold text-[var(--color-accent)] sm:text-xl">
+                <span className="text-base font-semibold text-[var(--color-text-primary)]">
                   qiymetleri.com
                 </span>
               </a>
-              <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-1 sm:gap-3">
                 <div className="hidden gap-6 md:flex">
                   {navLinks.map((link) => (
                     <a
@@ -165,10 +142,10 @@ export default async function LocaleLayout({
               </div>
             </nav>
           </header>
-          <main>{children}</main>
-          <footer className="mt-8 border-t border-[var(--color-border)] bg-[var(--color-bg-surface)] py-6 sm:mt-16 sm:py-8">
-            <div className="mx-auto max-w-7xl px-4 text-center text-xs text-[var(--color-text-muted)] sm:text-sm">
-              © {new Date().getFullYear()} {tFooter("tagline")}
+          <main className="mx-auto max-w-6xl">{children}</main>
+          <footer className="mt-8 border-t border-[var(--color-border)] py-6 sm:mt-16 sm:py-8">
+            <div className="mx-auto max-w-6xl px-4 text-center text-xs text-[var(--color-text-muted)] sm:text-sm">
+              &copy; {new Date().getFullYear()} {tFooter("tagline")}
             </div>
           </footer>
         </NextIntlClientProvider>
