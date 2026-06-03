@@ -62,5 +62,10 @@ jobs:
           PROXY_ENABLED: ${{ secrets.PROXY_ENABLED || 'false' }}
           PROXY_USERNAME: ${{ secrets.PROXY_USERNAME || '' }}
           PROXY_PASSWORD: ${{ secrets.PROXY_PASSWORD || '' }}
+          SPIDER_NAME: ${{ github.event.inputs.spider }}
         run: |
-          poetry run scrapy crawl ${{ github.event.inputs.spider }}
+          case "$SPIDER_NAME" in
+            ispace|irshad_electronics|baku_electronics|kontakt_home) ;;
+            *) echo "Unknown spider: $SPIDER_NAME"; exit 1 ;;
+          esac
+          poetry run scrapy crawl "$SPIDER_NAME"

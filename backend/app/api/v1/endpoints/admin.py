@@ -3,7 +3,7 @@ from uuid import UUID
 
 from celery import Celery
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, AnyHttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -329,7 +329,7 @@ class ProductUpdate(BaseModel):
     brand: str | None = None
     category: str | None = None
     model_family: str | None = None
-    image_url: str | None = None
+    image_url: AnyHttpUrl | None = None
 
 
 class AdminProduct(BaseModel):
@@ -433,7 +433,8 @@ async def update_product(
         raise HTTPException(status_code=400, detail="No fields to update")
 
     for field, value in update_data.items():
-        setattr(product, field, value)
+        # AnyHttpUrl serializes to a Url object; ORM expects a plain string
+        setattr(product, field, str(value) if value is not None else None)
 
     await db.commit()
     await db.refresh(product)

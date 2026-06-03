@@ -2,11 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-/**
- * Client-side auth gate for admin pages.
- * Prompts for credentials and verifies against the admin API before rendering children.
- * Uses localStorage for persistence across page refreshes.
- */
 export function AdminAuthGate({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<"loading" | "prompt" | "authenticated" | "failed">("loading");
 
@@ -17,26 +12,19 @@ export function AdminAuthGate({ children }: { children: React.ReactNode }) {
         headers: { Authorization: `Basic ${token}` },
       });
       if (res.ok) {
-        localStorage.setItem("admin_auth", token);
         sessionStorage.setItem("admin_auth", token);
         setState("authenticated");
         return true;
       }
     } catch {
-      // network error — keep existing token, don't lock out
-      const existing = localStorage.getItem("admin_auth");
-      if (existing) {
-        setState("authenticated");
-        return true;
-      }
+      // network error — do not authenticate without server confirmation
     }
-    localStorage.removeItem("admin_auth");
     sessionStorage.removeItem("admin_auth");
     return false;
   }, []);
 
   useEffect(() => {
-    const existing = localStorage.getItem("admin_auth") || sessionStorage.getItem("admin_auth");
+    const existing = sessionStorage.getItem("admin_auth");
     if (existing) {
       verify(existing).then((ok) => {
         if (!ok) setState("prompt");

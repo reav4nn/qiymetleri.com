@@ -35,6 +35,9 @@ Thumbs.db
 # Poetry
 poetry.lock
 
+# Logs
+*.log
+
 # pnpm
 pnpm-debug.log
 frontend/tsconfig.tsbuildinfo

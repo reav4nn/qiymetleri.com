@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # PostgreSQL
     POSTGRES_USER: str = "qiymetleri"
-    POSTGRES_PASSWORD: str = "qiymetleri_secret"
+    POSTGRES_PASSWORD: str = "CHANGE_ME_SET_VIA_ENV"
     POSTGRES_HOST: str = "postgres"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "qiymetleri"
