@@ -54,8 +54,10 @@ ITEM_PIPELINES = {
 # Database — always set DATABASE_URL in production
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 if not DATABASE_URL:
+    _pg_pass = os.getenv("POSTGRES_PASSWORD")
+    if not _pg_pass:
+        raise RuntimeError("Set DATABASE_URL or POSTGRES_PASSWORD env var before running scrapers.")
     _pg_user = os.getenv("POSTGRES_USER", "qiymetleri")
-    _pg_pass = os.getenv("POSTGRES_PASSWORD", "qiymetleri")
     _pg_host = os.getenv("POSTGRES_HOST", "localhost")
     _pg_port = os.getenv("POSTGRES_PORT", "5432")
     _pg_db = os.getenv("POSTGRES_DB", "qiymetleri")
