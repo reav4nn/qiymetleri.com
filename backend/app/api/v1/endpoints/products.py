@@ -39,7 +39,7 @@ def _list_cache_key(
     size_mm: int | None,
 ) -> str:
     raw = f"{page}:{per_page}:{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}:{sort_by}:{chip}:{size_mm}"
-    h = hashlib.md5(raw.encode()).hexdigest()[:12]
+    h = hashlib.sha256(raw.encode()).hexdigest()[:12]
     return f"products:list:{h}"
 
 

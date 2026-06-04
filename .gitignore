@@ -43,3 +43,5 @@ pnpm-debug.log
 frontend/tsconfig.tsbuildinfo
 docker/nginx/.htpasswd
 
+# AI assistant context (contains deployment details)
+

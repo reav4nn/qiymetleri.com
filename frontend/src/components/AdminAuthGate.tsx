@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
 export function AdminAuthGate({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<"loading" | "prompt" | "authenticated" | "failed">("loading");
 
@@ -13,6 +15,7 @@ export function AdminAuthGate({ children }: { children: React.ReactNode }) {
       });
       if (res.ok) {
         sessionStorage.setItem("admin_auth", token);
+        sessionStorage.setItem("admin_auth_exp", String(Date.now() + SESSION_TTL_MS));
         setState("authenticated");
         return true;
       }
@@ -20,16 +23,21 @@ export function AdminAuthGate({ children }: { children: React.ReactNode }) {
       // network error — do not authenticate without server confirmation
     }
     sessionStorage.removeItem("admin_auth");
+    sessionStorage.removeItem("admin_auth_exp");
     return false;
   }, []);
 
   useEffect(() => {
     const existing = sessionStorage.getItem("admin_auth");
-    if (existing) {
+    const exp = sessionStorage.getItem("admin_auth_exp");
+    const isExpired = !exp || Date.now() >= Number(exp);
+    if (existing && !isExpired) {
       verify(existing).then((ok) => {
         if (!ok) setState("prompt");
       });
     } else {
+      sessionStorage.removeItem("admin_auth");
+      sessionStorage.removeItem("admin_auth_exp");
       setState("prompt");
     }
   }, [verify]);

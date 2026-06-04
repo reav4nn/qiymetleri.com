@@ -22,7 +22,7 @@ def _filters_cache_key(
     max_price: float | None,
 ) -> str:
     raw = f"{q}:{category}:{brand}:{store_id}:{min_price}:{max_price}"
-    h = hashlib.md5(raw.encode()).hexdigest()[:12]
+    h = hashlib.sha256(raw.encode()).hexdigest()[:12]
     return f"filters:{h}"
 
 
