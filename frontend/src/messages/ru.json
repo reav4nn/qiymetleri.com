@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "categories": "Категории",
+    "login": "Войти"
+  },
+  "search": {
+    "placeholder": "Какой товар вы хотите найти дешевле?",
+    "submit": "Поиск"
+  },
+  "home": {
+    "hero": "найди нужный товар в самом дешевом месте с qiymetleri",
+    "storesLabel": "Сравниваем цены:",
+    "popularTitle": "Популярные товары",
+    "seeAll": "Смотреть все"
+  },
+  "product": {
+    "cheapest": "Дешевле всех",
+    "offers": "{count} цены",
+    "unit": "₼",
+    "favourite": "Добавить в избранное"
+  },
+  "categories": {
+    "phones": "Телефоны",
+    "laptops": "Ноутбуки",
+    "tvs": "Телевизоры",
+    "headphones": "Наушники",
+    "tablets": "Планшеты",
+    "watches": "Смарт-часы",
+    "count": "{count, number} товаров"
+  }
+}

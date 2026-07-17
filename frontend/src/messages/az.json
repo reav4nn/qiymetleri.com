@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "categories": "Kateqoriyalar",
+    "login": "Daxil ol"
+  },
+  "search": {
+    "placeholder": "Hansı məhsulu axtarırsınız?",
+    "submit": "Axtar"
+  },
+  "home": {
+    "hero": "qiymetleri ilə istədiyin məhsulu ən ucuz yerdə tap",
+    "storesLabel": "Mağazalar:",
+    "popularTitle": "Ən çox baxılan məhsullar",
+    "seeAll": "Hamısına bax"
+  },
+  "product": {
+    "cheapest": "Ən ucuz",
+    "offers": "{count} qiymət",
+    "unit": "₼",
+    "favourite": "Seçilmişlərə əlavə et"
+  },
+  "categories": {
+    "phones": "Telefonlar",
+    "laptops": "Noutbuklar",
+    "tvs": "Televizorlar",
+    "headphones": "Qulaqlıqlar",
+    "tablets": "Tabletlər",
+    "watches": "Smart Saatlar",
+    "count": "{count, number} məhsul"
+  }
+}
