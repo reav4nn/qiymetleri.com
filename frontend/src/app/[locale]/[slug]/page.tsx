@@ -88,21 +88,14 @@ export default async function ContentPage({
           </p>
         </header>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {page.sections.map((section, index) => (
+        <div className="mt-6 divide-y divide-border rounded-card border border-border bg-white">
+          {page.sections.map((section) => (
             <section
               key={section.title}
-              className={`rounded-card border border-border bg-white p-5 sm:p-6 ${
-                page.sections.length % 2 === 1 && index === 0
-                  ? "md:col-span-2"
-                  : ""
-              }`}
+              className="grid gap-2 px-5 py-5 sm:px-8 sm:py-7 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] md:gap-8"
             >
-              <div className="text-xs font-extrabold tracking-[0.08em] text-[#a1a1aa]">
-                {String(index + 1).padStart(2, "0")}
-              </div>
-              <h2 className="mt-3 text-lg font-extrabold sm:text-xl">{section.title}</h2>
-              <p className="mt-3 max-w-prose text-sm leading-relaxed text-[#71717a] sm:text-base">
+              <h2 className="text-base font-extrabold sm:text-lg">{section.title}</h2>
+              <p className="max-w-prose text-sm leading-relaxed text-[#71717a] sm:text-base">
                 {section.body}
               </p>
             </section>
