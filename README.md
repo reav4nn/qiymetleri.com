@@ -87,18 +87,37 @@ qiymetleriV2/
 
 ### 🐳 Running with Docker (Recommended)
 
-To spin up the entire application stack (Frontend, Backend, DB, Redis, and workers):
+To start the full application stack:
 
-1. **Build and start the application:**
+1. **Create the local environment file and replace every `CHANGE_ME` value:**
    ```bash
-   docker compose build frontend && docker compose up -d
+   cp .env.example .env
    ```
-2. **Access the services:**
+
+2. **Build and start PostgreSQL, Redis, migrations, API, frontend, and workers:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. **Optionally load the deterministic diploma demonstration catalogue:**
+   ```bash
+   docker compose --profile demo run --rm seed-demo
+   ```
+
+4. **Verify the stack:**
+   ```bash
+   curl http://localhost:8000/health/ready
+   ```
+
+5. **Access the services:**
    - Frontend: `http://localhost:3000`
    - FastAPI Docs: `http://localhost:8000/docs`
+   - Nginx entrypoint: `http://localhost`
 
-> [!TIP]
-> For subsequential runs, hot reloading is enabled. Simply use `docker compose up -d` without rebuilding.
+> [!WARNING]
+> `docker compose down -v` permanently deletes local PostgreSQL and Redis volumes. Use it only when intentionally creating a fresh environment.
+
+Detailed procedures are available in [the demo runbook](docs/DEMO.md) and [the deployment guide](docs/DEPLOYMENT.md).
 
 ---
 
@@ -139,7 +158,8 @@ scrapy crawl kontakt_home     # Run a spider manually
 
 ## Linting & Formatting
 
-Always format and type-check your code before committing:
+Run these checks before committing:
 
-- **Backend / Scraper**: `cd backend && ruff check . && black --check .`
-- **Frontend**: `cd frontend && pnpm lint`
+- **Backend**: `cd backend && poetry run ruff check . && poetry run black --check . && poetry run pytest -q tests`
+- **Scraper**: `cd scraper && poetry run ruff check .`
+- **Frontend**: `cd frontend && npm run lint && npm run build`
