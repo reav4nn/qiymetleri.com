@@ -1,8 +1,15 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { stores } from "@/app/[locale]/_lib/mock-data";
+import type { FilterOption } from "@/lib/api";
 
-export async function StoresBar() {
+const storeLogos: Record<string, string> = {
+  kontakt_home: "/stores/kontakt_home.png",
+  baku_electronics: "/stores/baku_electronics.png",
+  irshad_electronics: "/stores/irshad_electronics.png",
+  ispace: "/stores/ispace.png",
+};
+
+export async function StoresBar({ stores }: { stores: FilterOption[] }) {
   const t = await getTranslations();
 
   return (
@@ -11,7 +18,7 @@ export async function StoresBar() {
       {stores.map((store) => (
         <span key={store.name} className="flex items-center gap-2 text-sm font-bold">
           <Image
-            src={store.logo}
+            src={storeLogos[store.id] ?? "/logo.svg"}
             alt={store.name}
             width={18}
             height={18}

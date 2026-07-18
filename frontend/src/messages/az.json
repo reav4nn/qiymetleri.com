@@ -11,7 +11,9 @@
     "hero": "qiymetleri ilə istədiyin məhsulu ən ucuz yerdə tap",
     "storesLabel": "Mağazalar:",
     "popularTitle": "Ən çox baxılan məhsullar",
-    "seeAll": "Hamısına bax"
+    "seeAll": "Hamısına bax",
+    "emptyProducts": "Hələ məhsul məlumatı yoxdur.",
+    "dataUnavailable": "Məlumat xidməti müvəqqəti olaraq əlçatan deyil."
   },
   "product": {
     "cheapest": "Ən ucuz",
