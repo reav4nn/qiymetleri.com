@@ -42,7 +42,6 @@ class DatabasePipeline:
     def open_spider(self, spider):
         self.engine = create_engine(self.database_url)
         self.session_factory = sessionmaker(bind=self.engine)
-        self._ensure_schema()
         self._spider_name = spider.name
         self._run_start = datetime.now(timezone.utc)
         self._item_count = 0
@@ -107,85 +106,6 @@ class DatabasePipeline:
                 logger.warning(f"Cache invalidation failed: {e}")
         if self.engine:
             self.engine.dispose()
-
-    def _ensure_schema(self):
-        """Create required tables and seed data if they don't exist."""
-        with self.engine.begin() as conn:
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS stores (
-                    id VARCHAR(100) PRIMARY KEY,
-                    name VARCHAR(200) NOT NULL,
-                    base_url TEXT NOT NULL,
-                    is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMPTZ DEFAULT NOW()
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS products (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    canonical_id VARCHAR(255) UNIQUE NOT NULL,
-                    brand VARCHAR(100),
-                    category VARCHAR(100),
-                    model_family VARCHAR(200),
-                    name VARCHAR(500) NOT NULL,
-                    image_url TEXT,
-                    attributes JSONB DEFAULT '{}',
-                    created_at TIMESTAMPTZ DEFAULT NOW(),
-                    updated_at TIMESTAMPTZ DEFAULT NOW()
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS current_prices (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-                    store_id VARCHAR(100) NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
-                    price_azn DECIMAL(10,2) NOT NULL,
-                    original_title TEXT,
-                    url TEXT,
-                    in_stock BOOLEAN DEFAULT TRUE,
-                    last_checked_at TIMESTAMPTZ DEFAULT NOW(),
-                    CONSTRAINT uq_product_store UNIQUE (product_id, store_id)
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS price_history (
-                    time TIMESTAMPTZ NOT NULL,
-                    product_id UUID NOT NULL,
-                    store_id VARCHAR(100) NOT NULL,
-                    price_azn DECIMAL(10,2) NOT NULL,
-                    in_stock BOOLEAN
-                )
-            """))
-            # Seed stores
-            conn.execute(text("""
-                INSERT INTO stores (id, name, base_url) VALUES
-                    ('kontakt_home', 'Kontakt Home', 'https://kontakt.az'),
-                    ('baku_electronics', 'Baku Electronics', 'https://bakuelectronics.az'),
-                    ('irshad_electronics', 'Irshad Electronics', 'https://irshad.az'),
-                    ('ispace', 'iSpace', 'https://ispace.az')
-                ON CONFLICT (id) DO NOTHING
-            """))
-            # Scraper run history
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS scraper_runs (
-                    id SERIAL PRIMARY KEY,
-                    spider VARCHAR(100) NOT NULL,
-                    status VARCHAR(20) NOT NULL DEFAULT 'running',
-                    items_scraped INTEGER DEFAULT 0,
-                    errors INTEGER DEFAULT 0,
-                    duration_seconds REAL,
-                    started_at TIMESTAMPTZ NOT NULL,
-                    finished_at TIMESTAMPTZ
-                )
-            """))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_scraper_runs_spider ON scraper_runs (spider, started_at DESC)"))
-            # Indexes for query performance
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_current_prices_product ON current_prices (product_id)"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_current_prices_store ON current_prices (store_id)"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_current_prices_price ON current_prices (price_azn)"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_history_product ON price_history (product_id, time DESC)"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_price_history_store ON price_history (store_id, time DESC)"))
-        logger.info("Database schema verified/created")
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
