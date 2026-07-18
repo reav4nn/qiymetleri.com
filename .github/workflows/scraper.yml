@@ -1,0 +1,71 @@
+name: Scheduled Scraper
+
+on:
+  schedule:
+    # Kontakt Home — hər 2 saatda bir (UTC 02:00, 04:00, 06:00, ...)
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      spider:
+        description: "Spider to run (leave empty for all)"
+        required: false
+        default: ""
+
+jobs:
+  scrape:
+    name: Run Scrapers
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies + Playwright
+        working-directory: scraper
+        run: |
+          poetry install --no-interaction
+          poetry run playwright install chromium --with-deps
+
+      - name: Copy shared module
+        run: cp -r shared scraper/
+
+      - name: Run all spiders
+        if: ${{ github.event.inputs.spider == '' }}
+        working-directory: scraper
+        env:
+          DATABASE_URL: ${{ secrets.SCRAPER_DATABASE_URL }}
+          REDIS_URL: ${{ secrets.SCRAPER_REDIS_URL }}
+          PROXY_ENABLED: ${{ secrets.PROXY_ENABLED || 'false' }}
+          PROXY_USERNAME: ${{ secrets.PROXY_USERNAME || '' }}
+          PROXY_PASSWORD: ${{ secrets.PROXY_PASSWORD || '' }}
+        run: |
+          for spider in ispace irshad_electronics baku_electronics kontakt_home; do
+            echo "=== Running $spider ==="
+            poetry run scrapy crawl $spider || echo "WARN: $spider finished with errors"
+          done
+
+      - name: Run specific spider
+        if: ${{ github.event.inputs.spider != '' }}
+        working-directory: scraper
+        env:
+          DATABASE_URL: ${{ secrets.SCRAPER_DATABASE_URL }}
+          REDIS_URL: ${{ secrets.SCRAPER_REDIS_URL }}
+          PROXY_ENABLED: ${{ secrets.PROXY_ENABLED || 'false' }}
+          PROXY_USERNAME: ${{ secrets.PROXY_USERNAME || '' }}
+          PROXY_PASSWORD: ${{ secrets.PROXY_PASSWORD || '' }}
+          SPIDER_NAME: ${{ github.event.inputs.spider }}
+        run: |
+          case "$SPIDER_NAME" in
+            ispace|irshad_electronics|baku_electronics|kontakt_home) ;;
+            *) echo "Unknown spider: $SPIDER_NAME"; exit 1 ;;
+          esac
+          poetry run scrapy crawl "$SPIDER_NAME"
