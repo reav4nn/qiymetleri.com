@@ -43,8 +43,7 @@ class ISpaceSpider(scrapy.Spider):
         "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
     }
 
-    def start_requests(self):
-        self.logger.warning("--- start_requests CALLED! ---")
+    async def start(self):
         base_url = "https://ispace.az"
         for category, path in CATEGORY_URLS.items():
             yield scrapy.Request(
@@ -70,6 +69,7 @@ class ISpaceSpider(scrapy.Spider):
             )
 
     async def parse_listing(self, response, category: str):
+        self.crawler.stats.inc_value(f"category/{category}/pages")
         page = response.meta.get("playwright_page")
 
         try:
@@ -88,7 +88,9 @@ class ISpaceSpider(scrapy.Spider):
 
                 # Name: .entity-card_name
                 name = (
-                    card.css(".entity-card_name::text").get() or ""
+                    card.css(".entity-card_name::attr(data-title)").get()
+                    or card.css(".entity-card_name-text::text").get()
+                    or ""
                 ).strip()
 
                 if not name or len(name) < 3:
@@ -146,3 +148,5 @@ class ISpaceSpider(scrapy.Spider):
         if page:
             await page.close()
         self.logger.error(f"Request failed: {failure.value}")
+        category = failure.request.meta.get("category", "unknown")
+        self.crawler.stats.inc_value(f"category/{category}/errors")

@@ -35,7 +35,7 @@ class BakuElectronicsSpider(scrapy.Spider):
         "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
     }
 
-    def start_requests(self):
+    async def start(self):
         base_url = "https://bakuelectronics.az"
         for category, path in CATEGORY_URLS.items():
             yield scrapy.Request(
@@ -74,6 +74,7 @@ class BakuElectronicsSpider(scrapy.Spider):
             )
 
     async def parse_listing(self, response, category: str):
+        self.crawler.stats.inc_value(f"category/{category}/pages")
         page = response.meta.get("playwright_page")
         page_num = response.meta.get("page_num", 1)
 
@@ -218,6 +219,8 @@ class BakuElectronicsSpider(scrapy.Spider):
         if page:
             await page.close()
         self.logger.error(f"Request failed: {failure.value}")
+        category = failure.request.meta.get("category", "unknown")
+        self.crawler.stats.inc_value(f"category/{category}/errors")
 
     @staticmethod
     def _extract_brand(title: str) -> str | None:

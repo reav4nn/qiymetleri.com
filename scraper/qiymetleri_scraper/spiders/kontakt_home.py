@@ -28,11 +28,15 @@ class KontaktHomeSpider(scrapy.Spider):
     store_id = "kontakt_home"
 
     custom_settings = {
-        "DOWNLOAD_DELAY": 2,
-        "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
+        "DOWNLOAD_DELAY": 4,
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
+        "USER_AGENT": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+        ),
     }
 
-    def start_requests(self):
+    async def start(self):
         base_url = "https://kontakt.az"
         for category, path in CATEGORY_URLS.items():
             yield scrapy.Request(
@@ -51,6 +55,7 @@ class KontaktHomeSpider(scrapy.Spider):
             )
 
     async def parse_listing(self, response, category: str):
+        self.crawler.stats.inc_value(f"category/{category}/pages")
         page = response.meta.get("playwright_page")
 
         try:
@@ -194,6 +199,8 @@ class KontaktHomeSpider(scrapy.Spider):
         if page:
             await page.close()
         self.logger.error(f"Request failed: {failure.value}")
+        category = failure.request.meta.get("category", "unknown")
+        self.crawler.stats.inc_value(f"category/{category}/errors")
 
     @staticmethod
     def _extract_brand(title: str) -> str | None:

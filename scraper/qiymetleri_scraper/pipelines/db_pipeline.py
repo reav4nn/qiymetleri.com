@@ -31,7 +31,7 @@ class DatabasePipeline:
 
     @classmethod
     def from_crawler(cls, crawler):
-        return cls(
+        pipeline = cls(
             database_url=crawler.settings.get("DATABASE_URL"),
             redis_url=crawler.settings.get(
                 "CACHE_REDIS_URL",
@@ -40,14 +40,18 @@ class DatabasePipeline:
                 ),
             ),
         )
+        pipeline.crawler = crawler
+        return pipeline
 
-    def open_spider(self, spider):
+    def open_spider(self):
+        spider = self.crawler.spider
         self.engine = create_engine(self.database_url)
         self.session_factory = sessionmaker(bind=self.engine)
         self._spider_name = spider.name
         self._run_start = datetime.now(timezone.utc)
         self._item_count = 0
         self._error_count = 0
+        self._run_id = int(os.getenv("SCRAPER_RUN_ID", "0")) or None
         try:
             self._redis = redis.from_url(self.redis_url, decode_responses=True)
             self._redis.ping()
@@ -56,31 +60,50 @@ class DatabasePipeline:
             logger.warning(f"Redis not available — cache won't be invalidated: {e}")
             self._redis = None
 
-    def close_spider(self, spider):
+    def close_spider(self):
+        spider = self.crawler.spider
         # Record scraper run result
         run_end = datetime.now(timezone.utc)
         duration_s = (run_end - self._run_start).total_seconds()
+        stats = spider.crawler.stats.get_stats()
+        categories = getattr(__import__(spider.__module__, fromlist=["CATEGORY_URLS"]), "CATEGORY_URLS", {})
+        category_counts = [int(stats.get(f"category/{category}/items_saved", 0)) for category in categories]
         status = "success" if self._error_count == 0 else "partial"
         if self._item_count == 0:
             status = "failed"
+        elif any(count == 0 for count in category_counts):
+            status = "partial"
+        seen = int(stats.get("item_scraped_count", 0)) + int(stats.get("item_dropped_count", 0))
+        dropped = int(stats.get("item_dropped_count", 0))
+        request_errors = sum(
+            int(value) for key, value in stats.items() if str(key).endswith("/errors")
+        )
+        self._error_count += request_errors
 
         try:
             with self.session_factory() as session:
-                session.execute(
-                    text("""
-                        INSERT INTO scraper_runs (spider, status, items_scraped, errors, duration_seconds, started_at, finished_at)
-                        VALUES (:spider, :status, :items, :errors, :duration, :started, :finished)
-                    """),
-                    {
-                        "spider": self._spider_name,
-                        "status": status,
-                        "items": self._item_count,
-                        "errors": self._error_count,
-                        "duration": duration_s,
-                        "started": self._run_start,
-                        "finished": run_end,
-                    },
-                )
+                if self._run_id:
+                    session.execute(text("""
+                        UPDATE scraper_runs SET status=:status, items_scraped=:items,
+                            items_seen=:seen, items_saved=:items, items_dropped=:dropped,
+                            errors=:errors, duration_seconds=:duration, finished_at=:finished
+                        WHERE id=:run_id
+                    """), {"status": status, "items": self._item_count, "seen": seen,
+                           "dropped": dropped, "errors": self._error_count, "duration": duration_s,
+                           "finished": run_end, "run_id": self._run_id})
+                else:
+                    row = session.execute(text("""
+                        INSERT INTO scraper_runs (spider, trigger, status, items_scraped,
+                            items_seen, items_saved, items_dropped, errors, duration_seconds,
+                            started_at, finished_at)
+                        VALUES (:spider, 'manual', :status, :items, :seen, :items, :dropped,
+                            :errors, :duration, :started, :finished) RETURNING id
+                    """), {"spider": self._spider_name, "status": status, "items": self._item_count,
+                           "seen": seen, "dropped": dropped, "errors": self._error_count,
+                           "duration": duration_s, "started": self._run_start, "finished": run_end}).scalar_one()
+                    self._run_id = row
+
+                self._write_category_results(session, spider, stats)
                 session.commit()
             logger.info(
                 f"Scraper run recorded: {self._spider_name} — {status}, "
@@ -109,7 +132,8 @@ class DatabasePipeline:
         if self.engine:
             self.engine.dispose()
 
-    def process_item(self, item, spider):
+    def process_item(self, item):
+        spider = self.crawler.spider
         adapter = ItemAdapter(item)
         price_azn = adapter.get("price_azn")
         if price_azn is None:
@@ -123,11 +147,14 @@ class DatabasePipeline:
             with self.session_factory() as session:
                 canonical_id = self._build_canonical_id(adapter)
                 self._ensure_product_exists(session, adapter, canonical_id)
-                self._upsert_current_price(session, adapter, canonical_id, now)
-                self._insert_price_history(session, adapter, canonical_id, now)
+                changed = self._upsert_current_price(session, adapter, canonical_id, now)
+                if changed:
+                    self._insert_price_history(session, adapter, canonical_id, now)
                 session.commit()
 
             self._item_count += 1
+            category = adapter.get("category", "unknown")
+            spider.crawler.stats.inc_value(f"category/{category}/items_saved")
 
             # Invalidate product-specific cache keys
             if self._redis:
@@ -205,9 +232,14 @@ class DatabasePipeline:
     def _upsert_current_price(
         self, session: Session, adapter: ItemAdapter, canonical_id: str, now: datetime
     ):
+        previous = session.execute(text("""
+            SELECT cp.price_azn, cp.in_stock FROM current_prices cp
+            JOIN products p ON p.id = cp.product_id
+            WHERE p.canonical_id=:canonical_id AND cp.store_id=:store_id
+        """), {"canonical_id": canonical_id, "store_id": adapter.get("store_id")}).first()
         session.execute(
             text("""
-                INSERT INTO current_prices (id, product_id, store_id, price_azn, original_title, url, in_stock, last_checked_at)
+                INSERT INTO current_prices (id, product_id, store_id, price_azn, original_title, url, in_stock, last_checked_at, last_seen_run_id)
                 SELECT
                     gen_random_uuid(),
                     p.id,
@@ -216,7 +248,8 @@ class DatabasePipeline:
                     :original_title,
                     :url,
                     :in_stock,
-                    :now
+                    :now,
+                    :run_id
                 FROM products p
                 WHERE p.canonical_id = :canonical_id
                 ON CONFLICT (product_id, store_id)
@@ -225,7 +258,8 @@ class DatabasePipeline:
                     original_title = EXCLUDED.original_title,
                     url = EXCLUDED.url,
                     in_stock = EXCLUDED.in_stock,
-                    last_checked_at = EXCLUDED.last_checked_at
+                    last_checked_at = EXCLUDED.last_checked_at,
+                    last_seen_run_id = EXCLUDED.last_seen_run_id
             """),
             {
                 "store_id": adapter.get("store_id"),
@@ -235,8 +269,57 @@ class DatabasePipeline:
                 "in_stock": adapter.get("in_stock", True),
                 "canonical_id": canonical_id,
                 "now": now,
+                "run_id": self._run_id,
             },
         )
+        return previous is None or float(previous[0]) != float(adapter.get("price_azn")) or bool(previous[1]) != bool(adapter.get("in_stock", True))
+
+    def _write_category_results(self, session: Session, spider, stats: dict):
+        if not self._run_id:
+            return
+        categories = getattr(__import__(spider.__module__, fromlist=["CATEGORY_URLS"]), "CATEGORY_URLS", {})
+        for category in categories:
+            saved = int(stats.get(f"category/{category}/items_saved", 0))
+            errors = int(stats.get(f"category/{category}/errors", 0))
+            pages = int(stats.get(f"category/{category}/pages", 0))
+            median = session.execute(text("""
+                SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY items_saved)
+                FROM (SELECT rc.items_saved FROM scraper_run_categories rc
+                      JOIN scraper_runs r ON r.id=rc.run_id
+                      WHERE r.spider=:spider AND rc.category=:category
+                        AND rc.status='success' ORDER BY r.started_at DESC LIMIT 7) recent
+            """), {"spider": self._spider_name, "category": category}).scalar()
+            below_baseline = median is not None and saved < float(median) * 0.5
+            status = "failed" if saved == 0 else ("partial" if errors or below_baseline else "success")
+            session.execute(text("""
+                INSERT INTO scraper_run_categories
+                    (run_id, category, status, pages, items_seen, items_saved, items_dropped, errors)
+                VALUES (:run_id, :category, :status, :pages, :saved, :saved, 0, :errors)
+                ON CONFLICT (run_id, category) DO UPDATE SET status=EXCLUDED.status,
+                    pages=EXCLUDED.pages, items_seen=EXCLUDED.items_seen,
+                    items_saved=EXCLUDED.items_saved, errors=EXCLUDED.errors
+            """), {"run_id": self._run_id, "category": category, "status": status,
+                   "pages": pages, "saved": saved, "errors": errors})
+            if status == "success":
+                stale = session.execute(text("""
+                    UPDATE current_prices cp SET in_stock=FALSE, last_checked_at=NOW()
+                    FROM products p WHERE cp.product_id=p.id AND cp.store_id=:store
+                      AND p.category=:category AND cp.in_stock=TRUE
+                      AND cp.last_seen_run_id IS DISTINCT FROM :run_id
+                    RETURNING cp.product_id, cp.price_azn
+                """), {"store": self._spider_name, "category": category, "run_id": self._run_id}).all()
+                for product_id, price in stale:
+                    session.execute(text("""
+                        INSERT INTO price_history (time, product_id, store_id, price_azn, in_stock)
+                        VALUES (NOW(), :product_id, :store, :price, FALSE)
+                    """), {"product_id": product_id, "store": self._spider_name, "price": price})
+        session.execute(text("""
+            UPDATE scraper_runs SET status = CASE
+                WHEN NOT EXISTS (SELECT 1 FROM scraper_run_categories WHERE run_id=:run_id AND items_saved > 0) THEN 'failed'
+                WHEN EXISTS (SELECT 1 FROM scraper_run_categories WHERE run_id=:run_id AND status IN ('failed','partial')) THEN 'partial'
+                ELSE status END
+            WHERE id=:run_id
+        """), {"run_id": self._run_id})
 
     def _insert_price_history(
         self, session: Session, adapter: ItemAdapter, canonical_id: str, now: datetime

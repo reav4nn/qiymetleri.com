@@ -8,14 +8,15 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.13"
-scrapy = ">=2.12.0"
-playwright = ">=1.49.0"
-scrapy-playwright = ">=0.0.43"
+scrapy = "2.17.0"
+playwright = "1.55.0"
+scrapy-playwright = "0.0.48"
 sqlalchemy = ">=2.0.40"
 psycopg2-binary = ">=2.9.10"
 python-dotenv = ">=1.1.0"
 celery = {extras = ["redis"], version = ">=5.4.0"}
 redis = ">=5.0.0"
+croniter = "6.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0.0"

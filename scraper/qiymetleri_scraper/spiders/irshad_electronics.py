@@ -158,11 +158,12 @@ class IrshadElectronicsSpider(scrapy.Spider):
     store_id = "irshad_electronics"
 
     custom_settings = {
-        "DOWNLOAD_DELAY": 2,
-        "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
+        "DOWNLOAD_DELAY": 30,
+        "RANDOMIZE_DOWNLOAD_DELAY": False,
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
     }
 
-    def start_requests(self):
+    async def start(self):
         base_url = "https://irshad.az"
         for category, path in CATEGORY_URLS.items():
             yield scrapy.Request(
@@ -178,7 +179,7 @@ class IrshadElectronicsSpider(scrapy.Spider):
                         PageMethod("wait_for_timeout", 5000),
                         PageMethod(
                             "wait_for_selector",
-                            ".product",
+                            ".products__list__body .product",
                             timeout=20000,
                         ),
                     ],
@@ -189,6 +190,7 @@ class IrshadElectronicsSpider(scrapy.Spider):
             )
 
     async def parse_listing(self, response, category: str):
+        self.crawler.stats.inc_value(f"category/{category}/pages")
         page = response.meta.get("playwright_page")
 
         try:
@@ -310,6 +312,8 @@ class IrshadElectronicsSpider(scrapy.Spider):
         if page:
             await page.close()
         self.logger.error(f"Request failed: {failure.value}")
+        category = failure.request.meta.get("category", "unknown")
+        self.crawler.stats.inc_value(f"category/{category}/errors")
 
     @staticmethod
     def _extract_brand(title: str) -> str | None:
