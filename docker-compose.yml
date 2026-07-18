@@ -94,6 +94,26 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  seed-demo:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    profiles:
+      - demo
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-qiymetleri}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-qiymetleri}
+      CACHE_REDIS_URL: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/0
+    command: python -m scripts.seed_demo
+    networks:
+      - internal
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
   frontend:
     build:
       context: ./frontend
