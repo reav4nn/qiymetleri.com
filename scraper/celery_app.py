@@ -1,10 +1,10 @@
 import os
 
 from celery import Celery
-from celery.schedules import crontab
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/1")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/2")
+REDIS_FALLBACK = os.getenv("REDIS_URL", "redis://redis:6379/0")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_FALLBACK)
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_FALLBACK)
 
 app = Celery(
     "qiymetleri_scraper",
@@ -28,24 +28,5 @@ app.conf.update(
 )
 
 app.conf.beat_schedule = {
-    "scrape-kontakt-home": {
-        "task": "tasks.crawl_spider",
-        "schedule": crontab(minute=0, hour="*/2"),
-        "args": ("kontakt_home",),
-    },
-    "scrape-baku-electronics": {
-        "task": "tasks.crawl_spider",
-        "schedule": crontab(minute=15, hour="*/4"),
-        "args": ("baku_electronics",),
-    },
-    "scrape-irshad-electronics": {
-        "task": "tasks.crawl_spider",
-        "schedule": crontab(minute=30, hour="*/4"),
-        "args": ("irshad_electronics",),
-    },
-    "scrape-ispace": {
-        "task": "tasks.crawl_spider",
-        "schedule": crontab(minute=45, hour="*/4"),
-        "args": ("ispace",),
-    },
+    "dispatch-due-spiders": {"task": "tasks.dispatch_due_spiders", "schedule": 60.0},
 }

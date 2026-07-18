@@ -1,9 +1,14 @@
 import logging
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+from uuid import uuid4
 from uuid import UUID
 
+from croniter import croniter
 from celery import Celery
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from pydantic import BaseModel, AnyHttpUrl
+from pydantic import BaseModel, AnyHttpUrl, Field, model_validator
+from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -50,6 +55,224 @@ SPIDER_META = {
     },
     "ispace": {"display_name": "iSpace", "schedule": "Hər 4 saatda"},
 }
+
+
+class ScheduleUpdate(BaseModel):
+    is_enabled: bool
+    schedule_type: str = Field(pattern="^(interval|cron)$")
+    interval_minutes: int | None = Field(default=None, ge=30, le=10080)
+    cron_expression: str | None = None
+
+    @model_validator(mode="after")
+    def validate_schedule(self):
+        if self.schedule_type == "interval" and self.interval_minutes is None:
+            raise ValueError("Interval dəqiqələri tələb olunur")
+        if self.schedule_type == "cron":
+            if (
+                not self.cron_expression
+                or len(self.cron_expression.split()) != 5
+                or not croniter.is_valid(self.cron_expression)
+            ):
+                raise ValueError("Etibarlı 5 hissəli cron ifadəsi tələb olunur")
+        return self
+
+
+class StoreUpdate(BaseModel):
+    is_active: bool
+
+
+@router.get("/scrapers")
+async def list_scrapers(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(sa_text("""
+        SELECT c.spider, c.store_id, c.display_name, c.is_enabled, c.schedule_type,
+               c.interval_minutes, c.cron_expression, c.timezone, c.next_run_at,
+               r.id, r.status, r.items_saved, r.finished_at, r.duration_seconds
+        FROM scraper_configs c LEFT JOIN LATERAL (
+            SELECT * FROM scraper_runs WHERE spider=c.spider ORDER BY started_at DESC LIMIT 1
+        ) r ON TRUE ORDER BY c.display_name
+    """))
+    try:
+        from app.core.cache import redis_client
+
+        queue_count = int(await redis_client.llen("scraping"))
+        beat_online = bool(await redis_client.get("scraper:beat:heartbeat"))
+    except Exception:
+        queue_count, beat_online = 0, False
+    try:
+        worker_online = bool(celery_app.control.inspect(timeout=1).ping())
+    except Exception:
+        worker_online = False
+    return {
+        "worker_online": worker_online,
+        "beat_online": beat_online,
+        "queue_count": queue_count,
+        "scrapers": [dict(row._mapping) for row in result.all()],
+    }
+
+
+@router.patch("/scrapers/{name}/schedule")
+async def update_schedule(
+    name: str, payload: ScheduleUpdate, db: AsyncSession = Depends(get_db)
+):
+    if name not in SPIDER_META:
+        raise HTTPException(status_code=404, detail="Scraper tapılmadı")
+    now = datetime.now(timezone.utc)
+    local_now = now.astimezone(ZoneInfo("Asia/Baku"))
+    next_run = (
+        now + timedelta(minutes=payload.interval_minutes or 60)
+        if payload.schedule_type == "interval"
+        else croniter(payload.cron_expression, local_now)
+        .get_next(datetime)
+        .astimezone(timezone.utc)
+    )
+    result = await db.execute(
+        sa_text("""
+        UPDATE scraper_configs SET is_enabled=:enabled, schedule_type=:kind,
+            interval_minutes=:minutes, cron_expression=:cron, next_run_at=:next,
+            updated_at=NOW() WHERE spider=:spider RETURNING spider
+    """),
+        {
+            "enabled": payload.is_enabled,
+            "kind": payload.schedule_type,
+            "minutes": (
+                payload.interval_minutes
+                if payload.schedule_type == "interval"
+                else None
+            ),
+            "cron": (
+                payload.cron_expression if payload.schedule_type == "cron" else None
+            ),
+            "next": next_run,
+            "spider": name,
+        },
+    )
+    if not result.first():
+        raise HTTPException(status_code=404, detail="Scraper konfiqurasiyası tapılmadı")
+    return {"spider": name, "updated": True, "next_run_at": next_run}
+
+
+async def _queue_run(name: str, trigger: str, db: AsyncSession) -> dict:
+    running = await db.scalar(
+        sa_text("""
+        SELECT EXISTS(SELECT 1 FROM scraper_runs WHERE spider=:spider AND status IN ('queued','running'))
+    """),
+        {"spider": name},
+    )
+    if running:
+        raise HTTPException(
+            status_code=409, detail="Bu scraper artıq növbədədir və ya işləyir"
+        )
+    task_id = str(uuid4())
+    run_id = (
+        await db.execute(
+            sa_text("""
+        INSERT INTO scraper_runs (task_id, spider, trigger, status, started_at)
+        VALUES (:task, :spider, :trigger, 'queued', NOW()) RETURNING id
+    """),
+            {"task": task_id, "spider": name, "trigger": trigger},
+        )
+    ).scalar_one()
+    await db.commit()
+    celery_app.send_task(
+        "tasks.crawl_spider",
+        args=[name, run_id, trigger],
+        task_id=task_id,
+        queue="scraping",
+    )
+    return {"task_id": task_id, "run_id": run_id, "spider": name, "status": "queued"}
+
+
+@router.post("/scrapers/{name}/runs")
+async def run_scraper(name: str, db: AsyncSession = Depends(get_db)):
+    if name not in SPIDER_META:
+        raise HTTPException(status_code=404, detail="Scraper tapılmadı")
+    return await _queue_run(name, "manual", db)
+
+
+@router.post("/scrapers/run-all")
+async def run_all(db: AsyncSession = Depends(get_db)):
+    runs = []
+    for name in SPIDER_META:
+        try:
+            runs.append(await _queue_run(name, "manual", db))
+        except HTTPException as exc:
+            if exc.status_code != 409:
+                raise
+    return {"runs": runs}
+
+
+@router.get("/scraper-runs")
+async def list_runs(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(25, ge=1, le=100),
+    status: str | None = None,
+    spider: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    where = ["1=1"]
+    params: dict = {"limit": per_page, "offset": (page - 1) * per_page}
+    if status:
+        where.append("status=:status")
+        params["status"] = status
+    if spider:
+        where.append("spider=:spider")
+        params["spider"] = spider
+    clause = " AND ".join(where)
+    total = await db.scalar(
+        sa_text(f"SELECT COUNT(*) FROM scraper_runs WHERE {clause}"), params
+    )
+    rows = (
+        await db.execute(
+            sa_text(f"""
+        SELECT id, task_id, spider, trigger, status, attempt, items_seen, items_saved,
+               items_dropped, errors, duration_seconds, started_at, finished_at, error_message
+        FROM scraper_runs WHERE {clause} ORDER BY started_at DESC LIMIT :limit OFFSET :offset
+    """),
+            params,
+        )
+    ).all()
+    return {
+        "items": [dict(row._mapping) for row in rows],
+        "total": total or 0,
+        "page": page,
+        "per_page": per_page,
+    }
+
+
+@router.get("/scraper-runs/{run_id}")
+async def run_detail(run_id: int, db: AsyncSession = Depends(get_db)):
+    run = (
+        await db.execute(
+            sa_text("SELECT * FROM scraper_runs WHERE id=:id"), {"id": run_id}
+        )
+    ).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Run tapılmadı")
+    categories = (
+        await db.execute(
+            sa_text(
+                "SELECT * FROM scraper_run_categories WHERE run_id=:id ORDER BY category"
+            ),
+            {"id": run_id},
+        )
+    ).all()
+    return {
+        "run": dict(run._mapping),
+        "categories": [dict(row._mapping) for row in categories],
+    }
+
+
+@router.patch("/stores/{store_id}")
+async def update_store(
+    store_id: str, payload: StoreUpdate, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        sa_text("UPDATE stores SET is_active=:active WHERE id=:id RETURNING id"),
+        {"active": payload.is_active, "id": store_id},
+    )
+    if not result.first():
+        raise HTTPException(status_code=404, detail="Mağaza tapılmadı")
+    return {"id": store_id, "is_active": payload.is_active}
 
 
 @router.get("/dashboard", response_model=DashboardStats)
@@ -460,7 +683,7 @@ async def batch_delete_products(
 ):
     """Delete multiple products at once."""
     from sqlalchemy import select, delete as sa_delete
-    from app.models.product import Product, CurrentPrice
+    from app.models.product import Product, CurrentPrice, PriceHistory
 
     uuids = [UUID(pid) for pid in product_ids]
 
@@ -468,6 +691,7 @@ async def batch_delete_products(
     result = await db.execute(select(Product.canonical_id).where(Product.id.in_(uuids)))
     canonical_ids = [r[0] for r in result.all()]
 
+    await db.execute(sa_delete(PriceHistory).where(PriceHistory.product_id.in_(uuids)))
     await db.execute(sa_delete(CurrentPrice).where(CurrentPrice.product_id.in_(uuids)))
     del_result = await db.execute(sa_delete(Product).where(Product.id.in_(uuids)))
     await db.commit()
@@ -485,7 +709,7 @@ async def delete_product(
 ):
     """Delete a product and its current prices."""
     from sqlalchemy import select, delete as sa_delete
-    from app.models.product import Product, CurrentPrice
+    from app.models.product import Product, CurrentPrice, PriceHistory
 
     pid = UUID(product_id)
     result = await db.execute(select(Product).where(Product.id == pid))
@@ -495,6 +719,7 @@ async def delete_product(
 
     canonical_id = product.canonical_id
 
+    await db.execute(sa_delete(PriceHistory).where(PriceHistory.product_id == pid))
     # Delete current_prices first (may not cascade depending on DB setup)
     await db.execute(sa_delete(CurrentPrice).where(CurrentPrice.product_id == pid))
     await db.delete(product)

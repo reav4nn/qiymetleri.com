@@ -5,7 +5,7 @@ from sqlalchemy import Float, cast, func, select, text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.product import CurrentPrice, PriceHistory, Product
+from app.models.product import CurrentPrice, PriceHistory, Product, Store
 
 # Minimum trigram similarity to consider a match
 TRGM_THRESHOLD = 0.15
@@ -110,11 +110,23 @@ async def get_products(
         score_col = hybrid_score.label("_score")
         query = (
             select(Product, score_col)
-            .options(selectinload(Product.current_prices))
+            .options(
+                selectinload(
+                    Product.current_prices.and_(
+                        CurrentPrice.store.has(Store.is_active.is_(True))
+                    )
+                )
+            )
             .where(filter_clause)
         )
     else:
-        query = select(Product).options(selectinload(Product.current_prices))
+        query = select(Product).options(
+            selectinload(
+                Product.current_prices.and_(
+                    CurrentPrice.store.has(Store.is_active.is_(True))
+                )
+            )
+        )
         if q:
             query = query.where(Product.name.ilike(f"%{q}%"))
 
@@ -129,7 +141,7 @@ async def get_products(
 
     price_join_needed = store_id or min_price is not None or max_price is not None
     if price_join_needed:
-        query = query.join(CurrentPrice)
+        query = query.join(CurrentPrice).join(Store).where(Store.is_active.is_(True))
         if store_id:
             query = query.where(CurrentPrice.store_id == store_id)
         if min_price is not None:
@@ -218,7 +230,13 @@ async def get_products(
 async def get_product_by_id(db: AsyncSession, product_id: UUID) -> Product | None:
     query = (
         select(Product)
-        .options(selectinload(Product.current_prices))
+        .options(
+            selectinload(
+                Product.current_prices.and_(
+                    CurrentPrice.store.has(Store.is_active.is_(True))
+                )
+            )
+        )
         .where(Product.id == product_id)
     )
     result = await db.execute(query)
@@ -232,7 +250,13 @@ async def get_family_variants(db: AsyncSession, product: Product) -> list[Produc
 
     query = (
         select(Product)
-        .options(selectinload(Product.current_prices))
+        .options(
+            selectinload(
+                Product.current_prices.and_(
+                    CurrentPrice.store.has(Store.is_active.is_(True))
+                )
+            )
+        )
         .where(func.lower(Product.model_family) == product.model_family.lower())
         .order_by(Product.name)
     )

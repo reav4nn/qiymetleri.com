@@ -81,6 +81,9 @@ class CurrentPrice(Base):
     last_checked_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    last_seen_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("scraper_runs.id", ondelete="SET NULL")
+    )
 
     product: Mapped["Product"] = relationship(back_populates="current_prices")
     store: Mapped["Store"] = relationship(back_populates="current_prices")

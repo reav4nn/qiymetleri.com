@@ -1,28 +1,48 @@
+import hashlib
 import secrets
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+from app.core.cache import redis_client
 from app.core.config import get_settings
 from app.core.database import get_db
 
-_security = HTTPBasic()
+SESSION_COOKIE = "qiymetleri_admin_session"
+_security = HTTPBasic(auto_error=False)
 
 
 async def require_admin(
-    credentials: HTTPBasicCredentials = Depends(_security),
+    request: Request,
+    credentials: HTTPBasicCredentials | None = Depends(_security),
 ) -> str:
-    """Verify HTTP Basic Auth credentials for admin endpoints."""
     settings = get_settings()
-    correct_user = secrets.compare_digest(credentials.username, settings.ADMIN_USER)
-    correct_pass = secrets.compare_digest(credentials.password, settings.ADMIN_PASSWORD)
-    if not (correct_user and correct_pass):
+    username: str | None = None
+    if credentials:
+        valid = secrets.compare_digest(
+            credentials.username, settings.ADMIN_USER
+        ) and secrets.compare_digest(credentials.password, settings.ADMIN_PASSWORD)
+        if valid:
+            username = credentials.username
+    if username is None:
+        token = request.cookies.get(SESSION_COOKIE)
+        if token:
+            username = await redis_client.get(
+                f"admin:session:{hashlib.sha256(token.encode()).hexdigest()}"
+            )
+    if username is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Giriş tələb olunur"
         )
-    return credentials.username
+    if request.method in {"POST", "PATCH", "PUT", "DELETE"} and not credentials:
+        origin = request.headers.get("origin")
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(
+            ","
+        )[0]
+        expected = f"{scheme}://{request.headers.get('host')}"
+        if not origin or origin.rstrip("/") != expected.rstrip("/"):
+            raise HTTPException(status_code=403, detail="Sorğunun mənbəyi etibarsızdır")
+    return username
 
 
-__all__ = ["get_db", "require_admin"]
+__all__ = ["get_db", "require_admin", "SESSION_COOKIE"]

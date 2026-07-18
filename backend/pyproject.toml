@@ -17,6 +17,7 @@ pydantic-settings = ">=2.8.0"
 redis = ">=5.2.0"
 celery = {extras = ["redis"], version = ">=5.4.0"}
 httpx = ">=0.28.0"
+croniter = "6.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0.0"
