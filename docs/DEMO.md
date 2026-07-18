@@ -1,4 +1,4 @@
-# Diploma Demonstration Runbook
+# Demonstration Runbook
 
 This runbook produces a repeatable local demonstration without depending on retailer websites during the presentation.
 
@@ -10,7 +10,7 @@ This runbook produces a repeatable local demonstration without depending on reta
    cp .env.example .env
    ```
 
-2. Replace every password placeholder and keep `.env` outside Git.
+2. Replace both password placeholders and keep `.env` outside Git.
 
 3. Build and start the stack:
 

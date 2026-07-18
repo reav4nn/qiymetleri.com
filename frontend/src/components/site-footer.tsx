@@ -40,7 +40,7 @@ export async function SiteFooter() {
                 <span className="text-accent">.com</span>
               </div>
             </Link>
-            <p className="font-serif italic text-[#a1a1aa]">{t("footer.tagline")}</p>
+            <p >{t("footer.tagline")}</p>
           </div>
 
           <FooterColumn title={t("footer.shop")}>
