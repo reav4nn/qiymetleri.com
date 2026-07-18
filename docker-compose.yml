@@ -230,7 +230,7 @@ services:
       - internal
       - public
     volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro,z
     depends_on:
       backend:
         condition: service_healthy
