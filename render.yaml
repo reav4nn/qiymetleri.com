@@ -12,6 +12,14 @@ services:
         sync: false
       - key: REDIS_URL
         sync: false
+      - key: CACHE_REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: ENVIRONMENT
+        value: production
       - key: ADMIN_USER
         sync: false
       - key: ADMIN_PASSWORD
@@ -30,5 +38,30 @@ services:
         sync: false
       - key: REDIS_URL
         sync: false
+      - key: CACHE_REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
       - key: PROXY_ENABLED
         value: "false"
+
+  - type: worker
+    name: qiymetleri-celery-beat
+    runtime: docker
+    dockerfilePath: ./scraper/Dockerfile
+    dockerContext: .
+    plan: free
+    startCommand: celery -A celery_app beat --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CACHE_REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false

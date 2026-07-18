@@ -1,9 +1,6 @@
 name: Scheduled Scraper
 
 on:
-  schedule:
-    # Kontakt Home — hər 2 saatda bir (UTC 02:00, 04:00, 06:00, ...)
-    - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
       spider:
@@ -50,7 +47,7 @@ jobs:
         run: |
           for spider in ispace irshad_electronics baku_electronics kontakt_home; do
             echo "=== Running $spider ==="
-            poetry run scrapy crawl $spider || echo "WARN: $spider finished with errors"
+            poetry run scrapy crawl "$spider"
           done
 
       - name: Run specific spider
