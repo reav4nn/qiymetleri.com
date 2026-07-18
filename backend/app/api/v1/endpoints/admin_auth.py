@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.api.dependencies import SESSION_COOKIE
 from app.core.cache import redis_client
 from app.core.config import get_settings
+from app.core.origin import require_trusted_origin
 
 router = APIRouter()
 SESSION_TTL = 8 * 60 * 60
@@ -23,18 +24,10 @@ def _hash(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
 
 
-def _require_same_origin(request: Request) -> None:
-    origin = request.headers.get("origin")
-    scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0]
-    expected = f"{scheme}://{request.headers.get('host')}"
-    if not origin or origin.rstrip("/") != expected.rstrip("/"):
-        raise HTTPException(status_code=403, detail="Sorğunun mənbəyi etibarsızdır")
-
-
 @router.post("/login")
 async def login(payload: LoginRequest, request: Request, response: Response):
-    _require_same_origin(request)
     settings = get_settings()
+    require_trusted_origin(request, settings.BACKEND_CORS_ORIGINS)
     forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
     client_ip = forwarded or (request.client.host if request.client else "unknown")
     rate_key = f"admin:login:{_hash(f'{client_ip}:{payload.username.lower()}')}"
@@ -95,7 +88,7 @@ async def session(request: Request):
 
 @router.post("/logout")
 async def logout(request: Request, response: Response):
-    _require_same_origin(request)
+    require_trusted_origin(request, get_settings().BACKEND_CORS_ORIGINS)
     token = request.cookies.get(SESSION_COOKIE)
     if token:
         await redis_client.delete(f"admin:session:{_hash(token)}")

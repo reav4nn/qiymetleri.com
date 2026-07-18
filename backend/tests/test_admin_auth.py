@@ -38,7 +38,10 @@ def configure(monkeypatch):
         admin_auth,
         "get_settings",
         lambda: SimpleNamespace(
-            ADMIN_USER="operator", ADMIN_PASSWORD="strong-password", ENVIRONMENT="test"
+            ADMIN_USER="operator",
+            ADMIN_PASSWORD="strong-password",
+            ENVIRONMENT="test",
+            BACKEND_CORS_ORIGINS=["http://localhost:3000"],
         ),
     )
     app = FastAPI()
@@ -85,3 +88,23 @@ def test_login_rate_limit(monkeypatch):
             ).status_code
             == 429
         )
+
+
+def test_login_accepts_trusted_frontend_behind_internal_proxy(monkeypatch):
+    with configure(monkeypatch) as client:
+        response = client.post(
+            "/auth/login",
+            json={"username": "operator", "password": "strong-password"},
+            headers={"Origin": "http://localhost:3000", "Host": "backend:8000"},
+        )
+        assert response.status_code == 200
+
+
+def test_login_rejects_untrusted_origin(monkeypatch):
+    with configure(monkeypatch) as client:
+        response = client.post(
+            "/auth/login",
+            json={"username": "operator", "password": "strong-password"},
+            headers={"Origin": "https://attacker.example"},
+        )
+        assert response.status_code == 403

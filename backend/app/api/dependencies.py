@@ -7,6 +7,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from app.core.cache import redis_client
 from app.core.config import get_settings
 from app.core.database import get_db
+from app.core.origin import require_trusted_origin
 
 SESSION_COOKIE = "qiymetleri_admin_session"
 _security = HTTPBasic(auto_error=False)
@@ -35,13 +36,7 @@ async def require_admin(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Giriş tələb olunur"
         )
     if request.method in {"POST", "PATCH", "PUT", "DELETE"} and not credentials:
-        origin = request.headers.get("origin")
-        scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(
-            ","
-        )[0]
-        expected = f"{scheme}://{request.headers.get('host')}"
-        if not origin or origin.rstrip("/") != expected.rstrip("/"):
-            raise HTTPException(status_code=403, detail="Sorğunun mənbəyi etibarsızdır")
+        require_trusted_origin(request, settings.BACKEND_CORS_ORIGINS)
     return username
 
 
