@@ -69,6 +69,9 @@ jobs:
       - name: Black check
         run: poetry run black --check .
 
+      - name: Test
+        run: poetry run pytest -q tests
+
   # ───────────────────── Scraper ──────────────────────
   scraper-lint:
     name: Scraper Lint
