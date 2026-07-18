@@ -2,7 +2,7 @@ import logging
 from functools import lru_cache
 import os
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,12 @@ _INSECURE_PASSWORDS = frozenset(
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
+
     PROJECT_NAME: str = "qiymetleri.com API"
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
@@ -56,7 +62,6 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
-    @property
     def _default_redis_url(self, database: int) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{database}"
 
@@ -100,10 +105,6 @@ class Settings(BaseSettings):
                 "Set a strong ADMIN_PASSWORD environment variable before deploying to production.",
                 self.ADMIN_PASSWORD,
             )
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 @lru_cache()
