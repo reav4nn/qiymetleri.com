@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-superior);
+  --font-sans: var(--font-manrope);
 
   --color-border: var(--border);
   --color-border-strong: #e4e4e7;

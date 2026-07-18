@@ -5,35 +5,11 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
-const superior = localFont({
-  src: [
-    {
-      path: "../../../public/fonts/lt-superior/LTSuperior-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../../public/fonts/lt-superior/LTSuperior-Medium.ttf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../../public/fonts/lt-superior/LTSuperior-SemiBold.ttf",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../../../public/fonts/lt-superior/LTSuperior-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../../public/fonts/lt-superior/LTSuperior-ExtraBold.ttf",
-      weight: "800",
-      style: "normal",
-    },
-  ],
-  variable: "--font-superior",
+const manrope = localFont({
+  src: "../../../public/fonts/manrope/Manrope[wght].ttf",
+  weight: "200 800",
+  style: "normal",
+  variable: "--font-manrope",
 });
 
 export const metadata: Metadata = {
@@ -58,7 +34,7 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html lang={locale} className={superior.variable}>
+    <html lang={locale} className={manrope.variable}>
       <body className="font-sans antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
