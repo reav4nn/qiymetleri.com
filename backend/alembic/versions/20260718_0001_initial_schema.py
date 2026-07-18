@@ -9,7 +9,6 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-
 revision = "20260718_0001"
 down_revision = None
 branch_labels = None
@@ -19,8 +18,7 @@ depends_on = None
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
     op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
-    op.execute(
-        """
+    op.execute("""
         DO $$
         BEGIN
             CREATE EXTENSION IF NOT EXISTS timescaledb;
@@ -28,8 +26,7 @@ def upgrade() -> None:
             RAISE NOTICE 'TimescaleDB is unavailable; using standard PostgreSQL.';
         END;
         $$;
-        """
-    )
+        """)
 
     op.create_table(
         "stores",
@@ -77,16 +74,14 @@ def upgrade() -> None:
             server_default=sa.text("NOW()"),
         ),
     )
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE products ADD COLUMN search_vector tsvector
         GENERATED ALWAYS AS (
             setweight(to_tsvector('simple', coalesce(brand, '')), 'A') ||
             setweight(to_tsvector('simple', coalesce(name, '')), 'B') ||
             setweight(to_tsvector('simple', coalesce(model_family, '')), 'C')
         ) STORED
-        """
-    )
+        """)
     op.create_index("idx_products_brand", "products", ["brand"])
     op.create_index("idx_products_category", "products", ["category"])
     op.create_index("idx_products_canonical_id", "products", ["canonical_id"])
@@ -136,10 +131,11 @@ def upgrade() -> None:
         sa.Column("price_azn", sa.Numeric(10, 2), nullable=False),
         sa.Column("in_stock", sa.Boolean()),
     )
-    op.create_index("idx_price_history_product", "price_history", ["product_id", "time"])
+    op.create_index(
+        "idx_price_history_product", "price_history", ["product_id", "time"]
+    )
     op.create_index("idx_price_history_store", "price_history", ["store_id", "time"])
-    op.execute(
-        """
+    op.execute("""
         DO $$
         BEGIN
             PERFORM create_hypertable(
@@ -150,8 +146,7 @@ def upgrade() -> None:
             RAISE NOTICE 'price_history remains a standard PostgreSQL table.';
         END;
         $$;
-        """
-    )
+        """)
 
     op.create_table(
         "product_matches",
@@ -161,7 +156,10 @@ def upgrade() -> None:
         sa.Column("brand", sa.String(length=100)),
         sa.Column("similarity", sa.Numeric(5, 4), nullable=False),
         sa.Column(
-            "status", sa.String(length=20), nullable=False, server_default=sa.text("'pending'")
+            "status",
+            sa.String(length=20),
+            nullable=False,
+            server_default=sa.text("'pending'"),
         ),
         sa.Column("merged_family", sa.String(length=200)),
         sa.Column(
@@ -180,9 +178,14 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
         sa.Column("spider", sa.String(length=100), nullable=False),
         sa.Column(
-            "status", sa.String(length=20), nullable=False, server_default=sa.text("'running'")
+            "status",
+            sa.String(length=20),
+            nullable=False,
+            server_default=sa.text("'running'"),
         ),
-        sa.Column("items_scraped", sa.Integer(), nullable=False, server_default=sa.text("0")),
+        sa.Column(
+            "items_scraped", sa.Integer(), nullable=False, server_default=sa.text("0")
+        ),
         sa.Column("errors", sa.Integer(), nullable=False, server_default=sa.text("0")),
         sa.Column("duration_seconds", sa.Float()),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
@@ -190,17 +193,14 @@ def upgrade() -> None:
     )
     op.create_index("idx_scraper_runs_spider", "scraper_runs", ["spider", "started_at"])
 
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO stores (id, name, base_url) VALUES
             ('kontakt_home', 'Kontakt Home', 'https://kontakt.az'),
             ('baku_electronics', 'Baku Electronics', 'https://bakuelectronics.az'),
             ('irshad_electronics', 'Irshad Electronics', 'https://irshad.az'),
             ('ispace', 'iSpace', 'https://ispace.az')
-        """
-    )
-    op.execute(
-        """
+        """)
+    op.execute("""
         CREATE VIEW v_product_lowest_price AS
         SELECT p.id, p.canonical_id, p.brand, p.category, p.name,
                MIN(cp.price_azn) AS lowest_price,
@@ -212,8 +212,7 @@ def upgrade() -> None:
         LEFT JOIN current_prices cp
           ON cp.product_id = p.id AND cp.in_stock = TRUE
         GROUP BY p.id
-        """
-    )
+        """)
 
 
 def downgrade() -> None:

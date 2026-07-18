@@ -50,9 +50,13 @@ async def run(dry_run: bool = False):
         pg_user = os.environ.get("POSTGRES_USER", "qiymetleri")
         pg_pass = os.environ.get("POSTGRES_PASSWORD")
         if not pg_pass:
-            raise RuntimeError("Set DATABASE_URL or POSTGRES_PASSWORD env var before running this script.")
+            raise RuntimeError(
+                "Set DATABASE_URL or POSTGRES_PASSWORD env var before running this script."
+            )
         pg_db = os.environ.get("POSTGRES_DB", "qiymetleri")
-        database_url = f"postgresql+asyncpg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
+        database_url = (
+            f"postgresql+asyncpg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
+        )
 
     engine = create_async_engine(database_url, echo=False)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
