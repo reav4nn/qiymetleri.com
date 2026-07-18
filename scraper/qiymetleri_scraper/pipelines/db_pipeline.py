@@ -34,8 +34,10 @@ class DatabasePipeline:
         return cls(
             database_url=crawler.settings.get("DATABASE_URL"),
             redis_url=crawler.settings.get(
-                "REDIS_URL",
-                os.getenv("REDIS_URL", "redis://redis:6379/0"),
+                "CACHE_REDIS_URL",
+                os.getenv(
+                    "CACHE_REDIS_URL", os.getenv("REDIS_URL", "redis://redis:6379/0")
+                ),
             ),
         )
 

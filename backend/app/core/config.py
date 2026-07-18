@@ -51,18 +51,33 @@ class Settings(BaseSettings):
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    # Redis — supports full URL (Upstash/managed) or host/port (local Docker)
+    # Redis — separate URLs keep API cache and Celery traffic isolated.
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
     @property
+    def _default_redis_url(self, database: int) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{database}"
+
+    @property
+    def CACHE_REDIS_URL(self) -> str:
+        return os.getenv(
+            "CACHE_REDIS_URL", os.getenv("REDIS_URL", self._default_redis_url(0))
+        )
+
+    @property
+    def CELERY_BROKER_URL(self) -> str:
+        return os.getenv("CELERY_BROKER_URL", self._default_redis_url(1))
+
+    @property
+    def CELERY_RESULT_BACKEND(self) -> str:
+        return os.getenv("CELERY_RESULT_BACKEND", self._default_redis_url(2))
+
+    @property
     def REDIS_URL(self) -> str:
-        # REDIS_URL env var takes priority (Upstash: rediss://...)
-        url = os.getenv("REDIS_URL", "")
-        if url:
-            return url
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        """Backward-compatible alias for cache integrations."""
+        return self.CACHE_REDIS_URL
 
     # Admin credentials — MUST be set via environment variables in production
     ADMIN_USER: str = "admin"

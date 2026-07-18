@@ -64,7 +64,9 @@ if not DATABASE_URL:
     DATABASE_URL = f"postgresql://{_pg_user}:{_pg_pass}@{_pg_host}:{_pg_port}/{_pg_db}"
 
 # Redis (for cache invalidation)
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+CACHE_REDIS_URL = os.getenv(
+    "CACHE_REDIS_URL", os.getenv("REDIS_URL", "redis://redis:6379/0")
+)
 
 # Logging
 LOG_LEVEL = "INFO"

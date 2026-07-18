@@ -34,8 +34,9 @@ router = APIRouter()
 
 settings = get_settings()
 
-CELERY_BROKER = settings.REDIS_URL
-celery_app = Celery("qiymetleri_scraper", broker=CELERY_BROKER, backend=CELERY_BROKER)
+CELERY_BROKER = settings.CELERY_BROKER_URL
+CELERY_RESULTS = settings.CELERY_RESULT_BACKEND
+celery_app = Celery("qiymetleri_scraper", broker=CELERY_BROKER, backend=CELERY_RESULTS)
 
 SPIDER_META = {
     "kontakt_home": {"display_name": "Kontakt Home", "schedule": "Hər 2 saatda"},
@@ -130,7 +131,7 @@ async def scraper_history(limit: int = Query(default=20, ge=1, le=100)):
     try:
         import redis as sync_redis
 
-        r = sync_redis.from_url(CELERY_BROKER, decode_responses=True)
+        r = sync_redis.from_url(CELERY_RESULTS, decode_responses=True)
         keys = []
         for key in r.scan_iter(match="celery-task-meta-*", count=200):
             keys.append(key)
@@ -291,7 +292,7 @@ def _get_last_task_result(spider_name: str) -> dict | None:
         import json
         import redis as sync_redis
 
-        r = sync_redis.from_url(CELERY_BROKER, decode_responses=True)
+        r = sync_redis.from_url(CELERY_RESULTS, decode_responses=True)
 
         best = None
         for key in r.scan_iter(match="celery-task-meta-*", count=200):
@@ -509,7 +510,7 @@ def _invalidate_product_cache(canonical_id: str | None):
     try:
         import redis as sync_redis
 
-        r = sync_redis.from_url(settings.REDIS_URL, decode_responses=True)
+        r = sync_redis.from_url(settings.CACHE_REDIS_URL, decode_responses=True)
         if canonical_id:
             r.delete(f"product:{canonical_id}")
         # Also clear list and filter caches
