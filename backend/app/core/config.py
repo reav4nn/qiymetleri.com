@@ -51,9 +51,11 @@ class Settings(BaseSettings):
     def SYNC_DATABASE_URL(self) -> str:
         url = os.getenv("DATABASE_URL", "")
         if url:
-            return url
+            return url.replace(
+                "postgresql+asyncpg://", "postgresql+psycopg://", 1
+            ).replace("postgresql://", "postgresql+psycopg://", 1)
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 

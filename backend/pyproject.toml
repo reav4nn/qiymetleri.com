@@ -35,3 +35,6 @@ line-length = 88
 [tool.black]
 target-version = ["py313"]
 line-length = 88
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
