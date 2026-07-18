@@ -11,7 +11,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1280px] flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:flex-nowrap">
+      <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:gap-x-5 sm:px-6 lg:flex-nowrap lg:gap-x-6 lg:px-8 xl:px-10">
         <Link
           href="/"
           className="flex min-h-11 shrink-0 items-center gap-2 text-xl font-extrabold tracking-[-0.02em] sm:text-2xl"
@@ -52,7 +52,9 @@ export async function SiteHeader() {
           </Button>
         </form>
 
-        <LanguageToggle />
+        <div className="ml-auto lg:ml-0">
+          <LanguageToggle />
+        </div>
 
         <Link
           href="/login"
