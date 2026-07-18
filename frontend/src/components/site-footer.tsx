@@ -1,63 +1,111 @@
-import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 
-export function SiteFooter() {
+const shopLinks = [
+  ["smartphones", "phones"],
+  ["laptops", "laptops"],
+  ["televisions", "tvs"],
+] as const;
+
+const informationLinks = [
+  ["about", "about"],
+  ["partnership", "partnership"],
+  ["social", "social"],
+  ["contact", "contact"],
+] as const;
+
+const legalLinks = [
+  ["terms", "terms"],
+  ["privacy", "privacy"],
+  ["personal-data", "personalData"],
+  ["consent", "consent"],
+] as const;
+
+export async function SiteFooter() {
+  const t = await getTranslations();
+
   return (
-    <footer className="bg-[#fafafa] pt-16 pb-8 text-[#71717a] border-t border-border">
-      <div className="mx-auto max-w-[1280px] px-6">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-4 md:gap-8">
-          {/* Brand Column */}
-          <div className="flex flex-col gap-6">
-            <Link href="#" className="flex items-center gap-2 text-2xl font-extrabold tracking-[-0.02em] text-[#09090b]">
+    <footer className="border-t border-border bg-[#fafafa] pt-12 pb-7 text-[#71717a] sm:pt-16 sm:pb-8">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-8">
+          <div className="col-span-2 flex flex-col gap-4 lg:col-span-1 lg:gap-6">
+            <Link
+              href="/"
+              className="flex min-h-11 items-center gap-2 text-2xl font-extrabold tracking-[-0.02em] text-[#09090b]"
+            >
               <Image src="/logo.svg" alt="qiymetleri.com" width={28} height={28} />
               <div className="flex items-baseline gap-0.5">
                 <span>qiymetleri</span>
                 <span className="text-accent">.com</span>
               </div>
             </Link>
-            <p className="font-serif italic text-[#a1a1aa]">
-              Ən sərfəli qiymətlər.
-            </p>
+            <p className="font-serif italic text-[#a1a1aa]">{t("footer.tagline")}</p>
           </div>
 
-          {/* Column 2 */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-[13px] font-bold tracking-[0.08em] text-[#09090b] uppercase">Mağaza</h3>
-            <ul className="flex flex-col gap-3 text-[14px]">
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Smartfonlar</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Noutbuklar</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Televizorlar</Link></li>
-            </ul>
-          </div>
+          <FooterColumn title={t("footer.shop")}>
+            {shopLinks.map(([category, key]) => (
+              <li key={category}>
+                <Link
+                  href={`/products?category=${category}`}
+                  className="inline-flex min-h-11 items-center transition-colors hover:text-[#09090b]"
+                >
+                  {t(`categories.${key}`)}
+                </Link>
+              </li>
+            ))}
+          </FooterColumn>
 
-          {/* Column 3 */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-[13px] font-bold tracking-[0.08em] text-[#09090b] uppercase">Məlumat</h3>
-            <ul className="flex flex-col gap-3 text-[14px]">
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Haqqımızda</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Tərəfdaşlıq</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Sosial media</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Əlaqə</Link></li>
-            </ul>
-          </div>
+          <FooterColumn title={t("footer.information")}>
+            {informationLinks.map(([href, key]) => (
+              <li key={href}>
+                <Link
+                  href={`/${href}`}
+                  className="inline-flex min-h-11 items-center transition-colors hover:text-[#09090b]"
+                >
+                  {t(`footer.${key}`)}
+                </Link>
+              </li>
+            ))}
+          </FooterColumn>
 
-          {/* Column 4 */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-[13px] font-bold tracking-[0.08em] text-[#09090b] uppercase">Hüquqi</h3>
-            <ul className="flex flex-col gap-3 text-[14px]">
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">İstifadə şərtləri</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Gizlilik və təhlükəsizlik</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Fərdi məlumatların qorunması</Link></li>
-              <li><Link href="#" className="transition-colors hover:text-[#09090b]">Razılıq mətni</Link></li>
-            </ul>
-          </div>
+          <FooterColumn title={t("footer.legal")} className="col-span-2 lg:col-span-1">
+            {legalLinks.map(([href, key]) => (
+              <li key={href}>
+                <Link
+                  href={`/${href}`}
+                  className="inline-flex min-h-11 items-center transition-colors hover:text-[#09090b]"
+                >
+                  {t(`footer.${key}`)}
+                </Link>
+              </li>
+            ))}
+          </FooterColumn>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-16 border-t border-[#e4e4e7] pt-8 text-[13px] text-[#a1a1aa]">
-          <p>© 2026 qiymetleri.com, Bakı. Bütün hüquqlar qorunur.</p>
+        <div className="mt-10 border-t border-[#e4e4e7] pt-6 text-[13px] text-[#a1a1aa] sm:mt-14 sm:pt-8">
+          <p>{t("footer.copyright", { year: 2026 })}</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <h2 className="text-[13px] font-bold tracking-[0.08em] text-[#09090b] uppercase">
+        {title}
+      </h2>
+      <ul className="flex flex-col text-sm">{children}</ul>
+    </div>
   );
 }

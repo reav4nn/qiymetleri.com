@@ -1,0 +1,139 @@
+import type { Metadata } from "next";
+import {
+  BadgeCheck,
+  FileText,
+  Handshake,
+  Info,
+  LockKeyhole,
+  Mail,
+  Share2,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { Link } from "@/i18n/navigation";
+import {
+  contentPages,
+  contentSlugs,
+  isContentSlug,
+  isSupportedLocale,
+  type ContentSlug,
+} from "@/lib/static-content";
+
+const icons: Record<ContentSlug, typeof Info> = {
+  login: UserRound,
+  about: Info,
+  partnership: Handshake,
+  social: Share2,
+  contact: Mail,
+  terms: FileText,
+  privacy: LockKeyhole,
+  "personal-data": ShieldCheck,
+  consent: BadgeCheck,
+};
+
+export function generateStaticParams() {
+  return contentSlugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  if (!isSupportedLocale(locale) || !isContentSlug(slug)) return {};
+  const page = contentPages[locale][slug];
+  return { title: `${page.title} | qiymetleri.com`, description: page.intro };
+}
+
+export default async function ContentPage({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}) {
+  const [{ locale, slug }, t] = await Promise.all([params, getTranslations()]);
+  if (!isSupportedLocale(locale) || !isContentSlug(slug)) notFound();
+
+  const page = contentPages[locale][slug];
+  const Icon = icons[slug];
+
+  return (
+    <>
+      <SiteHeader />
+      <main className="mx-auto min-h-[60vh] max-w-[1040px] px-4 py-6 sm:px-6 sm:py-10">
+        <nav className="mb-5 text-sm text-[#71717a]" aria-label={t("common.breadcrumb")}>
+          <Link href="/" className="inline-flex min-h-11 items-center hover:text-foreground">
+            {t("common.home")}
+          </Link>
+          <span className="mx-2" aria-hidden="true">/</span>
+          <span className="text-foreground">{page.title}</span>
+        </nav>
+
+        <header className="overflow-hidden rounded-card border border-border bg-white p-6 sm:p-10 lg:p-12">
+          <div className="flex size-12 items-center justify-center rounded-button bg-accent-soft text-accent sm:size-14">
+            <Icon className="size-6 sm:size-7" strokeWidth={1.8} />
+          </div>
+          <p className="mt-6 text-xs font-extrabold tracking-[0.1em] text-accent uppercase">
+            {page.eyebrow}
+          </p>
+          <h1 className="mt-2 max-w-[760px] text-3xl font-extrabold tracking-[-0.04em] text-balance sm:text-4xl lg:text-5xl">
+            {page.title}
+          </h1>
+          <p className="mt-5 max-w-prose text-base leading-relaxed text-[#52525b] sm:text-lg">
+            {page.intro}
+          </p>
+        </header>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {page.sections.map((section, index) => (
+            <section
+              key={section.title}
+              className={`rounded-card border border-border bg-white p-5 sm:p-6 ${
+                page.sections.length % 2 === 1 && index === 0
+                  ? "md:col-span-2"
+                  : ""
+              }`}
+            >
+              <div className="text-xs font-extrabold tracking-[0.08em] text-[#a1a1aa]">
+                {String(index + 1).padStart(2, "0")}
+              </div>
+              <h2 className="mt-3 text-lg font-extrabold sm:text-xl">{section.title}</h2>
+              <p className="mt-3 max-w-prose text-sm leading-relaxed text-[#71717a] sm:text-base">
+                {section.body}
+              </p>
+            </section>
+          ))}
+        </div>
+
+        {page.cta ? (
+          <div className="mt-6 rounded-card bg-foreground p-6 text-white sm:flex sm:items-center sm:justify-between sm:p-8">
+            <div>
+              <h2 className="text-xl font-extrabold">{t("content.ctaTitle")}</h2>
+              <p className="mt-1 text-sm text-white/65">{t("content.ctaBody")}</p>
+            </div>
+            {page.cta.href.startsWith("/") ? (
+              <Link
+                href={page.cta.href}
+                className="mt-5 inline-flex min-h-12 items-center justify-center rounded-button bg-accent px-5 text-sm font-bold sm:mt-0"
+              >
+                {page.cta.label}
+              </Link>
+            ) : (
+              <a
+                href={page.cta.href}
+                className="mt-5 inline-flex min-h-12 items-center justify-center rounded-button bg-accent px-5 text-sm font-bold sm:mt-0"
+              >
+                {page.cta.label}
+              </a>
+            )}
+          </div>
+        ) : null}
+      </main>
+      <SiteFooter />
+    </>
+  );
+}

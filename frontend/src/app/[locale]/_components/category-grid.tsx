@@ -38,7 +38,7 @@ export async function CategoryGrid({
         return (
           <Link
             key={category.id}
-            href="#"
+            href={`/products?category=${encodeURIComponent(category.id)}`}
             className="flex flex-col gap-2.5 rounded-chip border-[1.5px] border-border bg-white px-3.5 py-4 transition-colors hover:border-accent"
           >
             <span className="flex size-[38px] items-center justify-center rounded-button bg-accent-soft">

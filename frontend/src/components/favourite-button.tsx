@@ -17,7 +17,7 @@ export function FavouriteButton({ label }: { label: string }) {
         setIsFavourite(!isFavourite);
       }}
       className={cn(
-        "absolute top-[14px] right-[14px] z-2 flex size-8 items-center justify-center rounded-full border bg-[#fafafa] transition-colors",
+        "absolute top-3 right-3 z-2 flex size-11 items-center justify-center rounded-full border bg-[#fafafa] transition-colors",
         isFavourite
           ? "border-accent bg-accent-soft text-accent"
           : "border-border text-[#d4d4d8] hover:text-[#a1a1aa]"
@@ -25,7 +25,7 @@ export function FavouriteButton({ label }: { label: string }) {
     >
       <Heart
         className={cn(
-          "size-4 transition-transform active:scale-90",
+          "size-5 transition-transform active:scale-90",
           isFavourite ? "fill-accent stroke-accent" : ""
         )}
         strokeWidth={2}
