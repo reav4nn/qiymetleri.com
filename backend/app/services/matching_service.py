@@ -3,7 +3,6 @@ import re
 from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 REVIEW_THRESHOLD = 0.60
 
 _VERSION_PATTERNS = (
