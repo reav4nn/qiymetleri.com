@@ -1,7 +1,7 @@
 """
 Kontakt Home spider — scrapes product listings from kontakt.az
 
-Uses Playwright for JS-rendered content (Magento / Swissup Breeze theme).
+Uses the server-rendered Magento / Swissup Breeze catalogue HTML.
 Categories covered (MVP): Smartphones, Laptops, Headphones, Smartwatches.
 """
 
@@ -10,7 +10,6 @@ import re
 from datetime import datetime, timezone
 
 import scrapy
-from scrapy_playwright.page import PageMethod
 
 from qiymetleri_scraper.items import ProductItem
 
@@ -30,10 +29,13 @@ class KontaktHomeSpider(scrapy.Spider):
     custom_settings = {
         "DOWNLOAD_DELAY": 4,
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
-        "USER_AGENT": (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-        ),
+        # Kontakt serves catalogue HTML to declared crawlers, while its generic
+        # Chrome user agent is sent through a Cloudflare browser challenge.
+        "USER_AGENT": "qiymetleri.com price comparison bot (+https://qiymetleri.com)",
+        "DOWNLOAD_HANDLERS": {
+            "http": "scrapy.core.downloader.handlers.http11.HTTP11DownloadHandler",
+            "https": "scrapy.core.downloader.handlers.http11.HTTP11DownloadHandler",
+        },
     }
 
     async def start(self):
@@ -42,162 +44,110 @@ class KontaktHomeSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=f"{base_url}{path}",
                 callback=self.parse_listing,
-                meta={
-                    "playwright": True,
-                    "playwright_include_page": True,
-                    "playwright_page_methods": [
-                        PageMethod("wait_for_selector", ".product-item", timeout=15000),
-                    ],
-                    "category": category,
-                },
+                meta={"category": category},
                 cb_kwargs={"category": category},
-                errback=self.errback_close_page,
+                errback=self.errback_request,
             )
 
-    async def parse_listing(self, response, category: str):
+    def parse_listing(self, response, category: str):
         self.crawler.stats.inc_value(f"category/{category}/pages")
-        page = response.meta.get("playwright_page")
+        product_cards = response.css("div.prodItem.product-item")
+        if not product_cards:
+            product_cards = response.css(".product-item")
 
-        try:
-            # Extract image URLs from live DOM (after scroll triggered lazy-load)
-            live_images = {}
-            if page:
+        self.logger.info(
+            f"Found {len(product_cards)} products in {category} on {response.url}"
+        )
+
+        for card in product_cards:
+            # Primary extraction: data-gtm JSON attribute
+            gtm_raw = card.attrib.get("data-gtm", "")
+            gtm = {}
+            if gtm_raw:
                 try:
-                    live_images = await page.evaluate("""
-                        () => {
-                            const map = {};
-                            document.querySelectorAll('.product-item').forEach((card, i) => {
-                                const img = card.querySelector('img.product-image') 
-                                         || card.querySelector('a.prodItem__img img');
-                                if (img) {
-                                    const src = img.currentSrc || img.src || img.getAttribute('data-src') || '';
-                                    if (src && !src.startsWith('data:') && !src.includes('icon') && !src.includes('.svg')) {
-                                        const gtm = card.getAttribute('data-gtm');
-                                        const key = gtm ? JSON.parse(gtm).item_name : i.toString();
-                                        map[key] = src;
-                                    }
-                                }
-                            });
-                            return map;
-                        }
-                    """)
-                except Exception as e:
-                    self.logger.warning(f"Failed to extract live images: {e}")
+                    gtm = json.loads(gtm_raw)
+                except json.JSONDecodeError:
+                    pass
 
-            product_cards = response.css("div.prodItem.product-item")
+            item = ProductItem()
+            item["store_id"] = self.store_id
+            item["category"] = category
+            item["scraped_at"] = datetime.now(timezone.utc).isoformat()
 
-            if not product_cards:
-                product_cards = response.css(".product-item")
+            # Name from data-gtm, fallback to current and legacy CSS.
+            name = gtm.get("item_name", "").strip()
+            if not name:
+                name = (
+                    card.css(".prodItem__title::text").get()
+                    or card.css("a.prodItem__title::attr(title)").get()
+                    or card.css("a.prodItem__img::attr(title)").get()
+                    or ""
+                ).strip()
 
-            self.logger.info(
-                f"Found {len(product_cards)} products in {category} on {response.url} "
-                f"({len(live_images)} live images)"
-            )
+            if not name or len(name) < 3:
+                continue
 
-            for card in product_cards:
-                # Primary extraction: data-gtm JSON attribute
-                gtm_raw = card.attrib.get("data-gtm", "")
-                gtm = {}
-                if gtm_raw:
-                    try:
-                        gtm = json.loads(gtm_raw)
-                    except json.JSONDecodeError:
-                        pass
+            item["original_title"] = name
 
-                item = ProductItem()
-                item["store_id"] = self.store_id
-                item["category"] = category
-                item["scraped_at"] = datetime.now(timezone.utc).isoformat()
-
-                # Name from data-gtm, fallback to CSS
-                name = gtm.get("item_name", "").strip()
-                if not name:
-                    name = (
-                        card.css("a.prodItem__title::text").get()
-                        or card.css("a.prodItem__title::attr(title)").get()
-                        or card.css("[class*='title'] ::text").get()
-                        or ""
-                    ).strip()
-
-                if not name or len(name) < 3:
-                    continue
-
-                item["original_title"] = name
-
-                # Price from data-gtm (always final/discounted price in AZN)
-                price_val = gtm.get("price")
-                if price_val is not None:
-                    item["price_raw"] = f"{price_val} ₼"
+            # Price from data-gtm (always final/discounted price in AZN)
+            price_val = gtm.get("price")
+            if price_val is not None:
+                item["price_raw"] = f"{price_val} ₼"
+            else:
+                # Fallback: regex from card text
+                all_text = " ".join(card.css("::text").getall())
+                price_match = re.search(r"([\d.,]+)\s*₼", all_text)
+                if price_match:
+                    item["price_raw"] = f"{price_match.group(1)} ₼"
                 else:
-                    # Fallback: regex from card text
-                    all_text = " ".join(card.css("::text").getall())
-                    price_match = re.search(r"([\d.,]+)\s*₼", all_text)
-                    if price_match:
-                        item["price_raw"] = f"{price_match.group(1)} ₼"
-                    else:
-                        item["price_raw"] = ""
+                    item["price_raw"] = ""
 
-                # Brand from data-gtm, fallback to title extraction
-                brand_gtm = gtm.get("item_brand", "").strip().lower()
-                item["brand"] = brand_gtm if brand_gtm else self._extract_brand(name)
+            # Brand from data-gtm, fallback to title extraction
+            brand_gtm = gtm.get("item_brand", "").strip().lower()
+            item["brand"] = brand_gtm if brand_gtm else self._extract_brand(name)
 
-                # Product URL — prodItem__title link or first product link
-                link = (
-                    card.css("a.prodItem__title::attr(href)").get()
-                    or card.css("a.prodItem__img::attr(href)").get()
-                    or card.css("a[href*='kontakt.az/']::attr(href)").get()
-                )
-                if link and "#" not in link:
-                    item["url"] = response.urljoin(link)
-
-                # Image: prefer live DOM (post-scroll), fallback to response HTML
-                img = None
-                item_name = gtm.get("item_name", "")
-                if item_name and item_name in live_images:
-                    img = live_images[item_name]
-                if not img:
-                    img = (
-                        card.css("img.product-image::attr(src)").get()
-                        or card.css("img.product-image::attr(data-src)").get()
-                        or card.css("a.prodItem__img img::attr(src)").get()
-                        or card.css("a.prodItem__img img::attr(data-src)").get()
-                    )
-                if img and "icon" not in img and "svg" not in img and not img.startswith("data:"):
-                    item["image_url"] = response.urljoin(img)
-
-                # Stock — assume in stock (kontakt.az typically hides out-of-stock)
-                item["in_stock"] = True
-
-                yield item
-
-            # Pagination — Magento standard next page link
-            next_page = (
-                response.css(".pages-item-next a::attr(href)").get()
-                or response.css("a.action.next::attr(href)").get()
+            # Product URL — image link in the current Magento card.
+            link = (
+                card.css("a.prodItem__title::attr(href)").get()
+                or card.css("a.prodItem__img::attr(href)").get()
+                or card.css("a[href*='kontakt.az/']::attr(href)").get()
             )
-            if next_page:
-                yield scrapy.Request(
-                    url=response.urljoin(next_page),
-                    callback=self.parse_listing,
-                    meta={
-                        "playwright": True,
-                        "playwright_include_page": True,
-                        "playwright_page_methods": [
-                            PageMethod("wait_for_selector", ".product-item", timeout=15000),
-                        ],
-                        "category": category,
-                    },
-                    cb_kwargs={"category": category},
-                    errback=self.errback_close_page,
-                )
-        finally:
-            if page:
-                await page.close()
+            if link and "#" not in link:
+                item["url"] = response.urljoin(link)
 
-    async def errback_close_page(self, failure):
-        page = failure.request.meta.get("playwright_page")
-        if page:
-            await page.close()
+            img = (
+                card.css("a.prodItem__img picture source::attr(srcset)").get()
+                or card.css("a.prodItem__img img.product-image::attr(src)").get()
+                or card.css("a.prodItem__img img::attr(data-src)").get()
+            )
+            if (
+                img
+                and "icon" not in img
+                and ".svg" not in img
+                and not img.startswith("data:")
+            ):
+                item["image_url"] = response.urljoin(img.split()[0])
+
+            # Out-of-stock variants are not emitted as catalogue cards.
+            item["in_stock"] = True
+
+            yield item
+
+        # Pagination — Magento standard next page link.
+        next_page = (
+            response.css(".pages-item-next a::attr(href)").get()
+            or response.css("a.action.next::attr(href)").get()
+        )
+        if next_page:
+            yield scrapy.Request(
+                url=response.urljoin(next_page),
+                callback=self.parse_listing,
+                meta={"category": category},
+                cb_kwargs={"category": category},
+                errback=self.errback_request,
+            )
+
+    def errback_request(self, failure):
         self.logger.error(f"Request failed: {failure.value}")
         category = failure.request.meta.get("category", "unknown")
         self.crawler.stats.inc_value(f"category/{category}/errors")
@@ -205,11 +155,32 @@ class KontaktHomeSpider(scrapy.Spider):
     @staticmethod
     def _extract_brand(title: str) -> str | None:
         known_brands = [
-            "apple", "iphone", "samsung", "xiaomi", "huawei", "honor",
-            "oppo", "vivo", "realme", "oneplus", "google",
-            "sony", "lg", "asus", "lenovo", "hp", "dell",
-            "acer", "msi", "jbl", "marshall", "beats",
-            "bose", "sennheiser", "garmin", "fitbit",
+            "apple",
+            "iphone",
+            "samsung",
+            "xiaomi",
+            "huawei",
+            "honor",
+            "oppo",
+            "vivo",
+            "realme",
+            "oneplus",
+            "google",
+            "sony",
+            "lg",
+            "asus",
+            "lenovo",
+            "hp",
+            "dell",
+            "acer",
+            "msi",
+            "jbl",
+            "marshall",
+            "beats",
+            "bose",
+            "sennheiser",
+            "garmin",
+            "fitbit",
         ]
         title_lower = title.lower()
         for brand in known_brands:

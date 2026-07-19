@@ -213,20 +213,25 @@ async def get_pending_matches(db: AsyncSession, limit: int = 50) -> list[dict]:
             pm.created_at,
             (SELECT string_agg(DISTINCT cp.store_id, ', ')
              FROM products p JOIN current_prices cp ON cp.product_id = p.id
-             WHERE p.model_family = pm.family_a AND p.brand = pm.brand) AS stores_a,
+             WHERE p.model_family = pm.family_a
+               AND LOWER(p.brand) = LOWER(pm.brand)) AS stores_a,
             (SELECT string_agg(DISTINCT cp.store_id, ', ')
              FROM products p JOIN current_prices cp ON cp.product_id = p.id
-             WHERE p.model_family = pm.family_b AND p.brand = pm.brand) AS stores_b,
+             WHERE p.model_family = pm.family_b
+               AND LOWER(p.brand) = LOWER(pm.brand)) AS stores_b,
             (SELECT COUNT(*) FROM products p
-             WHERE p.model_family = pm.family_a AND p.brand = pm.brand) AS count_a,
+             WHERE p.model_family = pm.family_a
+               AND LOWER(p.brand) = LOWER(pm.brand)) AS count_a,
             (SELECT COUNT(*) FROM products p
-             WHERE p.model_family = pm.family_b AND p.brand = pm.brand) AS count_b,
+             WHERE p.model_family = pm.family_b
+               AND LOWER(p.brand) = LOWER(pm.brand)) AS count_b,
             (SELECT json_agg(json_build_object(
                 'name', sub.name, 'store_id', sub.store_id, 'url', sub.url, 'price', sub.price_azn
              )) FROM (
                 SELECT p.name, cp.store_id, cp.url, cp.price_azn
                 FROM products p JOIN current_prices cp ON cp.product_id = p.id
-                WHERE p.model_family = pm.family_a AND p.brand = pm.brand
+                WHERE p.model_family = pm.family_a
+                  AND LOWER(p.brand) = LOWER(pm.brand)
                 ORDER BY cp.price_azn LIMIT 5
              ) sub) AS products_a,
             (SELECT json_agg(json_build_object(
@@ -234,7 +239,8 @@ async def get_pending_matches(db: AsyncSession, limit: int = 50) -> list[dict]:
              )) FROM (
                 SELECT p.name, cp.store_id, cp.url, cp.price_azn
                 FROM products p JOIN current_prices cp ON cp.product_id = p.id
-                WHERE p.model_family = pm.family_b AND p.brand = pm.brand
+                WHERE p.model_family = pm.family_b
+                  AND LOWER(p.brand) = LOWER(pm.brand)
                 ORDER BY cp.price_azn LIMIT 5
              ) sub) AS products_b
         FROM product_matches pm
@@ -306,7 +312,7 @@ async def review_match(db: AsyncSession, match_id: int, action: str) -> dict | N
         await db.execute(
             sa_text("""
                 UPDATE products SET model_family = :canonical
-                WHERE model_family = :other AND brand = :brand
+                WHERE model_family = :other AND LOWER(brand) = LOWER(:brand)
             """),
             {"canonical": canonical, "other": other, "brand": brand},
         )

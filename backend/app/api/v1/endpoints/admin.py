@@ -33,6 +33,7 @@ from app.services.admin_service import (
     get_store_health,
     review_match,
 )
+from app.services.matching_service import generate_match_suggestions
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -490,6 +491,12 @@ async def pending_matches(
 ):
     """Get product matches pending manual review."""
     return await get_pending_matches(db, limit=limit)
+
+
+@router.post("/matches/refresh")
+async def refresh_matches(db: AsyncSession = Depends(get_db)):
+    """Generate fresh cross-store suggestions for manual review."""
+    return await generate_match_suggestions(db)
 
 
 @router.post("/matches/{match_id}/{action}")
