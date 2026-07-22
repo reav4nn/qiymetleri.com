@@ -100,6 +100,11 @@ class ProductModelCreate(BaseModel):
     reason: str = Field(min_length=3, max_length=2000)
 
 
+class ProductModelMerge(BaseModel):
+    target_model_id: UUID
+    reason: str = Field(min_length=3, max_length=2000)
+
+
 class ModelMappingResolution(BaseModel):
     action: Literal["assign", "reject"]
     target_model_id: UUID | None = None

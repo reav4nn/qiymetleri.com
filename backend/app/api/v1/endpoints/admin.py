@@ -26,6 +26,7 @@ from app.schemas.admin import (
     TriggerResponse,
     ModelMappingResolution,
     ProductModelCreate,
+    ProductModelMerge,
 )
 from app.services.admin_service import (
     get_dashboard_stats,
@@ -39,6 +40,7 @@ from app.services.model_mapping_service import (
     create_product_model,
     list_mapping_reviews,
     list_product_models,
+    merge_product_models,
     resolve_mapping_review,
 )
 
@@ -561,6 +563,28 @@ async def add_product_model(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/product-models/{source_model_id}/merge")
+async def merge_models(
+    source_model_id: UUID,
+    payload: ProductModelMerge,
+    actor: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        result = await merge_product_models(
+            db,
+            source_model_id=source_model_id,
+            target_model_id=payload.target_model_id,
+            actor=actor,
+            reason=payload.reason,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="Source model not found")
+    return result
 
 
 @router.get("/model-mapping-reviews")

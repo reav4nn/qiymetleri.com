@@ -39,6 +39,242 @@ type PageResult<T> = {
   total: number;
 };
 
+function MergeModelsPanel({ onMerged }: { onMerged: () => Promise<void> }) {
+  const { toast } = useToast();
+  const [sourceQuery, setSourceQuery] = useState("");
+  const [targetQuery, setTargetQuery] = useState("");
+  const [sourceModels, setSourceModels] = useState<ProductModel[]>([]);
+  const [targetModels, setTargetModels] = useState<ProductModel[]>([]);
+  const [sourceModelId, setSourceModelId] = useState("");
+  const [targetModelId, setTargetModelId] = useState("");
+  const [reason, setReason] = useState("");
+  const [searching, setSearching] = useState<"source" | "target" | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sourceModel = sourceModels.find((model) => model.id === sourceModelId);
+  const targetModel = targetModels.find((model) => model.id === targetModelId);
+
+  async function searchModels(
+    event: FormEvent,
+    role: "source" | "target",
+  ) {
+    event.preventDefault();
+    const query = (role === "source" ? sourceQuery : targetQuery).trim();
+    if (query.length < 2) {
+      setError("Model axtarışı üçün ən azı 2 simvol yazın.");
+      return;
+    }
+
+    setSearching(role);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ q: query, limit: "100" });
+      if (role === "target") {
+        params.set("status", "verified");
+        if (sourceModel) params.set("category_id", sourceModel.category_id);
+      }
+      const result = await adminFetch<PageResult<ProductModel>>(
+        `/product-models?${params.toString()}`,
+      );
+      const items =
+        role === "source"
+          ? result.items.filter((model) => model.status !== "archived")
+          : result.items;
+      if (role === "source") {
+        setSourceModels(items);
+        setSourceModelId(items[0]?.id ?? "");
+        setTargetModels([]);
+        setTargetModelId("");
+      } else {
+        setTargetModels(items);
+        setTargetModelId(items[0]?.id ?? "");
+      }
+      if (items.length === 0) setError("Uyğun model tapılmadı.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Axtarış alınmadı");
+    } finally {
+      setSearching(null);
+    }
+  }
+
+  async function mergeModels() {
+    const normalizedReason = reason.trim();
+    if (!sourceModel || !targetModel) {
+      setError("Səhv mənbə modeli və düzgün hədəf modeli seçin.");
+      return;
+    }
+    if (sourceModel.id === targetModel.id) {
+      setError("Mənbə və hədəf model eyni ola bilməz.");
+      return;
+    }
+    if (normalizedReason.length < 3) {
+      setError("Birləşdirmə səbəbi ən azı 3 simvol olmalıdır.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `“${sourceModel.brand} ${sourceModel.name}” modelinin ${sourceModel.variant_count} variantı “${targetModel.brand} ${targetModel.name}” modelinə köçürüləcək. Davam edilsin?`,
+    );
+    if (!confirmed) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      const result = await adminFetch<{ moved_products: number }>(
+        `/product-models/${sourceModel.id}/merge`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            target_model_id: targetModel.id,
+            reason: normalizedReason,
+          }),
+        },
+      );
+      toast(`${result.moved_products} variant düzgün modelə köçürüldü`, "success");
+      setSourceQuery("");
+      setTargetQuery("");
+      setSourceModels([]);
+      setTargetModels([]);
+      setSourceModelId("");
+      setTargetModelId("");
+      setReason("");
+      await onMerged();
+    } catch (reason) {
+      const message =
+        reason instanceof Error ? reason.message : "Modellər birləşdirilmədi";
+      setError(message);
+      toast(message, "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <details className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/50">
+      <summary className="flex min-h-11 cursor-pointer items-center px-5 py-3 font-bold text-amber-950">
+        Səhv və duplicate canonical modelləri birləşdir
+      </summary>
+      <div className="border-t border-amber-200 p-4 sm:p-5">
+        <p className="text-sm text-zinc-600">
+          Typo ilə yaranmış modeli mənbə, rəsmi düzgün modeli hədəf seçin. Bütün
+          variantlar hədəfə köçürüləcək, mənbə model isə arxivlənəcək.
+        </p>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-xl border bg-white p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-red-700">
+              Səhv mənbə model
+            </p>
+            <form
+              onSubmit={(event) => void searchModels(event, "source")}
+              className="mt-2 flex flex-col gap-2 sm:flex-row"
+            >
+              <input
+                value={sourceQuery}
+                onChange={(event) => setSourceQuery(event.target.value)}
+                placeholder="Məsələn: MacBook Neo 13 18 Pro"
+                aria-label="Səhv mənbə model axtarışı"
+                className="min-h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none focus:border-amber-600"
+              />
+              <button
+                type="submit"
+                disabled={searching !== null || saving}
+                className="min-h-11 rounded-xl border px-4 text-sm font-bold hover:bg-zinc-50 disabled:opacity-60"
+              >
+                {searching === "source" ? "Axtarılır..." : "Mənbəni axtar"}
+              </button>
+            </form>
+            {sourceModels.length > 0 && (
+              <select
+                value={sourceModelId}
+                onChange={(event) => {
+                  setSourceModelId(event.target.value);
+                  setTargetModels([]);
+                  setTargetModelId("");
+                }}
+                aria-label="Səhv mənbə model"
+                className="mt-3 min-h-11 w-full rounded-xl border px-3 text-sm"
+              >
+                {sourceModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.brand} {model.name} · {model.status} ·{" "}
+                    {model.variant_count} variant
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="rounded-xl border bg-white p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+              Düzgün hədəf model
+            </p>
+            <form
+              onSubmit={(event) => void searchModels(event, "target")}
+              className="mt-2 flex flex-col gap-2 sm:flex-row"
+            >
+              <input
+                value={targetQuery}
+                onChange={(event) => setTargetQuery(event.target.value)}
+                placeholder="Məsələn: MacBook Neo 13 A18 Pro"
+                aria-label="Düzgün hədəf model axtarışı"
+                className="min-h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none focus:border-emerald-600"
+              />
+              <button
+                type="submit"
+                disabled={searching !== null || saving || !sourceModel}
+                className="min-h-11 rounded-xl border px-4 text-sm font-bold hover:bg-zinc-50 disabled:opacity-60"
+              >
+                {searching === "target" ? "Axtarılır..." : "Hədəfi axtar"}
+              </button>
+            </form>
+            {targetModels.length > 0 && (
+              <select
+                value={targetModelId}
+                onChange={(event) => setTargetModelId(event.target.value)}
+                aria-label="Düzgün hədəf model"
+                className="mt-3 min-h-11 w-full rounded-xl border px-3 text-sm"
+              >
+                {targetModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.brand} {model.name} · {model.variant_count} variant
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-end">
+          <label className="min-w-0 flex-1 text-xs font-bold text-zinc-600">
+            Birləşdirmə səbəbi
+            <input
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Məsələn: Mağaza adında A18 → 18 typo-su"
+              className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 text-sm font-normal outline-none focus:border-amber-600"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void mergeModels()}
+            disabled={saving || !sourceModel || !targetModel}
+            className="min-h-11 rounded-xl bg-amber-600 px-5 text-sm font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving ? "Birləşdirilir..." : "Variantları hədəfə köçür"}
+          </button>
+        </div>
+
+        {error && (
+          <p role="alert" className="mt-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function ReviewCard({
   review,
   onResolved,
@@ -491,6 +727,8 @@ export default function MatchesPage() {
           {error}
         </div>
       )}
+
+      <MergeModelsPanel onMerged={load} />
 
       <div className="mt-6 space-y-4">
         {data.map((review) => (
