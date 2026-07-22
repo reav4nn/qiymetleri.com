@@ -98,6 +98,8 @@ async def get_filters(
 
     if category:
         base = base.where(Product.category == category)
+    if brand:
+        base = base.where(Product.brand == brand)
 
     # Price/store filtering requires join to current_prices
     if store_id or min_price is not None or max_price is not None:
