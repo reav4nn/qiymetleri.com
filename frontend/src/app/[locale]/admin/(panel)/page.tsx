@@ -41,7 +41,7 @@ export default function DashboardPage() {
             className="rounded-2xl border bg-white p-5"
           >
             <p className="text-sm font-semibold text-zinc-500">{label}</p>
-            <p className="mt-3 text-3xl font-extrabold">{value ?? "—"}</p>
+            <p className="mt-3 text-3xl font-extrabold">{value ?? "-"}</p>
           </section>
         ))}
       </div>

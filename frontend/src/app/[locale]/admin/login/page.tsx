@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { LockKeyhole } from "lucide-react";
 import { adminFetch } from "@/lib/admin-api";
 
 export default function AdminLoginPage() {
@@ -36,9 +35,6 @@ export default function AdminLoginPage() {
         onSubmit={submit}
         className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-9"
       >
-        <div className="mb-8 grid size-14 place-items-center rounded-2xl bg-red-50 text-red-600">
-          <LockKeyhole />
-        </div>
         <h1 className="text-3xl font-extrabold tracking-tight">Admin girişi</h1>
         <p className="mt-2 text-sm text-zinc-500">
           Scraper və məhsul məlumatlarını təhlükəsiz idarə edin.

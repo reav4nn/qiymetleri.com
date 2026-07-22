@@ -20,7 +20,7 @@ export function formatDate(value?: string | null) {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(new Date(value))
-    : "—";
+    : "-";
 }
 
 export function statusLabel(status?: string | null) {

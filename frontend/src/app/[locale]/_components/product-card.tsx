@@ -38,7 +38,7 @@ export async function ProductCard({ product }: { product: ProductSummary }) {
         <div className="flex items-baseline justify-between">
           <span className="text-xl font-extrabold tracking-[-0.02em]">
             {product.lowest_price === null
-              ? "—"
+              ? "-"
               : `${format.number(product.lowest_price)} ${t("product.unit")}`}
           </span>
           <span className="rounded-md bg-[#eff6ff] px-2 py-[3px] text-xs font-bold text-[#2563eb]">

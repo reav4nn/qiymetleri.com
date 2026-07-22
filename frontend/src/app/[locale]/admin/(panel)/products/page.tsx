@@ -104,8 +104,8 @@ export default function ProductsPage() {
                   />
                 </td>
                 <td className="max-w-sm p-3 font-semibold">{p.name}</td>
-                <td className="p-3">{p.brand || "—"}</td>
-                <td className="p-3">{p.category || "—"}</td>
+                <td className="p-3">{p.brand || "-"}</td>
+                <td className="p-3">{p.category || "-"}</td>
                 <td className="p-3">
                   {p.prices.map((x) => (
                     <span key={x.store_id} className="mr-2 whitespace-nowrap">

@@ -84,18 +84,18 @@
     "catalogue": "Kataloqa bax"
   },
   "footer": {
-    "tagline": "Ən sərfəli qiymətlər.",
-    "shop": "Mağaza",
+    "tagline": "Azərbaycanda elektronika mağazalarının qiymət müqayisəsi.",
+    "shop": "Kataloq",
     "information": "Məlumat",
-    "legal": "Hüquqi",
+    "legal": "Qaydalar və Məxfilik",
     "about": "Haqqımızda",
     "partnership": "Tərəfdaşlıq",
-    "social": "Sosial media",
+    "social": "Sosial şəbəkələr",
     "contact": "Əlaqə",
-    "terms": "İstifadə şərtləri",
-    "privacy": "Gizlilik və təhlükəsizlik",
-    "personalData": "Fərdi məlumatların qorunması",
-    "consent": "Razılıq mətni",
+    "terms": "Saytdan istifadə şərtləri",
+    "privacy": "Məxfilik siyasəti",
+    "personalData": "Fərdi məlumatlar",
+    "consent": "Məlumat emalına razılıq",
     "copyright": "© {year} qiymetleri.com, Bakı. Bütün hüquqlar qorunur."
   },
   "categories": {

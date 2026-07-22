@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Manrope } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
-const manrope = localFont({
-  src: "../../../public/fonts/manrope/Manrope[wght].ttf",
-  weight: "200 800",
-  style: "normal",
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext"],
   variable: "--font-manrope",
 });
 

@@ -17,7 +17,7 @@ export default function AnomaliesPage() {
   const [data, setData] = useState<Item[]>([]),
     [threshold, setThreshold] = useState(30),
     [hours, setHours] = useState(24),
-    [loading, setLoading] = useState(false);
+    [loading, setLoading] = useState(true);
   const load = async () => {
     setLoading(true);
     try {
@@ -32,7 +32,23 @@ export default function AnomaliesPage() {
     }
   };
   useEffect(() => {
-    void load();
+    let ignore = false;
+    async function init() {
+      try {
+        const res = await adminFetch<Item[]>(
+          `/anomalies?threshold=${threshold}&hours=${hours}`,
+        );
+        if (!ignore) setData(res);
+      } catch {
+        if (!ignore) toast("Anomaliyalar yüklənmədi", "error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    void init();
+    return () => {
+      ignore = true;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   async function submit(e: FormEvent) {
     e.preventDefault();

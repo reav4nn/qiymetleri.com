@@ -1,4 +1,3 @@
-import { SearchX } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -12,10 +11,7 @@ export default async function NotFoundPage() {
       <SiteHeader />
       <main className="mx-auto flex min-h-[60vh] max-w-[760px] items-center px-4 py-12 sm:px-6">
         <div className="w-full rounded-card border border-border bg-white p-6 text-center sm:p-10">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-accent-soft text-accent">
-            <SearchX className="size-6" />
-          </div>
-          <p className="mt-5 text-sm font-extrabold tracking-[0.1em] text-accent uppercase">404</p>
+          <p className="text-sm font-extrabold tracking-[0.1em] text-accent uppercase">404</p>
           <h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">
             {t("notFound.title")}
           </h1>

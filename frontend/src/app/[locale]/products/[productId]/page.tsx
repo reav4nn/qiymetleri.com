@@ -163,7 +163,7 @@ export default async function ProductDetailPage({
               </div>
               <div className="mt-1 text-3xl font-extrabold tracking-[-0.04em]">
                 {lowestPrice === null
-                  ? "—"
+                  ? "-"
                   : `${format.number(lowestPrice)} ${t("product.unit")}`}
               </div>
               <p className="mt-1 text-sm text-[#71717a]">

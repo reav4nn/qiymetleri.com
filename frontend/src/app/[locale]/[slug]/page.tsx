@@ -1,15 +1,4 @@
 import type { Metadata } from "next";
-import {
-  BadgeCheck,
-  FileText,
-  Handshake,
-  Info,
-  LockKeyhole,
-  Mail,
-  Share2,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
@@ -20,20 +9,7 @@ import {
   contentSlugs,
   isContentSlug,
   isSupportedLocale,
-  type ContentSlug,
 } from "@/lib/static-content";
-
-const icons: Record<ContentSlug, typeof Info> = {
-  login: UserRound,
-  about: Info,
-  partnership: Handshake,
-  social: Share2,
-  contact: Mail,
-  terms: FileText,
-  privacy: LockKeyhole,
-  "personal-data": ShieldCheck,
-  consent: BadgeCheck,
-};
 
 export function generateStaticParams() {
   return contentSlugs.map((slug) => ({ slug }));
@@ -59,7 +35,6 @@ export default async function ContentPage({
   if (!isSupportedLocale(locale) || !isContentSlug(slug)) notFound();
 
   const page = contentPages[locale][slug];
-  const Icon = icons[slug];
 
   return (
     <>
@@ -74,10 +49,7 @@ export default async function ContentPage({
         </nav>
 
         <header className="overflow-hidden rounded-card border border-border bg-white p-6 sm:p-10 lg:p-12">
-          <div className="flex size-12 items-center justify-center rounded-button bg-accent-soft text-accent sm:size-14">
-            <Icon className="size-6 sm:size-7" strokeWidth={1.8} />
-          </div>
-          <p className="mt-6 text-xs font-extrabold tracking-[0.1em] text-accent uppercase">
+          <p className="text-xs font-extrabold tracking-[0.1em] text-accent uppercase">
             {page.eyebrow}
           </p>
           <h1 className="mt-2 max-w-[760px] text-3xl font-extrabold tracking-[-0.04em] text-balance sm:text-4xl lg:text-5xl">
@@ -95,7 +67,7 @@ export default async function ContentPage({
               className="grid gap-2 px-5 py-5 sm:px-8 sm:py-7 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] md:gap-8"
             >
               <h2 className="text-base font-extrabold sm:text-lg">{section.title}</h2>
-              <p className="max-w-prose text-sm leading-relaxed text-[#71717a] sm:text-base">
+              <p className="max-w-prose text-sm leading-relaxed text-[#71717a] whitespace-pre-line sm:text-base">
                 {section.body}
               </p>
             </section>

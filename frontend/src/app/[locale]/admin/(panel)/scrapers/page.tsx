@@ -130,7 +130,7 @@ export default function ScrapersPage() {
           <div key={k as string} className="rounded-2xl border bg-white p-4">
             <span className="text-sm text-zinc-500">{k}</span>
             <b className="float-right">
-              {typeof v === "boolean" ? (v ? "Online" : "Offline") : (v ?? "—")}
+              {typeof v === "boolean" ? (v ? "Online" : "Offline") : (v ?? "-")}
             </b>
           </div>
         ))}

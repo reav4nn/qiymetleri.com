@@ -35,392 +35,448 @@ export const contentPages: Record<
 > = {
   az: {
     login: {
-      eyebrow: "Şəxsi kabinet",
-      title: "Qiymətləri hesab yaratmadan müqayisə et",
+      eyebrow: "İstifadəçi hesabı",
+      title: "Şəxsi kabinet",
       intro:
-        "İstifadəçi hesabları hələ aktiv deyil. Kataloq, axtarış və qiymət tarixçəsi qeydiyyatsız tam açıqdır.",
+        "qiymetleri.com platformasından qeydiyyatsız istifadə edə bilərsiniz. Kataloq, axtarış və qiymət müqayisəsi hər kəs üçün tam açıqdır.",
       sections: [
         {
-          title: "Hazırda nə işləyir?",
-          body: "Məhsulları axtara, mağaza qiymətlərini müqayisə edə və son qiymət dəyişikliklərinə baxa bilərsiniz.",
+          title: "Mövcud imkanlar",
+          body: "Bütün məhsulları axtara, mağaza qiymətlərini müqayisə edə və qiymət dinamikasını izləyə bilərsiniz.",
         },
         {
-          title: "Növbəti imkanlar",
-          body: "Şəxsi kabinet aktivləşdikdə seçilmiş məhsullar, qiymət bildirişləri və fərdi izləmə siyahıları əlavə olunacaq.",
+          title: "Gələcək yeniliklər",
+          body: "Yaxın zamanlarda şəxsi kabinet aktivləşdikdə seçilmiş məhsulları yadda saxlamaq və qiymət enişi bildirişləri almaq mümkün olacaq.",
         },
       ],
       cta: { label: "Kataloqa keç", href: "/products" },
     },
     about: {
-      eyebrow: "Məlumat",
-      title: "Qiymət müqayisəsini sadələşdiririk",
+      eyebrow: "Açıq Mənbəli Layihə",
+      title: "Haqqımızda",
       intro:
-        "qiymetleri.com Azərbaycandakı elektronika mağazalarının təkliflərini bir yerdə göstərən müstəqil qiymət müqayisə platformasıdır.",
+        "qiymetleri.com - Azərbaycanda elektronika pərakəndə satışı bazarında şəffaflığı, dürüstlüyü və alıcı hüquqlarını təmin etmək üçün yaradılmış açıq mənbəli (open-source) real vaxt rejimli qiymət müqayisəsi və qiymət tarixçəsi platformasıdır.",
       sections: [
         {
-          title: "Məqsədimiz",
-          body: "Alıcının müxtəlif saytları ayrıca yoxlamadan məhsul, mağaza və qiymət barədə aydın qərar verməsinə kömək etməkdir.",
+          title: "Missiyamız və Baxışımız",
+          body: "Müasir e-ticarət mühitində alıcıların qarşılaşdığı en böyük çətinliklərdən biri müxtəlif pərakəndə satış mağazalarındakı qiymət fərqliliklərini izləmək və süni endirim kampaniyalarını müəyyən etməkdir. qiymetleri.com böyük həcmli məlumatların (Big Data) avtomatik toplanması və analiz edilməsi texnologiyalarına əsaslanan tərəfsiz rəqəmsal infrastrukturdur.",
         },
         {
-          title: "Məlumat necə işləyir?",
-          body: "Açıq mağaza səhifələrindən alınan məhsul məlumatları normallaşdırılır, uyğun məhsullar qruplaşdırılır və qiymət tarixçəsi saxlanılır.",
+          title: "Açıq Mənbəli (Open-Source) Fəlsəfəmiz",
+          body: "Biz inanırıq ki, rəqəmsal alətlər və məlumat şəffaflığı ictimai dəyərdir və kommersiya maraqlarının təsiri altında olmamalıdır. Platformanın backend, frontend və crawler kod bazası GitHub üzərindən icmaya tam açıqdır. Mozilla və GitHub prinsiplərinə uyğun olaraq alqoritmlərimiz şəffafdır, qiymət sıralamaları və tarixçə göstəriciləri manipulyasiya edilmir.",
         },
         {
-          title: "Müstəqillik",
-          body: "Platforma məhsul satmır. Sifariş, ödəniş, çatdırılma və zəmanət seçilmiş mağazanın şərtlərinə əsasən həyata keçirilir.",
+          title: "Cəmiyyətə və İstifadəçilərə Qatdığımız Dəyər",
+          body: "Platformamız ölkənin aparıcı elektronika şəbəkələrinin qiymətlərini real vaxt rejimində müqayisə edir. TimescaleDB time-series texnologiyası sayəsində məhsulların keçmiş qiymət dinamikasını təqdim edirik. Bu, alıcılara en sərfəli qiyməti tapmağa və endirimlərin real olduğunu görməyə imkan verir.",
+        },
+        {
+          title: "Müstəqillik və Tərəfsizlik",
+          body: "qiymetleri.com müstəqil informasiya platformasıdır və məhsul satışı ilə məşğul olmur. Sifariş, ödəniş, çatdırılma və zəmanət şərtləri birbaşa seçdiyiniz rəsmi mağaza tərəfindən həyata keçirilir.",
         },
       ],
-      cta: { label: "Məhsullara bax", href: "/products" },
+      cta: { label: "Məhsul kataloquna bax", href: "/products" },
     },
     partnership: {
-      eyebrow: "Biznes",
-      title: "Mağazanızın təkliflərini daha görünən edin",
+      eyebrow: "Biznes və İcma",
+      title: "Tərəfdaşlıq və Əməkdaşlıq",
       intro:
-        "Elektronika mağazaları və məlumat tərəfdaşları ilə dəqiq, yenilənən və istifadəçiyə faydalı kataloq qurmaq üçün əməkdaşlığa açığıq.",
+        "qiymetleri.com elektronika pərakəndəçiləri, rəsmi distribütorlar, açıq mənbə tərtibatçıları və texnologiya tərəfdaşları ilə açıq, şəffaf və dürüst əməkdaşlığa hazırdır.",
       sections: [
         {
-          title: "Mağazalar üçün",
-          body: "Məhsul feed-i və ya API inteqrasiyası qiymətlərin daha tez yenilənməsinə, düzgün stok məlumatına və keyfiyyətli məhsul uyğunlaşdırmasına imkan verir.",
+          title: "Korporativ Tərəfdaşlıq və Mağaza İnteqrasiyası",
+          body: "Pərakəndə satış mağazaları ilə rəsmi API və ya məhsul feed-ləri vasitəsilə qiymət və stok məlumatlarının real vaxt rejimində daha dəqiq və vaxtında yenilənməsi üçün inteqrasiya imkanları təqdim edirik.",
         },
         {
-          title: "İnteqrasiya prosesi",
-          body: "Kataloq formatı birlikdə yoxlanılır, test idxalı aparılır və məlumat keyfiyyəti təsdiqləndikdən sonra mağaza aktiv edilir.",
+          title: "Sponsorluq və Resurs Dəstəyi",
+          body: "Açıq mənbəli layihə olaraq platformamız müstəqil bulud infrastrukturu üzərində fəaliyyət göstərir. Server xərclərini, verilənlər bazası saxlanılmasını və təhlükəsizlik alətlərini dəstəkləmək istəyən korporativ sponsorlar üçün əməkdaşlıq proqramlarımız mövcuddur.",
         },
         {
-          title: "Redaksiya prinsipi",
-          body: "Ödənişli əməkdaşlıq nəticələrin dəqiqliyini və müqayisənin şəffaflığını dəyişmir. Qiymət və mövcudluq əsas göstəricilər olaraq qalır.",
+          title: "Açıq Mənbəli Layihəyə Töhfə Vermək (Contributing)",
+          body: "Platformamızın inkişafı açıq mənbə icmasının dəstəyindən qidalanır. Proqramçılar, data mühəndisləri və dizaynerlər GitHub repozitoriyamızı fork edərək, parser-ləri təkmilləşdirərək və yeni funksiyalar üçün Pull Request göndərərək layihəyə töhfə verə bilərlər.",
+        },
+        {
+          title: "Tərəfsizlik Teminatı",
+          body: "Korporativ əməkdaşlıq və ya sponsorluq müqavilələri qiymetleri.com platformasındakı qiymət sıralamasına və ya qiymət tarixçəsi məlumatlarına təsir edə bilməz.",
         },
       ],
       cta: { label: "Tərəfdaşlıq üçün yazın", href: "mailto:partners@qiymetleri.com" },
     },
     social: {
-      eyebrow: "İcma",
-      title: "Qiymət yeniliklərini izləyin",
+      eyebrow: "İcma Və Ekosistem",
+      title: "Sosial Şəbəkələr və İcma",
       intro:
-        "Sosial kanallarımızda qiymət enişləri, yeni mağazalar və məhsul müqayisəsi ilə bağlı qısa məlumatlar paylaşılacaq.",
+        "qiymetleri.com təkcə qiymət müqayisə platforması deyil, rəqəmsal şəffaflığa inanan proqramçıların, analitiklərin və alıcıların birləşdiyi açıq mənbəli icmadır.",
       sections: [
         {
-          title: "Endirim siqnalları",
-          body: "Kataloqda nəzərəçarpan qiymət dəyişikliyi olduqda seçilmiş məhsullar barədə icmal paylaşırıq.",
+          title: "İcma Yönümlü Ekosistem",
+          body: "Biz istifadəçilərimiz və tərtibatçılarımızla birbaşa dialoqu dəyərləndiririk. Platformanın gələcək inkişaf xəritəsini icmamızın rəy və təklifləri əsasında formalaşdırırıq.",
         },
         {
-          title: "Məhsul bələdçiləri",
-          body: "Oxşar modellərin əsas fərqlərini və alış zamanı yoxlanmalı məqamları sadə dildə izah edirik.",
+          title: "Sosial Media Kanallarımızı İzləməyin Üstünlükləri",
+          body: "Rəsmi hesablarımızda elektronika bazarındakı real qiymət enişləri, platformaya əlavə edilən yeni funksiyalar, arxitektura yenilənmələri və texnoloji bələdçilər müntəzəm paylaşılır.",
         },
         {
-          title: "Rəsmi hesablar",
-          body: "Aktiv sosial hesabların təsdiqlənmiş keçidləri istifadəyə verildikcə yalnız bu səhifədə yerləşdiriləcək.",
+          title: "GitHub İcması və Təcrübə Mübadiləsi",
+          body: "GitHub repozitoriyamızda müzakirələrə qoşula, texniki suallarınızı verə, Scrapy, Playwright, FastAPI, Next.js və TimescaleDB kimi müasir texnologiyalar üzrə təcrübə mübadiləsi apara bilərsiniz.",
+        },
+        {
+          title: "Rəsmi Hesablar",
+          body: "Təsdiqlənmiş sosial media hesablarımızın və açıq kod resurslarımızın keçidləri platformamız üzərindən təqdim olunur.",
         },
       ],
-      cta: { label: "Yenilik təklif edin", href: "mailto:info@qiymetleri.com" },
+      cta: { label: "GitHub-da bizə qoşulun", href: "https://github.com/reav4nn/qiymetleri.com" },
     },
     contact: {
-      eyebrow: "Dəstək",
-      title: "Bizimlə əlaqə saxlayın",
+      eyebrow: "Dəstək Və Əlaqə",
+      title: "Əlaqə",
       intro:
-        "Yanlış qiymət, çatışmayan məhsul, mağaza inteqrasiyası və ya platforma ilə bağlı sualınızı e-poçtla göndərə bilərsiniz.",
+        "İstifadəçi rəyləri, tərtibatçı təklifləri, mağaza inteqrasiyaları və ya texniki xətalar haqqında bizimlə istənilən vaxt əlaqə saxlaya bilərsiniz.",
       sections: [
         {
-          title: "Ümumi müraciətlər",
-          body: "info@qiymetleri.com ünvanına məhsulun linkini və gördüyünüz problemi əlavə edin. Bu, yoxlamanı sürətləndirir.",
+          title: "Ümumi Müraciətlər və İstifadəçi Dəstəyi",
+          body: "Platformanın istifadəsi, məhsul məlumatlarında uyğunsuzluqlar və ya rəyləriniz üçün info@qiymetleri.com ünvanına yaza bilərsiniz.",
         },
         {
-          title: "Tərəfdaşlıq",
-          body: "Mağaza, kataloq və API inteqrasiyası üçün partners@qiymetleri.com ünvanından istifadə edin.",
+          title: "Tərəfdaşlıq və Mağaza İnteqrasiyaları",
+          body: "Pərakəndə satıcılar, rəsmi distribütorlar və biznes təklifləri üçün partners@qiymetleri.com ünvanı vasitəsilə əlaqə yaradın.",
         },
         {
-          title: "Məkan",
-          body: "Platforma Bakı, Azərbaycan vaxt qurşağı ilə fəaliyyət göstərir. Dəstək müraciətləri iş günlərində emal olunur.",
+          title: "Açıq Mənbə Tərtibatçıları və Xəbərdarlıqlar (Bug Reports)",
+          body: "Texniki xətalar, təhlükəsizlik xəbərdarlıqları və ya kod təklifləri üçün GitHub repozitoriyamızın Issues bölməsində müraciət yarada bilərsiniz.",
+        },
+        {
+          title: "Cavablandırma Standartları",
+          body: "Daxil olan bütün müraciətlərə iş günləri ərzində 24-48 saat müddətində diqqətlə baxılır və rəsmi cavab verilir.",
         },
       ],
-      cta: { label: "E-poçt göndər", href: "mailto:info@qiymetleri.com" },
+      cta: { label: "E-poçt göndərin", href: "mailto:info@qiymetleri.com" },
     },
     terms: {
-      eyebrow: "Hüquqi · 18 iyul 2026",
-      title: "İstifadə şərtləri",
+      eyebrow: "Hüquqi Məlumat",
+      title: "Saytdan İstifadə Şərtləri",
       intro:
-        "Bu şərtlər qiymetleri.com saytından və təqdim olunan qiymət müqayisəsi məlumatlarından istifadə qaydasını müəyyən edir.",
+        "Bu İstifadə Şərtləri qiymetleri.com platformasından, onun açıq mənbəli proqram təminatından və təqdim edilən qiymət müqayisə xidmətlərindən istifadə qaydalarını tənzimləyir.",
       sections: [
         {
-          title: "Xidmətin mahiyyəti",
-          body: "Sayt məlumat və müqayisə xidmətidir, məhsul satıcısı deyil. Alış müqaviləsi istifadəçi ilə seçilmiş mağaza arasında bağlanır.",
+          title: "Ümumi Müddəalar və Şərtlərin Qəbulu",
+          body: "qiymetleri.com müstəqil qiymət müqayisə platformasıdır. Sayta daxil olmaqla siz bu Şərtləri tam qəbul etmiş olursunuz. Platforma məhsul satmır; ödəniş, çatdırılma və zəmanət şərtləri seçdiyiniz rəsmi mağaza tərəfindən həyata keçirilir.",
         },
         {
-          title: "Qiymətlərin dəqiqliyi",
-          body: "Məlumatları tez-tez yeniləsək də mağaza qiyməti və stok vəziyyəti dəyişə bilər. Sifarişdən əvvəl yekun məlumatı mağaza səhifəsində yoxlayın.",
+          title: "Açıq Mənbəli Lisenziya və Məzmun İstifadəsi",
+          body: "qiymetleri.com mənbə kodu açıq mənbəlidir. Siz kodu yoxlamaq, kopyalamaq və lisenziya şərtlərinə uyğun olaraq istifadə etmək hüququna maliksiniz. Platformadakı qiymət məlumatları və qrafiklər ictimai məlumatlandırma məqsədi daşıyır. Məlumatların avtomatlaşdırılmış toplanması platformanın işinə mane olmamaq şərtilə və mənbə göstərilməklə həyata keçirilməlidir.",
         },
         {
-          title: "İcazəli istifadə",
-          body: "Xidmət şəxsi və qanuni məqsədlər üçün istifadə edilə bilər. Sistemin işinə mane olmaq, məlumatı icazəsiz kütləvi çıxarmaq və təhlükəsizlik tədbirlərini keçmək qadağandır.",
+          title: "Məsuliyyətin Məhdudlaşdırılması və İmtah (Disclaimer)",
+          body: "Məlumatlar mağazalardan avtomatlaşdırılmış alətlərlə toplanır. Biz məlumatların dəqiqliyinə çalışırıq, lakin anlıq qiymət dəyişikliklərinə və stok xətalarına görə zəmanət vermirik. Alış-veriş qərarı verərkən son qiyməti mağazanın öz rəsmi saytında yoxlamaq istifadəçinin məsuliyyətindədir.",
         },
         {
-          title: "Xarici keçidlər",
-          body: "Mağaza saytlarının məzmunu, ödənişi, çatdırılması və zəmanət şərtləri həmin tərəflərin məsuliyyətindədir.",
+          title: "Ticarət Nişanları və Əqli Mülkiyyət",
+          body: "Platformada nümayiş olunan mağaza adları, loqolar və məhsul şəkilləri müvafiq hüquq sahiblərinə (Kontakt Home, Baku Electronics, Irshad, iSpace və s.) məxsusdur. Onların nümayişi yalnız identifikasiya və informasiya məqsədi daşıyır.",
+        },
+        {
+          title: "Şərtlərin Yenilənməsi",
+          body: "Biz bu Şərtləri istənilən vaxt yeniləmək hüququnu saxlayırıq. Yenilənmiş şərtlər saytda dərc edildiyi andan qüvvəyə minir.",
         },
       ],
-      cta: { label: "Sualınız var?", href: "mailto:info@qiymetleri.com" },
+      cta: { label: "Bizimlə əlaqə", href: "mailto:info@qiymetleri.com" },
     },
     privacy: {
-      eyebrow: "Hüquqi · 18 iyul 2026",
-      title: "Gizlilik və təhlükəsizlik",
+      eyebrow: "Hüquqi Məlumat",
+      title: "Məxfilik Siyasəti",
       intro:
-        "Məxfiliyə məlumatın minimum toplanması, məqsədli istifadəsi və uyğun texniki qorunması prinsipi ilə yanaşırıq.",
+        "qiymetleri.com istifadəçilərin rəqəmsal məxfilik hüququna dərin hörmətlə yanaşır. WordPress və Mozilla məxfilik standartlarına uyğun olaraq, minimum məlumat toplanması (data minimization) və maksimum şəffaflıq prinsipinə sadiqik.",
       sections: [
         {
-          title: "Toplanan texniki məlumat",
-          body: "Xidmətin təhlükəsizliyi və işləkliyi üçün IP ünvanı, brauzer tipi, sorğu vaxtı və xəta qeydləri kimi məhdud texniki məlumat emal oluna bilər.",
+          title: "Bizim Məxfilik Fəlsəfəmiz",
+          body: "Biz heç vaxt istifadəçilərimizin fərdi məlumatlarını satmırıq, kirayəyə vermirik və ya kommersiya məqsədli reklam şəbəkələrinə ötürmürük.",
         },
         {
-          title: "İstifadə məqsədi",
-          body: "Məlumat təhlükəsizlik insidentlərini aşkarlamaq, performansı ölçmək, xətaları aradan qaldırmaq və xidməti yaxşılaşdırmaq üçün istifadə olunur.",
+          title: "Toplanan Məlumatlar",
+          body: "Sayta daxil olduğunuz zaman serverlərimiz standart olaraq anonymized IP ünvanı, brauzer növü və daxilolma vaxtı kimi texniki log məlumatlarını qeydə alır. Bu məlumatlar yalnız platformanın təhlükəsizliyini təmin etmək və performansı optimallaşdırmaq üçün istifadə olunur.",
         },
         {
-          title: "Qorunma və saxlanma",
-          body: "Girişlər məhdudlaşdırılır, sirrlər açıq repoda saxlanmır və texniki qeydlər yalnız zəruri müddət ərzində qorunur.",
+          title: "Çərəzlər (Cookies) və Anonim Analitika",
+          body: "Platforma istifadəçi təcrübəsini yaxşılaşdırmaq (məsələn, seçilmiş dil tərcihini - AZ/RU xatırlamaq) və anonim statistik təhlillər aparmaq üçün minimal çərəzlərdən istifadə edir.",
         },
         {
-          title: "Üçüncü tərəflər",
-          body: "Mağaza keçidinə daxil olduqda həmin saytın məxfilik qaydaları tətbiq edilir. Onların məlumat emalına qiymetleri.com nəzarət etmir.",
+          title: "Açıq Mənbə Şəffaflığı və Üçüncü Tərəf Keçidləri",
+          body: "Platformamızın kodu açıq olduğu üçün məlumatların necə emal edildiyini istənilən şəxs kod səviyyəsində audit edə bilər. Mağaza keçidlərinə daxil olduqda həmin mağazanın öz məxfilik şərtləri keçərli olur.",
         },
       ],
-      cta: { label: "Məxfilik barədə yazın", href: "mailto:privacy@qiymetleri.com" },
+      cta: { label: "Məxfilik sorğusu yazın", href: "mailto:privacy@qiymetleri.com" },
     },
     "personal-data": {
-      eyebrow: "Hüquqi · 18 iyul 2026",
-      title: "Fərdi məlumatların qorunması",
+      eyebrow: "Hüquqi Məlumat",
+      title: "Fərdi Məlumatlar",
       intro:
-        "Fərdi məlumat yalnız aydın məqsəd olduqda, zəruri həcmdə və qüvvədə olan tələblərə uyğun emal edilir.",
+        "Fərdi məlumatların emalı və qorunması Azərbaycan Respublikasının 'Fərdi məlumatlar haqqında' Qanununa və GDPR beynəlxalq standartlarına uyğun olaraq həyata keçirilir.",
       sections: [
         {
-          title: "Məlumat subyektinin hüquqları",
-          body: "Sizinlə bağlı saxlanılan məlumatın mövcudluğu barədə sorğu göndərə, düzəliş və ya qanuni əsas olduqda silinmə tələb edə bilərsiniz.",
+          title: "Qanunvericilik və Emal Prinsipləri",
+          body: "Fərdi məlumatlar yalnız qanuni, adil və əvvəlcədən bəyan edilmiş məqsədlər üçün emal olunur. Məlumatlar toplandığı məqsəddən kənar emal edilə bilməz.",
         },
         {
-          title: "Emalın hüquqi əsası",
-          body: "Məlumat razılıq, xidmətin göstərilməsi, təhlükəsizlik üzrə qanuni maraq və ya hüquqi öhdəlik əsasında emal oluna bilər.",
+          title: "Məlumatların Saxlanması və Qorunması",
+          body: "Məlumatların icazəsiz daxilolmalardan, dəyişdirilmədən və ya sızmadan qorunması üçün müasir şifrələmə (SSL/TLS), təhlükəsiz bulud infrastrukturu və daxili mühafizə protokolları tətbiq edilir.",
         },
         {
-          title: "Sorğular",
-          body: "Məlumat sorğusunda kimliyin təsdiqi üçün əlavə məlumat istənilə bilər. Cavab qanunla nəzərdə tutulan müddətdə təqdim edilir.",
+          title: "İstifadəçi Hüquqları (Right to be Forgotten)",
+          body: "Hər bir istifadəçi öz fərdi məlumatları barədə məlumat almaq, düzəliş edilməsini və ya qanuni əsas olduqda sistemlərimizdən tam silinməsini tələb etmək hüququna malikdir.",
+        },
+        {
+          title: "Sorğular və Müraciət",
+          body: "Fərdi məlumatlar üzrə sorğularınızı privacy@qiymetleri.com ünvanına göndərə bilərsiniz. Müraciətlərə qanunla nəzərdə tutulmuş müddətdə cavab verilir.",
         },
       ],
-      cta: { label: "Məlumat sorğusu göndər", href: "mailto:privacy@qiymetleri.com" },
+      cta: { label: "Məlumat sorğusu göndərin", href: "mailto:privacy@qiymetleri.com" },
     },
     consent: {
-      eyebrow: "Hüquqi · 18 iyul 2026",
-      title: "Məlumat emalına razılıq",
+      eyebrow: "Hüquqi Məlumat",
+      title: "Məlumat Emalına Razılıq",
       intro:
-        "Bizə könüllü şəkildə müraciət göndərdikdə təqdim etdiyiniz məlumatın müraciəti cavablandırmaq üçün emalına razılıq vermiş olursunuz.",
+        "qiymetleri.com platformasından istifadə etməklə, çərəz bildirişini təsdiqləməklə və ya bizimlə əlaqə saxlayarkən məlumatlarınızın bu sənəddə müəyyən edilmiş hüquqi çərçivədə emal edilməsinə razılıq vermiş olursunuz.",
       sections: [
         {
-          title: "Razılığın əhatəsi",
-          body: "Ad, e-poçt ünvanı və müraciətdə yazdığınız digər məlumat yalnız əlaqə, dəstək və sorğunun icrası məqsədilə istifadə edilir.",
+          title: "Razılığın Hüquqi Əsası",
+          body: "İstifadəçinin verdiyi razılıq platformadan istifadə Şərtləri və Məxfilik Siyasəti ilə qarşılıqlı əlaqədə hüquqi çərçivə formalaşdırır.",
+        },
+        {
+          title: "Razılığın Əhatə Dairəsi",
+          body: "Verilən razılıq zəruri çərəzlərin yerləşdirilməsini, dil tərcihlərinin saxlanılmasını və platformanın təhlükəsizliyi üçün texniki log emalını əhatə edir.",
         },
         {
           title: "Könüllülük",
-          body: "Məlumat təqdim etmək könüllüdür. Zəruri əlaqə məlumatı olmadıqda müraciətə cavab vermək mümkün olmaya bilər.",
+          body: "Məlumat təqdim etmək könüllüdür. Zəruri əlaqə vasitəsi olmadıqda sorğuya cavab vermək mümkün olmaya bilər.",
         },
         {
-          title: "Razılığın geri götürülməsi",
-          body: "privacy@qiymetleri.com ünvanına yazaraq razılığı geri götürə bilərsiniz. Bu, geri götürülmədən əvvəlki qanuni emala təsir etmir.",
+          title: "Razılığın Geri Götürülməsi Mexanizmi",
+          body: "Brauzer parametrlərindən çərəzləri təmizləməklə və ya privacy@qiymetleri.com ünvanına yazaraq razılığınızı istənilən vaxt geri götürə bilərsiniz.",
         },
       ],
-      cta: { label: "Bizimlə əlaqə", href: "mailto:privacy@qiymetleri.com" },
+      cta: { label: "Dəstək komandasına yazın", href: "mailto:privacy@qiymetleri.com" },
     },
   },
   ru: {
     login: {
       eyebrow: "Личный кабинет",
-      title: "Сравнивайте цены без регистрации",
+      title: "Личный кабинет",
       intro:
-        "Учетные записи пользователей пока не активированы. Каталог, поиск и история цен полностью доступны без регистрации.",
+        "Платформой qiymetleri.com можно пользоваться без регистрации. Каталог, поиск и сравнение цен полностью доступны каждому пользователю.",
       sections: [
         {
-          title: "Что уже работает?",
-          body: "Вы можете искать товары, сравнивать предложения магазинов и просматривать последние изменения цен.",
+          title: "Текущие возможности",
+          body: "Вы можете искать товары, сравнивать предложения магазинов и следить за динамикой цен.",
         },
         {
-          title: "Следующие возможности",
-          body: "После запуска кабинета появятся избранные товары, уведомления о снижении цены и персональные списки наблюдения.",
+          title: "Предстоящие функции",
+          body: "После запуска личного кабинета появится возможность сохранять товары в избранное и получать уведомления о снижении цен.",
         },
       ],
       cta: { label: "Перейти в каталог", href: "/products" },
     },
     about: {
-      eyebrow: "Информация",
-      title: "Упрощаем сравнение цен",
+      eyebrow: "Открытый исходный код",
+      title: "О нас",
       intro:
-        "qiymetleri.com — независимая платформа, которая собирает предложения азербайджанских магазинов электроники в одном месте.",
+        "qiymetleri.com - открытая (open-source) платформа реального времени для сравнения цен и истории цен на рынке электроники Азербайджана.",
       sections: [
         {
-          title: "Наша цель",
-          body: "Помочь покупателю принять понятное решение о товаре, магазине и цене без отдельной проверки множества сайтов.",
+          title: "Наша миссия и видение",
+          body: "Главная проблема покупателей в сфере e-commerce - отслеживание разницы цен в различных магазинах и определение искусственных скидок. qiymetleri.com - это независимая цифровая инфраструктура на базе технологий автоматического сбора данных (Big Data).",
         },
         {
-          title: "Как работают данные?",
-          body: "Данные с открытых страниц магазинов нормализуются, одинаковые товары объединяются, а изменения цен сохраняются в истории.",
+          title: "Философия Open-Source",
+          body: "Мы верим, что цифровые инструменты и прозрачность данных - это общественное благо. Исходный код нашего backend, frontend и скраперов полностью открыт на GitHub в соответствии с принципами Mozilla и GitHub.",
+        },
+        {
+          title: "Ценность для пользователей",
+          body: "Мы сравниваем цены ведущих сетей электроники страны в реальном времени. С помощью технологий TimescaleDB мы предоставляем историю цен, помогая находить самые выгодные предложения и проверять реальность скидок.",
         },
         {
           title: "Независимость",
-          body: "Платформа не продает товары. За заказ, оплату, доставку и гарантию отвечает выбранный магазин на своих условиях.",
+          body: "qiymetleri.com не занимается продажей товаров. Заказ, оплата, доставка и гарантия оформляются напрямую в выбранном вами официальном магазине.",
         },
       ],
-      cta: { label: "Смотреть товары", href: "/products" },
+      cta: { label: "Смотреть каталог", href: "/products" },
     },
     partnership: {
-      eyebrow: "Бизнес",
-      title: "Сделайте предложения магазина заметнее",
+      eyebrow: "Бизнес и Сообщество",
+      title: "Партнерство и Сотрудничество",
       intro:
-        "Мы открыты к сотрудничеству с магазинами электроники и поставщиками данных ради точного и регулярно обновляемого каталога.",
+        "qiymetleri.com открыт к сотрудничеству с ритейлерами электроники, официальными дистрибьюторами и разработчиками открытого ПО.",
       sections: [
         {
-          title: "Для магазинов",
-          body: "Интеграция товарного фида или API ускоряет обновление цен, улучшает данные о наличии и качество сопоставления товаров.",
+          title: "Корпоративное партнерство и интеграция",
+          body: "Мы предоставляем возможности интеграции через официальный API и фиды товаров для точного и своевременного обновления цен.",
         },
         {
-          title: "Процесс интеграции",
-          body: "Мы вместе проверяем формат каталога, выполняем тестовый импорт и активируем магазин после контроля качества данных.",
+          title: "Спонсорство и инфраструктура",
+          body: "Платформа работает на независимой облачной инфраструктуре. Мы открыты к сотрудничеству с корпоративными спонсорами для поддержки серверов и баз данных.",
         },
         {
-          title: "Редакционный принцип",
-          body: "Коммерческое сотрудничество не влияет на точность результатов и прозрачность сравнения. Главными остаются цена и наличие.",
+          title: "Вклад в Open-Source (Contributing)",
+          body: "Разработчики и аналитики данных могут вносить вклад в проект через GitHub: улучшать парсеры, создавать Pull Request и развивать функционал.",
+        },
+        {
+          title: "Гарантия объективности",
+          body: "Партнерские соглашения не влияют на объективность ранжирования цен и график истории цен на qiymetleri.com.",
         },
       ],
-      cta: { label: "Обсудить партнерство", href: "mailto:partners@qiymetleri.com" },
+      cta: { label: "Написать о партнерстве", href: "mailto:partners@qiymetleri.com" },
     },
     social: {
       eyebrow: "Сообщество",
-      title: "Следите за ценовыми новостями",
+      title: "Социальные сети и Сообщество",
       intro:
-        "В социальных каналах будут публиковаться короткие новости о снижении цен, новых магазинах и сравнении товаров.",
+        "qiymetleri.com - это не только сервис сравнения цен, но и open-source сообщество разработчиков и пользователей, ценящих цифровую прозрачность.",
       sections: [
         {
-          title: "Сигналы о скидках",
-          body: "При заметном изменении цены в каталоге мы публикуем обзор выбранных товаров.",
+          title: "Сообщество и диалог",
+          body: "Мы ценим прямой диалог с пользователями и формируем дорожную карту развития платформы на основе ваших отзывов.",
         },
         {
-          title: "Гиды по товарам",
-          body: "Простым языком объясняем основные различия похожих моделей и важные моменты перед покупкой.",
+          title: "Преимущества подписки",
+          body: "В наших соцсетях публикуются обзоры реальных скидок, обновления архитектуры, новые функции и технические гайды.",
         },
         {
-          title: "Официальные аккаунты",
-          body: "Ссылки на подтвержденные активные аккаунты будут размещаться только на этой странице по мере их запуска.",
+          title: "Сообщество GitHub",
+          body: "Присоединяйтесь к дискуссиям на GitHub, задавайте технические вопросы и обменивайтесь опытом по стекe Scrapy, Playwright, FastAPI, Next.js и TimescaleDB.",
+        },
+        {
+          title: "Официальные каналы",
+          body: "Ссылки на подтвержденные аккаунты и исходный код доступны на нашем сайте.",
         },
       ],
-      cta: { label: "Предложить тему", href: "mailto:info@qiymetleri.com" },
+      cta: { label: "Присоединиться на GitHub", href: "https://github.com/reav4nn/qiymetleri.com" },
     },
     contact: {
-      eyebrow: "Поддержка",
-      title: "Свяжитесь с нами",
+      eyebrow: "Поддержка и Контакты",
+      title: "Контакты",
       intro:
-        "Сообщите по электронной почте о неверной цене, отсутствующем товаре, интеграции магазина или другом вопросе о платформе.",
+        "Свяжитесь с нами по вопросам работы сайта, предложениям по партнерству или сообщениям об ошибках.",
       sections: [
         {
-          title: "Общие обращения",
-          body: "Напишите на info@qiymetleri.com и приложите ссылку на товар и описание проблемы — это ускорит проверку.",
+          title: "Общие вопросы и поддержка",
+          body: "По вопросам использования платформы и неточностям в ценах пишите на info@qiymetleri.com.",
         },
         {
-          title: "Партнерство",
-          body: "По вопросам магазина, каталога и API-интеграции используйте partners@qiymetleri.com.",
+          title: "Партнерство и магазины",
+          body: "Для интеграции магазинов и бизнес-предложений используйте partners@qiymetleri.com.",
         },
         {
-          title: "Регион",
-          body: "Платформа работает по часовому поясу Баку, Азербайджан. Обращения поддержки обрабатываются в рабочие дни.",
+          title: "Open-Source разработчикам (Bug Reports)",
+          body: "Сообщения о багах и технические предложения отправляйте в раздел Issues на GitHub.",
+        },
+        {
+          title: "Регламент ответов",
+          body: "Все обращения рассматриваются в течение 24–48 часов в рабочие дни.",
         },
       ],
       cta: { label: "Отправить письмо", href: "mailto:info@qiymetleri.com" },
     },
     terms: {
-      eyebrow: "Правовая информация · 18 июля 2026",
-      title: "Условия использования",
+      eyebrow: "Правовая информация",
+      title: "Условия использования сайта",
       intro:
-        "Эти условия регулируют использование сайта qiymetleri.com и предоставляемых данных для сравнения цен.",
+        "Настоящие условия регулируют правила использования сайта qiymetleri.com, его открытого исходного кода и сервиса сравнения цен.",
       sections: [
         {
-          title: "Характер сервиса",
-          body: "Сайт является информационным сервисом сравнения, а не продавцом. Договор покупки заключается между пользователем и выбранным магазином.",
+          title: "Общие положения",
+          body: "qiymetleri.com - независимый информационный сервис. Используя сайт, вы принимаете эти Условия. Сервис не продает товары; договор купли-продажи заключается с магазином.",
         },
         {
-          title: "Точность цен",
-          body: "Хотя данные регулярно обновляются, цена и наличие в магазине могут измениться. Перед заказом проверьте итоговую информацию на сайте магазина.",
+          title: "Лицензия Open-Source и контент",
+          body: "Исходный код платформы распространяется по лицензии Open-Source. Графика и данные цен предназначены для общественного информирования. Автоматизированный сбор данных допускается при условии сохранения работоспособности сайта и указания ссылки на источник.",
         },
         {
-          title: "Допустимое использование",
-          body: "Сервис разрешено использовать в личных и законных целях. Запрещено нарушать работу системы, массово извлекать данные без разрешения и обходить меры защиты.",
+          title: "Ограничение ответственности (Disclaimer)",
+          body: "Данные собираются автоматически. Мы стремимся к точности, но не гарантируем отсутствие ошибок из-за мгновенных изменений цен в магазинах. Финальную цену необходимо проверять на сайте магазина.",
         },
         {
-          title: "Внешние ссылки",
-          body: "За содержание, оплату, доставку и гарантийные условия на сайтах магазинов отвечают соответствующие третьи стороны.",
+          title: "Товарные знаки",
+          body: "Логотипы и названия брендов принадлежат их правообладателям и используются исключительно для идентификации.",
+        },
+        {
+          title: "Изменение условий",
+          body: "Мы оставляем за собой право обновлять данные Условия. Изменения вступают в силу с момента публикации.",
         },
       ],
-      cta: { label: "Задать вопрос", href: "mailto:info@qiymetleri.com" },
+      cta: { label: "Связаться с нами", href: "mailto:info@qiymetleri.com" },
     },
     privacy: {
-      eyebrow: "Правовая информация · 18 июля 2026",
-      title: "Конфиденциальность и безопасность",
+      eyebrow: "Правовая информация",
+      title: "Политика конфиденциальности",
       intro:
-        "Мы придерживаемся принципов минимального сбора данных, целевого использования и надлежащей технической защиты.",
+        "qiymetleri.com уважает право пользователей на конфиденциальность в соответствии со стандартами WordPress и Mozilla.",
       sections: [
         {
-          title: "Технические данные",
-          body: "Для безопасности и работоспособности могут обрабатываться ограниченные технические данные: IP-адрес, тип браузера, время запроса и записи об ошибках.",
+          title: "Философия конфиденциальности",
+          body: "Мы никогда не продаем и не передаем персональные данные пользователей рекламодателям.",
         },
         {
-          title: "Цели использования",
-          body: "Данные используются для выявления угроз, измерения производительности, устранения ошибок и улучшения сервиса.",
+          title: "Собираемые данные",
+          body: "Серверы автоматически фиксируют технические данные (анонимизированный IP-адрес, тип браузера, время) исключительно для обеспечения безопасности и оптимизации сервиса.",
         },
         {
-          title: "Защита и хранение",
-          body: "Доступ ограничивается, секреты не хранятся в открытом репозитории, а технические журналы сохраняются только необходимое время.",
+          title: "Файлы Cookie",
+          body: "Используются минимальные cookie-файлы для сохранения настроек (язык AZ/RU) и анонимной аналитики.",
         },
         {
-          title: "Третьи стороны",
-          body: "При переходе на сайт магазина действуют его правила конфиденциальности. qiymetleri.com не управляет обработкой данных на этих сайтах.",
+          title: "Прозрачность и сторонние ссылки",
+          body: "Исходный код открыт для аудита. При переходе на сайты магазинов действуют их собственные правила конфиденциальности.",
         },
       ],
-      cta: { label: "Вопрос о конфиденциальности", href: "mailto:privacy@qiymetleri.com" },
+      cta: { label: "Написать по конфиденциальности", href: "mailto:privacy@qiymetleri.com" },
     },
     "personal-data": {
-      eyebrow: "Правовая информация · 18 июля 2026",
-      title: "Защита персональных данных",
+      eyebrow: "Правовая информация",
+      title: "Персональные данные",
       intro:
-        "Персональные данные обрабатываются только при наличии понятной цели, в необходимом объеме и в соответствии с применимыми требованиями.",
+        "Обработка персональных данных осуществляется в соответствии с Законом Азербайджанской Республики 'О персональных данных' и стандартами GDPR.",
       sections: [
         {
-          title: "Права субъекта данных",
-          body: "Вы можете запросить сведения о хранящихся данных, их исправление или удаление при наличии законных оснований.",
+          title: "Принципы обработки",
+          body: "Данные обрабатываются исключительно в законных и заранее заявленных целях.",
         },
         {
-          title: "Правовое основание",
-          body: "Обработка может основываться на согласии, оказании сервиса, законном интересе в безопасности или юридической обязанности.",
+          title: "Защита данных",
+          body: "Для защиты данных применяются современные протоколы шифрования (SSL/TLS) и меры защиты информации.",
+        },
+        {
+          title: "Права пользователей",
+          body: "Вы имеете право запрашивать информацию о своих данных, требовать их исправления или полного удаления из нашей системы.",
         },
         {
           title: "Запросы",
-          body: "Для подтверждения личности при запросе могут потребоваться дополнительные сведения. Ответ предоставляется в установленный законом срок.",
+          body: "Направляйте запросы по персональным данным на privacy@qiymetleri.com.",
         },
       ],
       cta: { label: "Отправить запрос", href: "mailto:privacy@qiymetleri.com" },
     },
     consent: {
-      eyebrow: "Правовая информация · 18 июля 2026",
+      eyebrow: "Правовая информация",
       title: "Согласие на обработку данных",
       intro:
-        "Добровольно отправляя обращение, вы соглашаетесь на обработку предоставленных данных для подготовки ответа.",
+        "Используя qiymetleri.com или обращаясь к нам, вы даете согласие на обработку ваших данных в рамках настоящих правил.",
       sections: [
         {
+          title: "Правовая основа",
+          body: "Согласие формирует правовую основу взаимодействия пользователя с сервисом.",
+        },
+        {
           title: "Объем согласия",
-          body: "Имя, адрес электронной почты и иные сведения из обращения используются только для связи, поддержки и исполнения запроса.",
+          body: "Согласие распространяется на использование необходимых cookie, сохранение настроек и обработку технических логов.",
         },
         {
           title: "Добровольность",
-          body: "Предоставление данных добровольно. Без необходимых контактных сведений ответить на обращение может быть невозможно.",
+          body: "Предоставление данных является добровольным.",
         },
         {
           title: "Отзыв согласия",
-          body: "Согласие можно отозвать письмом на privacy@qiymetleri.com. Это не влияет на законность обработки до момента отзыва.",
+          body: "Вы можете отозвать согласие, очистив cookie в браузере или направив письмо на privacy@qiymetleri.com.",
         },
       ],
-      cta: { label: "Связаться с нами", href: "mailto:privacy@qiymetleri.com" },
+      cta: { label: "Написать в поддержку", href: "mailto:privacy@qiymetleri.com" },
     },
   },
 };
