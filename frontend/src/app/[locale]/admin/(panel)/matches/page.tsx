@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
+import { useToast } from "@/components/toast-context";
+
 type MatchProduct = {
   name: string;
   store_id: string;
@@ -46,6 +48,7 @@ function ProductList({ products }: { products: MatchProduct[] }) {
 }
 
 export default function MatchesPage() {
+  const { toast } = useToast();
   const [data, setData] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,15 +65,16 @@ export default function MatchesPage() {
     try {
       await adminFetch("/matches/refresh", { method: "POST" });
       await load();
+      toast("Təkliflər yeniləndi", "success");
     } catch (reason) {
-      setError(
-        reason instanceof Error ? reason.message : "Təkliflər yenilənmədi",
-      );
+      const msg = reason instanceof Error ? reason.message : "Təkliflər yenilənmədi";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [load]);
+  }, [load, toast]);
 
   useEffect(() => {
     let active = true;
@@ -101,8 +105,16 @@ export default function MatchesPage() {
     try {
       await adminFetch(`/matches/${id}/${action}`, { method: "POST" });
       await load();
+      toast(
+        action === "accept"
+          ? "Uyğunlaşdırma təklifi qəbul edildi"
+          : "Uyğunlaşdırma təklifi rədd edildi",
+        action === "accept" ? "success" : "info"
+      );
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Əməliyyat alınmadı");
+      const msg = reason instanceof Error ? reason.message : "Əməliyyat alınmadı";
+      setError(msg);
+      toast(msg, "error");
     }
   }
 
@@ -121,7 +133,7 @@ export default function MatchesPage() {
           type="button"
           onClick={() => void refresh()}
           disabled={refreshing || loading}
-          className="min-h-11 rounded-xl border bg-white px-4 text-sm font-bold disabled:cursor-wait disabled:opacity-60"
+          className="min-h-11 rounded-xl border bg-white px-4 text-sm font-bold transition-all cursor-pointer hover:bg-zinc-100 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
         >
           {refreshing || loading ? "Yenilənir..." : "Təklifləri yenilə"}
         </button>
@@ -144,13 +156,13 @@ export default function MatchesPage() {
               <div className="grid grid-cols-2 gap-3 sm:flex">
                 <button
                   onClick={() => review(m.id, "reject")}
-                  className="min-h-11 rounded-xl border px-4 text-sm font-bold"
+                  className="min-h-11 rounded-xl border px-4 text-sm font-bold transition-all cursor-pointer hover:bg-red-50 hover:text-red-700 hover:border-red-200 active:scale-[0.98]"
                 >
                   Rədd et
                 </button>
                 <button
                   onClick={() => review(m.id, "accept")}
-                  className="min-h-11 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white"
+                  className="min-h-11 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition-all cursor-pointer hover:bg-emerald-700 active:scale-[0.98]"
                 >
                   Qəbul et
                 </button>

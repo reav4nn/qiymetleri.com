@@ -1,6 +1,8 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
 import { adminFetch, formatDate } from "@/lib/admin-api";
+import { useToast } from "@/components/toast-context";
+
 type Item = {
   product_id: string;
   product_name: string;
@@ -11,19 +13,31 @@ type Item = {
   detected_at: string;
 };
 export default function AnomaliesPage() {
+  const { toast } = useToast();
   const [data, setData] = useState<Item[]>([]),
     [threshold, setThreshold] = useState(30),
-    [hours, setHours] = useState(24);
-  const load = () =>
-    adminFetch<Item[]>(`/anomalies?threshold=${threshold}&hours=${hours}`).then(
-      setData,
-    );
+    [hours, setHours] = useState(24),
+    [loading, setLoading] = useState(false);
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await adminFetch<Item[]>(
+        `/anomalies?threshold=${threshold}&hours=${hours}`,
+      );
+      setData(res);
+    } catch {
+      toast("Anomaliyalar yüklənmədi", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     void load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    load();
+    await load();
+    toast("Filtrlər tətbiq edildi", "success");
   }
   return (
     <>
@@ -56,8 +70,11 @@ export default function AnomaliesPage() {
             className="mt-1 h-11 w-full rounded-xl border px-3"
           />
         </label>
-        <button className="min-h-11 self-end rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white">
-          Tətbiq et
+        <button
+          disabled={loading}
+          className="min-h-11 self-end rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white transition-all cursor-pointer hover:bg-zinc-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Yüklənir..." : "Tətbiq et"}
         </button>
       </form>
       <div className="mt-5 overflow-x-auto rounded-2xl border bg-white">

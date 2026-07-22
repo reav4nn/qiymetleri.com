@@ -1,6 +1,8 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
+import { useToast } from "@/components/toast-context";
+
 type Product = {
   id: string;
   name: string;
@@ -11,6 +13,7 @@ type Product = {
 };
 type Data = { items: Product[]; total: number; page: number; per_page: number };
 export default function ProductsPage() {
+  const { toast } = useToast();
   const [data, setData] = useState<Data | null>(null),
     [q, setQ] = useState(""),
     [page, setPage] = useState(1),
@@ -29,15 +32,23 @@ export default function ProductsPage() {
   }
   async function remove(ids: string[]) {
     if (!confirm(`${ids.length} məhsul silinsin?`)) return;
-    await adminFetch(
-      ids.length === 1 ? `/products/${ids[0]}` : "/products/batch/delete",
-      {
-        method: "DELETE",
-        body: ids.length === 1 ? undefined : JSON.stringify(ids),
-      },
-    );
-    setSelected([]);
-    load();
+    try {
+      await adminFetch(
+        ids.length === 1 ? `/products/${ids[0]}` : "/products/batch/delete",
+        {
+          method: "DELETE",
+          body: ids.length === 1 ? undefined : JSON.stringify(ids),
+        },
+      );
+      setSelected([]);
+      load();
+      toast(
+        ids.length === 1 ? "Məhsul silindi" : `${ids.length} məhsul silindi`,
+        "success"
+      );
+    } catch {
+      toast("Silinmə zamanı xəta baş verdi", "error");
+    }
   }
   return (
     <>
@@ -49,14 +60,14 @@ export default function ProductsPage() {
           placeholder="Məhsul adı ilə axtar"
           className="h-12 min-w-0 flex-1 rounded-xl border bg-white px-4"
         />
-        <button className="rounded-xl bg-zinc-950 px-5 text-sm font-bold text-white">
+        <button className="rounded-xl bg-zinc-950 px-5 text-sm font-bold text-white transition-all cursor-pointer hover:bg-zinc-800 active:scale-[0.98]">
           Axtar
         </button>
       </form>
       {selected.length > 0 && (
         <button
           onClick={() => remove(selected)}
-          className="mt-4 min-h-11 rounded-xl bg-red-600 px-4 text-sm font-bold text-white"
+          className="mt-4 min-h-11 rounded-xl bg-red-600 px-4 text-sm font-bold text-white transition-all cursor-pointer hover:bg-red-700 active:scale-[0.98]"
         >
           Seçilənləri sil ({selected.length})
         </button>
@@ -89,6 +100,7 @@ export default function ProductsPage() {
                           : selected.filter((x) => x !== p.id),
                       )
                     }
+                    className="cursor-pointer"
                   />
                 </td>
                 <td className="max-w-sm p-3 font-semibold">{p.name}</td>
@@ -106,20 +118,25 @@ export default function ProductsPage() {
                     onClick={async () => {
                       const name = prompt("Yeni ad", p.name);
                       if (name) {
-                        await adminFetch(`/products/${p.id}`, {
-                          method: "PATCH",
-                          body: JSON.stringify({ name }),
-                        });
-                        load();
+                        try {
+                          await adminFetch(`/products/${p.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ name }),
+                          });
+                          load();
+                          toast("Məhsul adı yeniləndi", "success");
+                        } catch {
+                          toast("Yenilənmə zamanı xəta baş verdi", "error");
+                        }
                       }
                     }}
-                    className="mr-2 min-h-11 px-2 font-bold"
+                    className="mr-2 min-h-11 rounded-lg px-3.5 py-1.5 font-bold transition-all cursor-pointer hover:bg-zinc-100 active:scale-[0.98]"
                   >
                     Redaktə
                   </button>
                   <button
                     onClick={() => remove([p.id])}
-                    className="min-h-11 px-2 font-bold text-red-600"
+                    className="min-h-11 rounded-lg px-3.5 py-1.5 font-bold text-red-600 transition-all cursor-pointer hover:bg-red-50 active:scale-[0.98]"
                   >
                     Sil
                   </button>
@@ -133,7 +150,7 @@ export default function ProductsPage() {
         <button
           disabled={page === 1}
           onClick={() => setPage((x) => x - 1)}
-          className="min-h-11 rounded-xl border bg-white px-4 disabled:opacity-40"
+          className="min-h-11 rounded-xl border bg-white px-4 font-semibold transition-all cursor-pointer hover:bg-zinc-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Əvvəlki
         </button>
@@ -143,7 +160,7 @@ export default function ProductsPage() {
         <button
           disabled={!data || page * data.per_page >= data.total}
           onClick={() => setPage((x) => x + 1)}
-          className="min-h-11 rounded-xl border bg-white px-4 disabled:opacity-40"
+          className="min-h-11 rounded-xl border bg-white px-4 font-semibold transition-all cursor-pointer hover:bg-zinc-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Növbəti
         </button>

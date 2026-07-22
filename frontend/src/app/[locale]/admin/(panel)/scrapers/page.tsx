@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Play, RefreshCw } from "lucide-react";
 import { adminFetch, formatDate, statusLabel } from "@/lib/admin-api";
+import { useToast } from "@/components/toast-context";
 
 type Spider = {
   spider: string;
@@ -26,6 +27,7 @@ type Data = {
   scrapers: Spider[];
 };
 export default function ScrapersPage() {
+  const { toast } = useToast();
   const { locale } = useParams<{ locale: string }>();
   const [data, setData] = useState<Data | null>(null);
   const [busy, setBusy] = useState("");
@@ -51,8 +53,11 @@ export default function ScrapersPage() {
     try {
       await adminFetch(`/scrapers/${name}/runs`, { method: "POST" });
       await load();
+      toast(`${name} scraper-i işə salındı`, "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Xəta");
+      const msg = e instanceof Error ? e.message : "Xəta";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setBusy("");
     }
@@ -72,8 +77,11 @@ export default function ScrapersPage() {
         }),
       });
       await load();
+      toast(`${s.display_name} cədvəli saxlanıldı`, "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Xəta");
+      const msg = e instanceof Error ? e.message : "Xəta";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setBusy("");
     }
@@ -88,19 +96,24 @@ export default function ScrapersPage() {
           </p>
         </div>
         <button
+          disabled={busy === "all"}
           onClick={async () => {
             setBusy("all");
             try {
               await adminFetch("/scrapers/run-all", { method: "POST" });
               await load();
+              toast("Bütün scraperlər işə salındı", "success");
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Xəta";
+              toast(msg, "error");
             } finally {
               setBusy("");
             }
           }}
-          className="min-h-11 rounded-xl bg-red-600 px-5 text-sm font-bold text-white"
+          className="min-h-11 rounded-xl bg-red-600 px-5 text-sm font-bold text-white transition-all cursor-pointer hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Play className="mr-2 inline" size={17} />
-          Hamısını işə sal
+          {busy === "all" ? "İşə salınır..." : "Hamısını işə sal"}
         </button>
       </div>
       {error && (
@@ -161,7 +174,7 @@ export default function ScrapersPage() {
                 <select
                   name="type"
                   defaultValue={s.schedule_type}
-                  className="mt-1 h-11 w-full rounded-xl border bg-white px-3"
+                  className="mt-1 h-11 w-full rounded-xl border bg-white px-3 cursor-pointer"
                 >
                   <option value="interval">Interval</option>
                   <option value="cron">Cron</option>
@@ -185,34 +198,35 @@ export default function ScrapersPage() {
                   className="mt-1 h-11 w-full rounded-xl border px-3 font-mono"
                 />
               </label>
-              <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+              <label className="flex min-h-11 items-center gap-2 text-sm font-semibold cursor-pointer select-none">
                 <input
                   name="enabled"
                   type="checkbox"
                   defaultChecked={s.is_enabled}
+                  className="cursor-pointer"
                 />
                 Avtomatik run aktivdir
               </label>
               <button
                 disabled={busy === s.spider}
-                className="min-h-11 rounded-xl border px-4 text-sm font-bold"
+                className="min-h-11 rounded-xl border bg-white px-4 text-sm font-bold transition-all cursor-pointer hover:bg-zinc-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Cədvəli saxla
+                {busy === s.spider ? "Saxlanılır..." : "Cədvəli saxla"}
               </button>
             </form>
             <div className="mt-4 flex gap-3">
               <button
                 onClick={() => run(s.spider)}
                 disabled={busy === s.spider}
-                className="min-h-11 flex-1 rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white"
+                className="min-h-11 flex-1 rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white transition-all cursor-pointer hover:bg-zinc-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <RefreshCw className="mr-2 inline" size={16} />
-                İndi işə sal
+                <RefreshCw className={`mr-2 inline ${busy === s.spider ? "animate-spin" : ""}`} size={16} />
+                {busy === s.spider ? "İşə salınır..." : "İndi işə sal"}
               </button>
               {s.id && (
                 <Link
                   href={`/${locale}/admin/scrapers/runs/${s.id}`}
-                  className="grid min-h-11 place-items-center rounded-xl border px-4 text-sm font-bold"
+                  className="grid min-h-11 place-items-center rounded-xl border bg-white px-4 text-sm font-bold transition-all cursor-pointer hover:bg-zinc-100 active:scale-[0.98]"
                 >
                   Detallar
                 </Link>

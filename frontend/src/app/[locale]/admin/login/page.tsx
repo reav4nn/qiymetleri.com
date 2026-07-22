@@ -69,7 +69,7 @@ export default function AdminLoginPage() {
         )}
         <button
           disabled={loading}
-          className="mt-6 min-h-12 w-full rounded-xl bg-red-600 px-5 font-bold text-white hover:bg-red-700 disabled:opacity-60"
+          className="mt-6 min-h-12 w-full rounded-xl bg-red-600 px-5 font-bold text-white transition-all cursor-pointer hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Yoxlanılır…" : "Daxil ol"}
         </button>

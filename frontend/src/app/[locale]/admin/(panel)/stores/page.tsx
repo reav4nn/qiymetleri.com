@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { adminFetch, formatDate } from "@/lib/admin-api";
+import { useToast } from "@/components/toast-context";
+
 type Store = {
   id: string;
   name: string;
@@ -12,11 +14,36 @@ type Store = {
   last_price_update: string | null;
 };
 export default function StoresPage() {
+  const { toast } = useToast();
   const [data, setData] = useState<Store[]>([]);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
   const load = () => adminFetch<Store[]>("/stores").then(setData);
+
   useEffect(() => {
     void load();
   }, []);
+
+  async function toggleStore(s: Store) {
+    setTogglingId(s.id);
+    const newStatus = !s.is_active;
+    try {
+      await adminFetch(`/stores/${s.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_active: newStatus }),
+      });
+      await load();
+      toast(
+        `${s.name} mağazası ${newStatus ? "aktivləşdirildi" : "deaktiv edildi"}`,
+        "success"
+      );
+    } catch {
+      toast("Mağaza statusunu dəyişərkən xəta baş verdi", "error");
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   return (
     <>
       <h1 className="text-2xl font-extrabold sm:text-3xl">Mağazalar</h1>
@@ -32,22 +59,26 @@ export default function StoresPage() {
                 <a
                   href={s.base_url}
                   target="_blank"
-                  className="text-xs text-zinc-500"
+                  rel="noreferrer"
+                  className="text-xs text-zinc-500 hover:text-zinc-800 underline transition-colors cursor-pointer"
                 >
                   {s.base_url}
                 </a>
               </div>
               <button
-                onClick={async () => {
-                  await adminFetch(`/stores/${s.id}`, {
-                    method: "PATCH",
-                    body: JSON.stringify({ is_active: !s.is_active }),
-                  });
-                  load();
-                }}
-                className={`min-h-11 rounded-xl px-4 text-sm font-bold ${s.is_active ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-600"}`}
+                disabled={togglingId === s.id}
+                onClick={() => toggleStore(s)}
+                className={`min-h-11 rounded-xl px-4 text-sm font-bold transition-all cursor-pointer hover:opacity-80 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
+                  s.is_active
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                }`}
               >
-                {s.is_active ? "Aktiv" : "Deaktiv"}
+                {togglingId === s.id
+                  ? "Yenilənir..."
+                  : s.is_active
+                  ? "Aktiv"
+                  : "Deaktiv"}
               </button>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
