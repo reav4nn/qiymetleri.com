@@ -53,7 +53,7 @@ async def list_products(
     store_id: str | None = None,
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),
-    sort_by: str = Query("name", pattern="^(name|price_asc|price_desc)$"),
+    sort_by: str = Query("name", pattern="^(name|price_asc|price_desc|popular)$"),
     chip: str | None = None,
     size_mm: int | None = Query(None, ge=1),
     db: AsyncSession = Depends(get_db),

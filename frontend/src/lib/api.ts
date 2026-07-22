@@ -106,7 +106,7 @@ function queryString(query: CatalogueQuery, includePaging = true): string {
 export async function getHomeData(): Promise<HomeData> {
   try {
     const [productsResponse, filtersResponse] = await Promise.all([
-      fetch(`${API_BASE_URL}/api/v1/products?per_page=8&sort_by=price_asc`, {
+      fetch(`${API_BASE_URL}/api/v1/products?per_page=8&sort_by=popular`, {
         next: { revalidate: 300 },
       }),
       fetch(`${API_BASE_URL}/api/v1/filters`, { next: { revalidate: 600 } }),

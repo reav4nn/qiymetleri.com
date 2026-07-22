@@ -202,6 +202,29 @@ async def get_products(
     if use_fuzzy and sort_by == "name":
         # When searching, sort by relevance instead of alphabetical
         grouped_items.sort(key=lambda x: -x["_score"])
+    elif sort_by == "popular":
+        # Sort items by store count, variant count, price presence and price
+        grouped_items.sort(
+            key=lambda x: (
+                -x["store_count"],
+                -x["variant_count"],
+                x["lowest_price"] is None,
+                -(x["lowest_price"] or 0),
+            )
+        )
+        # Interleave across categories to ensure home page category diversity
+        by_category: dict[str, list[dict]] = {}
+        for item in grouped_items:
+            cat = item["category"] or "other"
+            by_category.setdefault(cat, []).append(item)
+        interleaved: list[dict] = []
+        cat_lists = list(by_category.values())
+        max_len = max((len(lst) for lst in cat_lists), default=0)
+        for i in range(max_len):
+            for lst in cat_lists:
+                if i < len(lst):
+                    interleaved.append(lst[i])
+        grouped_items = interleaved
     elif sort_by == "price_asc":
         grouped_items.sort(
             key=lambda x: (x["lowest_price"] is None, x["lowest_price"] or 0)
