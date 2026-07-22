@@ -160,6 +160,7 @@ services:
       PROXY_USERNAME: ${PROXY_USERNAME:-}
       PROXY_PASSWORD: ${PROXY_PASSWORD:-}
       PROXY_COUNTRY: ${PROXY_COUNTRY:-az}
+      COMPARISON_WRITE_MODE: ${COMPARISON_WRITE_MODE:-off}
     networks:
       - internal
       - public
@@ -192,6 +193,7 @@ services:
       PROXY_USERNAME: ${PROXY_USERNAME:-}
       PROXY_PASSWORD: ${PROXY_PASSWORD:-}
       PROXY_COUNTRY: ${PROXY_COUNTRY:-az}
+      COMPARISON_WRITE_MODE: ${COMPARISON_WRITE_MODE:-off}
     networks:
       - internal
       - public

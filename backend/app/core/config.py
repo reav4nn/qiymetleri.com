@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
+    COMPARISON_WRITE_MODE: str = "off"
+    CATALOGUE_MODEL_READ: str = "legacy"
+    COMPARISON_API_ENABLED: bool = False
 
     # PostgreSQL
     POSTGRES_USER: str = "qiymetleri"

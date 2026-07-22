@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DashboardStats(BaseModel):
@@ -88,3 +90,17 @@ class RecentProduct(BaseModel):
     in_stock: bool | None
     store_name: str
     store_id: str
+
+
+class ProductModelCreate(BaseModel):
+    category_id: str = Field(min_length=1, max_length=100, pattern=r"^[a-z0-9_-]+$")
+    brand: str = Field(min_length=1, max_length=100)
+    name: str = Field(min_length=1, max_length=300)
+    status: Literal["provisional", "verified"] = "provisional"
+    reason: str = Field(min_length=3, max_length=2000)
+
+
+class ModelMappingResolution(BaseModel):
+    action: Literal["assign", "reject"]
+    target_model_id: UUID | None = None
+    reason: str = Field(min_length=3, max_length=2000)

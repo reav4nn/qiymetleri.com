@@ -4,6 +4,7 @@ import re
 import subprocess
 import time
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import redis
@@ -112,7 +113,7 @@ def dispatch_due_spiders() -> dict:
         for row in rows:
             if cache.exists(f"scraper:lock:{row.spider}"):
                 continue
-            task_id = app.uuid()
+            task_id = str(uuid4())
             run_id = connection.execute(text("""
                 INSERT INTO scraper_runs (task_id, spider, trigger, status, started_at)
                 VALUES (:task_id, :spider, 'scheduled', 'queued', :now) RETURNING id

@@ -14,6 +14,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import get_settings
 from app.core.database import get_db
+from app.api.dependencies import require_admin
 from app.schemas.admin import (
     DashboardStats,
     PriceAnomaly,
@@ -23,6 +24,8 @@ from app.schemas.admin import (
     StoreHealth,
     TaskResult,
     TriggerResponse,
+    ModelMappingResolution,
+    ProductModelCreate,
 )
 from app.services.admin_service import (
     get_dashboard_stats,
@@ -31,9 +34,13 @@ from app.services.admin_service import (
     get_price_anomalies,
     get_recent_products,
     get_store_health,
-    review_match,
 )
-from app.services.matching_service import generate_match_suggestions
+from app.services.model_mapping_service import (
+    create_product_model,
+    list_mapping_reviews,
+    list_product_models,
+    resolve_mapping_review,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -495,8 +502,11 @@ async def pending_matches(
 
 @router.post("/matches/refresh")
 async def refresh_matches(db: AsyncSession = Depends(get_db)):
-    """Generate fresh cross-store suggestions for manual review."""
-    return await generate_match_suggestions(db)
+    """Legacy family matching is read-only after canonical model backfill."""
+    raise HTTPException(
+        status_code=410,
+        detail="Legacy match generation is disabled; use model mapping reviews",
+    )
 
 
 @router.post("/matches/{match_id}/{action}")
@@ -505,14 +515,84 @@ async def review_product_match(
     action: str,
     db: AsyncSession = Depends(get_db),
 ):
-    """Accept or reject a product match."""
-    if action not in ("accept", "reject"):
-        raise HTTPException(
-            status_code=400, detail="Action must be 'accept' or 'reject'"
+    """Legacy family matching is read-only after canonical model backfill."""
+    raise HTTPException(
+        status_code=410,
+        detail="Legacy match mutation is disabled; use model mapping reviews",
+    )
+
+
+@router.get("/product-models")
+async def product_models(
+    category_id: str | None = None,
+    status: str | None = Query(
+        default=None, pattern="^(provisional|verified|archived)$"
+    ),
+    q: str | None = Query(default=None, min_length=2, max_length=100),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_product_models(
+        db,
+        category_id=category_id,
+        status=status,
+        query=q,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.post("/product-models", status_code=201)
+async def add_product_model(
+    payload: ProductModelCreate,
+    actor: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        return await create_product_model(
+            db,
+            category_id=payload.category_id,
+            brand=payload.brand,
+            name=payload.name,
+            status=payload.status,
+            actor=actor,
+            reason=payload.reason,
         )
-    result = await review_match(db, match_id, action)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/model-mapping-reviews")
+async def mapping_reviews(
+    status: str = Query(default="pending", pattern="^(pending|accepted|rejected)$"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_mapping_reviews(db, status=status, limit=limit, offset=offset)
+
+
+@router.post("/model-mapping-reviews/{review_id}/resolve")
+async def resolve_model_mapping_review(
+    review_id: UUID,
+    payload: ModelMappingResolution,
+    actor: str = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        result = await resolve_mapping_review(
+            db,
+            review_id=review_id,
+            action=payload.action,
+            target_model_id=payload.target_model_id,
+            actor=actor,
+            reason=payload.reason,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if result is None:
-        raise HTTPException(status_code=404, detail="Match not found")
+        raise HTTPException(status_code=404, detail="Mapping review not found")
     return result
 
 

@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -15,6 +19,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.comparison import ProductModel
 
 
 class Store(Base):
@@ -53,10 +60,22 @@ class Product(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    model_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("product_models.id", ondelete="RESTRICT"),
+        index=True,
+    )
+    is_default_variant: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    price_revision: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default="1"
+    )
 
     current_prices: Mapped[list["CurrentPrice"]] = relationship(
         back_populates="product", lazy="selectin"
     )
+    model: Mapped[ProductModel | None] = relationship(back_populates="products")
 
 
 class CurrentPrice(Base):

@@ -1,4 +1,22 @@
 from app.models.product import CurrentPrice, PriceHistory, Product, Store
+from app.models.comparison import (
+    CanonicalSpecValue,
+    Category,
+    ComparisonPage,
+    MeasurementUnit,
+    ModelBackfillRun,
+    ModelMappingReview,
+    ProductModel,
+    ProductModelSlugAlias,
+    SourceDocument,
+    SpecAuditEvent,
+    SpecDefinition,
+    SpecGroup,
+    SpecIngestionRun,
+    SpecModerationCase,
+    SpecObservation,
+    SpecOption,
+)
 from app.models.scraper import ScraperConfig, ScraperRun, ScraperRunCategory
 
 __all__ = [
@@ -9,4 +27,20 @@ __all__ = [
     "ScraperConfig",
     "ScraperRun",
     "ScraperRunCategory",
+    "Category",
+    "ProductModel",
+    "ProductModelSlugAlias",
+    "MeasurementUnit",
+    "SpecGroup",
+    "SpecDefinition",
+    "SpecOption",
+    "SourceDocument",
+    "SpecObservation",
+    "CanonicalSpecValue",
+    "SpecAuditEvent",
+    "SpecModerationCase",
+    "SpecIngestionRun",
+    "ModelMappingReview",
+    "ComparisonPage",
+    "ModelBackfillRun",
 ]
