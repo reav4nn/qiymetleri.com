@@ -1,0 +1,64 @@
+{
+  "contract_version": 1,
+  "category_id": "smartphones",
+  "fixture_only": true,
+  "cases": [
+    {
+      "id": "numeric-tie-within-tolerance",
+      "kind": "tie",
+      "definition_key": "display.refresh_rate_hz",
+      "inputs": {
+        "left": 120,
+        "right": 120
+      },
+      "expected": {
+        "relation": "tie"
+      }
+    },
+    {
+      "id": "missing-value-is-not-a-loss",
+      "kind": "missing",
+      "definition_key": "camera.rear.telephoto.optical_zoom_x",
+      "inputs": {
+        "left": null,
+        "right": 3
+      },
+      "expected": {
+        "relation": "insufficient_data"
+      }
+    },
+    {
+      "id": "variant-value-overrides-model-value",
+      "kind": "variant_override",
+      "definition_key": "battery.capacity_mah",
+      "inputs": {
+        "model_value": 5000,
+        "variant_value": 4800
+      },
+      "expected": {
+        "effective_value": 4800
+      }
+    },
+    {
+      "id": "official-retailer-disagreement-blocks-publish",
+      "kind": "source_conflict",
+      "definition_key": "battery.capacity_mah",
+      "inputs": {
+        "observations": [
+          {
+            "source_type": "official",
+            "value": 5000
+          },
+          {
+            "source_type": "retailer",
+            "value": 5100
+          }
+        ]
+      },
+      "expected": {
+        "blocking_conflict": true
+      }
+    }
+  ]
+}
+
