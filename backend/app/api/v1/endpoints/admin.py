@@ -27,6 +27,10 @@ from app.schemas.admin import (
     ModelMappingResolution,
     ProductModelCreate,
     ProductModelMerge,
+    SpecCaseResolution,
+    SpecImportCommit,
+    SpecImportPayload,
+    OfficialSpecIngest,
 )
 from app.services.admin_service import (
     get_dashboard_stats,
@@ -42,6 +46,21 @@ from app.services.model_mapping_service import (
     list_product_models,
     merge_product_models,
     resolve_mapping_review,
+)
+from app.services.spec_ingestion_service import (
+    SpecValueError,
+    calculate_model_readiness,
+    commit_import_rows,
+    make_import_token,
+    resolve_case,
+    validate_import_rows,
+    verify_import_token,
+    ingest_document,
+    ObservationInput,
+)
+from shared.spec_ingestion import (
+    OFFICIAL_ADAPTERS,
+    SpecValueError as SharedSpecValueError,
 )
 
 logger = logging.getLogger(__name__)
@@ -89,6 +108,327 @@ class ScheduleUpdate(BaseModel):
 
 class StoreUpdate(BaseModel):
     is_active: bool
+
+
+@router.get("/specs/cases")
+async def list_spec_cases(
+    status: str = Query("open", pattern="^(open|assigned|resolved|dismissed|all)$"),
+    case_type: str | None = Query(
+        None, pattern="^(mapping|conflict|incomplete|stale)$"
+    ),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(25, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    clauses = ["1=1"]
+    params: dict = {"limit": per_page, "offset": (page - 1) * per_page}
+    if status != "all":
+        clauses.append("c.status=:status")
+        params["status"] = status
+    if case_type:
+        clauses.append("c.case_type=:case_type")
+        params["case_type"] = case_type
+    where = " AND ".join(clauses)
+    total = int(
+        await db.scalar(
+            sa_text(f"SELECT COUNT(*) FROM spec_moderation_cases c WHERE {where}"),
+            params,
+        )
+        or 0
+    )
+    rows = (
+        await db.execute(
+            sa_text(f"""
+                SELECT c.*, d.key AS definition_key, d.labels AS definition_labels,
+                       pm.brand AS model_brand, pm.name AS model_name,
+                       cv.selected_observation_id,
+                       COALESCE((
+                           SELECT jsonb_agg(jsonb_build_object(
+                               'id', o.id, 'status', o.status,
+                               'original_value', o.original_value,
+                               'original_unit', o.original_unit,
+                               'source_type', sd.source_type,
+                               'source_url', sd.source_url,
+                               'observed_at', o.observed_at,
+                               'confidence', o.confidence
+                           ) ORDER BY o.observed_at DESC)
+                           FROM spec_observations o
+                           JOIN source_documents sd ON sd.id=o.source_document_id
+                           WHERE o.definition_id=c.definition_id
+                             AND ((c.entity_type='model' AND o.model_id::text=c.entity_id)
+                               OR (c.entity_type='product' AND o.product_id::text=c.entity_id))
+                       ), '[]'::jsonb) AS observations
+                FROM spec_moderation_cases c
+                LEFT JOIN spec_definitions d ON d.id=c.definition_id
+                LEFT JOIN product_models pm
+                    ON c.entity_type='model' AND pm.id::text=c.entity_id
+                LEFT JOIN canonical_spec_values cv
+                    ON cv.definition_id=c.definition_id
+                   AND ((c.entity_type='model' AND cv.model_id::text=c.entity_id)
+                     OR (c.entity_type='product' AND cv.product_id::text=c.entity_id))
+                WHERE {where}
+                ORDER BY (c.due_at < NOW()) DESC, c.created_at
+                LIMIT :limit OFFSET :offset
+            """),
+            params,
+        )
+    ).all()
+    return {
+        "items": [dict(row._mapping) for row in rows],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+    }
+
+
+@router.post("/specs/ingest-official")
+async def ingest_official_specs(
+    payload: OfficialSpecIngest,
+    db: AsyncSession = Depends(get_db),
+    actor: str = Depends(require_admin),
+):
+    adapter = OFFICIAL_ADAPTERS.get(payload.adapter)
+    if not adapter:
+        raise HTTPException(status_code=422, detail="Official adapter tanınmır")
+    try:
+        manufacturer_domain = adapter.validate_url(payload.source_url)
+        parsed = adapter.parse(payload.payload)
+        observations = [
+            ObservationInput(
+                definition_key=item.key,
+                value=item.value,
+                unit=item.unit,
+                confidence=item.confidence,
+                model_id=payload.model_id,
+            )
+            for item in parsed
+        ]
+        result = await ingest_document(
+            db,
+            source_type="official",
+            source_url=payload.source_url,
+            parser_name=adapter.name,
+            parser_version=adapter.version,
+            raw_payload=payload.payload,
+            observations=observations,
+            actor=actor,
+            reason=f"Official manufacturer ingestion via {adapter.name}",
+            manufacturer_domain=manufacturer_domain,
+        )
+        await db.commit()
+        return {
+            "document_id": result.document_id,
+            "idempotent": result.idempotent,
+            "accepted": result.accepted,
+            "rejected": result.rejected,
+            "conflicts": result.conflicts,
+        }
+    except (SpecValueError, SharedSpecValueError) as exc:
+        await db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/specs/cases/{case_id}/resolve")
+async def resolve_spec_case(
+    case_id: UUID,
+    payload: SpecCaseResolution,
+    db: AsyncSession = Depends(get_db),
+    actor: str = Depends(require_admin),
+):
+    try:
+        result = await resolve_case(
+            db,
+            case_id=case_id,
+            action=payload.action,
+            observation_id=payload.observation_id,
+            reason=payload.reason,
+            actor=actor,
+        )
+        await db.commit()
+        return result
+    except SpecValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/specs/imports/validate")
+async def validate_spec_import(
+    payload: SpecImportPayload,
+    db: AsyncSession = Depends(get_db),
+):
+    raw_size = len(payload.model_dump_json().encode())
+    if raw_size > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Import 10 MB limitini keçir")
+    try:
+        diff = await validate_import_rows(db, payload.rows)
+    except SpecValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    token = make_import_token(
+        payload.rows, settings.SPEC_IMPORT_SIGNING_KEY, datetime.now(timezone.utc)
+    )
+    return {"token": token, "expires_in_seconds": 1800, "diff": diff}
+
+
+@router.post("/specs/imports/{token}/commit")
+async def commit_spec_import(
+    token: str,
+    payload: SpecImportCommit,
+    db: AsyncSession = Depends(get_db),
+    actor: str = Depends(require_admin),
+):
+    try:
+        verify_import_token(
+            token,
+            payload.rows,
+            settings.SPEC_IMPORT_SIGNING_KEY,
+            datetime.now(timezone.utc),
+        )
+        await validate_import_rows(db, payload.rows)
+        result = await commit_import_rows(
+            db, payload.rows, actor=actor, reason=payload.reason
+        )
+        await db.commit()
+        return result
+    except SpecValueError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/specs/models/{model_id}/completeness")
+async def model_spec_completeness(
+    model_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        return await calculate_model_readiness(db, model_id, persist=False)
+    except SpecValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/specs/readiness/scan")
+async def scan_spec_readiness(
+    limit: int = Query(500, ge=1, le=5000),
+    db: AsyncSession = Depends(get_db),
+    actor: str = Depends(require_admin),
+):
+    queued = (
+        (
+            await db.execute(
+                sa_text("""
+                SELECT model_id FROM spec_readiness_queue
+                ORDER BY requested_at LIMIT :limit FOR UPDATE SKIP LOCKED
+            """),
+                {"limit": limit},
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not queued:
+        queued = (
+            (
+                await db.execute(
+                    sa_text("""
+                    SELECT id FROM product_models
+                    WHERE category_id='smartphones' AND status<>'archived'
+                    ORDER BY updated_at LIMIT :limit
+                """),
+                    {"limit": limit},
+                )
+            )
+            .scalars()
+            .all()
+        )
+    ready = 0
+    for model_id in queued:
+        result = await calculate_model_readiness(db, model_id, persist=True)
+        ready += int(result["is_comparison_ready"])
+    await db.commit()
+    return {"processed": len(queued), "ready": ready, "actor": actor}
+
+
+@router.get("/specs/runs")
+async def list_spec_runs(
+    status: str | None = Query(None, pattern="^(queued|running|success|failed)$"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(25, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    where = "WHERE status=:status" if status else ""
+    params = {
+        "status": status,
+        "limit": per_page,
+        "offset": (page - 1) * per_page,
+    }
+    rows = (
+        await db.execute(
+            sa_text(f"""
+                SELECT * FROM spec_ingestion_runs {where}
+                ORDER BY id DESC LIMIT :limit OFFSET :offset
+            """),
+            params,
+        )
+    ).all()
+    total = int(
+        await db.scalar(
+            sa_text(f"SELECT COUNT(*) FROM spec_ingestion_runs {where}"), params
+        )
+        or 0
+    )
+    return {"items": [dict(row._mapping) for row in rows], "total": total}
+
+
+@router.post("/specs/runs/{run_id}/retry")
+async def retry_spec_run(
+    run_id: int,
+    reason: str = Body(embed=True, min_length=3, max_length=2000),
+    db: AsyncSession = Depends(get_db),
+    actor: str = Depends(require_admin),
+):
+    row = (
+        await db.execute(
+            sa_text("""
+                SELECT * FROM spec_ingestion_runs
+                WHERE id=:id AND status='failed' FOR UPDATE
+            """),
+            {"id": run_id},
+        )
+    ).first()
+    if not row:
+        raise HTTPException(status_code=409, detail="Retry üçün failed run tapılmadı")
+    task_id = str(uuid4())
+    await db.execute(
+        sa_text("""
+            UPDATE spec_ingestion_runs SET task_id=:task_id, status='queued',
+                attempt=1, error=NULL, started_at=NULL, finished_at=NULL
+            WHERE id=:id
+        """),
+        {"task_id": task_id, "id": run_id},
+    )
+    await db.execute(
+        sa_text("""
+            INSERT INTO spec_audit_events
+                (actor, action, entity_type, entity_id, reason, before, after)
+            VALUES
+                (:actor, 'ingestion.retry', 'spec_ingestion_run', :entity_id,
+                 :reason, jsonb_build_object('status','failed'),
+                 jsonb_build_object('status','queued','task_id',:task_id))
+        """),
+        {
+            "actor": actor,
+            "entity_id": str(run_id),
+            "reason": reason,
+            "task_id": task_id,
+        },
+    )
+    await db.commit()
+    celery_app.send_task(
+        "tasks.run_official_adapter",
+        args=[row.source_adapter, run_id],
+        task_id=task_id,
+        queue="specs",
+    )
+    return {"run_id": run_id, "task_id": task_id, "status": "queued"}
 
 
 @router.get("/scrapers")

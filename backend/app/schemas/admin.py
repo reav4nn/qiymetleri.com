@@ -109,3 +109,24 @@ class ModelMappingResolution(BaseModel):
     action: Literal["assign", "reject"]
     target_model_id: UUID | None = None
     reason: str = Field(min_length=3, max_length=2000)
+
+
+class SpecCaseResolution(BaseModel):
+    action: Literal["accept", "reject", "dismiss"]
+    observation_id: UUID | None = None
+    reason: str = Field(min_length=3, max_length=2000)
+
+
+class SpecImportPayload(BaseModel):
+    rows: list[dict] = Field(min_length=1, max_length=5000)
+
+
+class SpecImportCommit(SpecImportPayload):
+    reason: str = Field(min_length=3, max_length=2000)
+
+
+class OfficialSpecIngest(BaseModel):
+    adapter: str = Field(min_length=1, max_length=100)
+    source_url: str = Field(min_length=1, max_length=2000)
+    model_id: UUID
+    payload: dict

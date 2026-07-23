@@ -24,6 +24,8 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      - key: SPEC_IMPORT_SIGNING_KEY
+        sync: false
 
   # Celery worker (scraper task queue)
   - type: worker
@@ -32,7 +34,7 @@ services:
     dockerfilePath: ./scraper/Dockerfile
     dockerContext: .
     plan: free
-    startCommand: celery -A celery_app worker --loglevel=info --concurrency=1 -Q scraping,celery
+    startCommand: celery -A celery_app worker --loglevel=info --concurrency=1 -Q scraping,specs,celery
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -46,6 +48,14 @@ services:
         sync: false
       - key: PROXY_ENABLED
         value: "false"
+      - key: INTERNAL_API_URL
+        value: https://qiymetleri-backend.onrender.com
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: OFFICIAL_SPEC_SOURCES
+        sync: false
 
   - type: worker
     name: qiymetleri-celery-beat
@@ -64,4 +74,12 @@ services:
       - key: CELERY_BROKER_URL
         sync: false
       - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: INTERNAL_API_URL
+        value: https://qiymetleri-backend.onrender.com
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: OFFICIAL_SPEC_SOURCES
         sync: false

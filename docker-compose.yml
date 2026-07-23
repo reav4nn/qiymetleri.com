@@ -68,6 +68,7 @@ services:
       CACHE_REDIS_URL: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/0
       CELERY_BROKER_URL: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/1
       CELERY_RESULT_BACKEND: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/2
+      SPEC_IMPORT_SIGNING_KEY: ${SPEC_IMPORT_SIGNING_KEY:-local-development-import-key-change-me}
     ports:
       - "8000:8000"
     networks:
@@ -180,7 +181,7 @@ services:
       context: .
       dockerfile: scraper/Dockerfile
     container_name: qiymetleri_celery_worker
-    command: celery -A celery_app worker --loglevel=info --pool=solo -Q scraping,celery
+    command: celery -A celery_app worker --loglevel=info --pool=solo -Q scraping,specs,celery
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-qiymetleri}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-qiymetleri}
@@ -194,6 +195,10 @@ services:
       PROXY_PASSWORD: ${PROXY_PASSWORD:-}
       PROXY_COUNTRY: ${PROXY_COUNTRY:-az}
       COMPARISON_WRITE_MODE: ${COMPARISON_WRITE_MODE:-off}
+      INTERNAL_API_URL: http://backend:8000
+      ADMIN_USER: ${ADMIN_USER:?Set ADMIN_USER in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      OFFICIAL_SPEC_SOURCES: ${OFFICIAL_SPEC_SOURCES:-[]}
     networks:
       - internal
       - public
@@ -218,6 +223,10 @@ services:
       CACHE_REDIS_URL: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/0
       CELERY_BROKER_URL: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/1
       CELERY_RESULT_BACKEND: redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/2
+      INTERNAL_API_URL: http://backend:8000
+      ADMIN_USER: ${ADMIN_USER:?Set ADMIN_USER in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      OFFICIAL_SPEC_SOURCES: ${OFFICIAL_SPEC_SOURCES:-[]}
     networks:
       - internal
     depends_on:

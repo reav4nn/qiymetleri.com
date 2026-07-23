@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     COMPARISON_WRITE_MODE: str = "off"
     CATALOGUE_MODEL_READ: str = "legacy"
     COMPARISON_API_ENABLED: bool = False
+    SPEC_IMPORT_SIGNING_KEY: str = "CHANGE_ME_SPEC_IMPORT_KEY"
 
     # PostgreSQL
     POSTGRES_USER: str = "qiymetleri"

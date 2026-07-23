@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   Network,
+  ShieldCheck,
   Store,
   X,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const nav = [
   ["/stores", "Mağazalar", Store],
   ["/anomalies", "Anomaliyalar", AlertTriangle],
   ["/matches", "Uyğunlaşdırma", Network],
+  ["/specs", "Spesifikasiya", ShieldCheck],
 ] as const;
 
 export function AdminShell({

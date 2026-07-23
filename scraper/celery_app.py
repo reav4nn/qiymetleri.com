@@ -1,6 +1,7 @@
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 
 REDIS_FALLBACK = os.getenv("REDIS_URL", "redis://redis:6379/0")
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_FALLBACK)
@@ -29,4 +30,13 @@ app.conf.update(
 
 app.conf.beat_schedule = {
     "dispatch-due-spiders": {"task": "tasks.dispatch_due_spiders", "schedule": 60.0},
+    "daily-spec-readiness": {
+        "task": "tasks.run_readiness_scan",
+        "schedule": crontab(hour=2, minute=0),
+    },
+    "weekly-official-spec-refetch": {
+        "task": "tasks.run_official_adapter",
+        "args": ["all"],
+        "schedule": crontab(hour=3, minute=0, day_of_week="sun"),
+    },
 }

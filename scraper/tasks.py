@@ -3,7 +3,15 @@ import os
 import re
 import subprocess
 import time
+import json
+import base64
 from datetime import datetime, timedelta, timezone
+from urllib.error import HTTPError, URLError
+from urllib.request import (
+    HTTPRedirectHandler,
+    Request,
+    build_opener,
+)
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -12,10 +20,169 @@ from croniter import croniter
 from sqlalchemy import create_engine, text
 
 from celery_app import app
+from shared.spec_ingestion import OFFICIAL_ADAPTERS
 
 logger = logging.getLogger(__name__)
 SPIDER_ORDER = ("kontakt_home", "baku_electronics", "irshad_electronics", "ispace")
 VALID_SPIDERS = frozenset(SPIDER_ORDER)
+
+
+class _RejectRedirects(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise HTTPError(newurl, code, "redirects are disabled for official sources", headers, fp)
+
+
+def _admin_request(path: str, payload: dict | None = None) -> dict:
+    base_url = os.getenv("INTERNAL_API_URL", "http://backend:8000").rstrip("/")
+    username = os.environ["ADMIN_USER"]
+    password = os.environ["ADMIN_PASSWORD"]
+    authorization = base64.b64encode(f"{username}:{password}".encode()).decode()
+    data = json.dumps(payload).encode() if payload is not None else None
+    request = Request(
+        f"{base_url}/api/v1/admin{path}",
+        data=data,
+        headers={
+            "Authorization": f"Basic {authorization}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with build_opener(_RejectRedirects()).open(request, timeout=60) as response:
+        return json.loads(response.read(2 * 1024 * 1024))
+
+
+def _official_sources() -> list[dict]:
+    try:
+        sources = json.loads(os.getenv("OFFICIAL_SPEC_SOURCES", "[]"))
+    except json.JSONDecodeError as exc:
+        raise ValueError("OFFICIAL_SPEC_SOURCES must be valid JSON") from exc
+    if not isinstance(sources, list):
+        raise ValueError("OFFICIAL_SPEC_SOURCES must be a JSON array")
+    return sources
+
+
+def _fetch_official_payload(adapter_name: str, source_url: str) -> dict:
+    adapter = OFFICIAL_ADAPTERS.get(adapter_name)
+    if not adapter:
+        raise ValueError(f"Unknown official adapter: {adapter_name}")
+    adapter.validate_url(source_url)
+    request = Request(
+        source_url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "qiymetleri-spec-ingestion/1.0",
+        },
+    )
+    with build_opener(_RejectRedirects()).open(request, timeout=45) as response:
+        if response.headers.get_content_type() not in {
+            "application/json",
+            "application/ld+json",
+        }:
+            raise ValueError("official source did not return JSON")
+        payload = json.loads(response.read(5 * 1024 * 1024 + 1))
+    if not isinstance(payload, dict):
+        raise ValueError("official source JSON root must be an object")
+    return payload
+
+
+@app.task(bind=True, max_retries=3, name="tasks.run_official_adapter")
+def run_official_adapter(
+    self, adapter_name: str = "all", run_id: int | None = None
+) -> dict:
+    sources = [
+        source
+        for source in _official_sources()
+        if adapter_name == "all" or source.get("adapter") == adapter_name
+    ]
+    if not sources:
+        raise ValueError(f"No configured official sources for adapter: {adapter_name}")
+    engine = create_engine(_database_url())
+    if run_id is None:
+        with engine.begin() as connection:
+            run_id = connection.execute(
+                text("""
+                    INSERT INTO spec_ingestion_runs
+                        (task_id, source_adapter, status, attempt, started_at)
+                    VALUES (:task_id, :adapter, 'running', 1, NOW()) RETURNING id
+                """),
+                {"task_id": self.request.id, "adapter": adapter_name},
+            ).scalar_one()
+    else:
+        with engine.begin() as connection:
+            connection.execute(
+                text("""
+                    UPDATE spec_ingestion_runs SET status='running',
+                        attempt=:attempt, started_at=NOW(), finished_at=NULL
+                    WHERE id=:id
+                """),
+                {"attempt": min(self.request.retries + 1, 3), "id": run_id},
+            )
+    documents = observations = errors = 0
+    try:
+        for source in sources:
+            payload = _fetch_official_payload(source["adapter"], source["url"])
+            result = _admin_request(
+                "/specs/ingest-official",
+                {
+                    "adapter": source["adapter"],
+                    "source_url": source["url"],
+                    "model_id": source["model_id"],
+                    "payload": payload,
+                },
+            )
+            documents += int(not result.get("idempotent"))
+            observations += (
+                int(result.get("accepted", 0))
+                + int(result.get("rejected", 0))
+                + int(result.get("conflicts", 0))
+            )
+        with engine.begin() as connection:
+            connection.execute(
+                text("""
+                    UPDATE spec_ingestion_runs SET status='success',
+                        documents_count=:documents, observations_count=:observations,
+                        errors_count=:errors, error=NULL, finished_at=NOW()
+                    WHERE id=:id
+                """),
+                {
+                    "documents": documents,
+                    "observations": observations,
+                    "errors": errors,
+                    "id": run_id,
+                },
+            )
+        return {
+            "run_id": run_id,
+            "status": "success",
+            "documents": documents,
+            "observations": observations,
+        }
+    except (HTTPError, URLError, TimeoutError, ValueError, KeyError) as exc:
+        errors += 1
+        with engine.begin() as connection:
+            connection.execute(
+                text("""
+                    UPDATE spec_ingestion_runs SET status='failed',
+                        errors_count=:errors, error=:error, finished_at=NOW()
+                    WHERE id=:id
+                """),
+                {"errors": errors, "error": str(exc)[:4000], "id": run_id},
+            )
+        if self.request.retries < self.max_retries:
+            delay = (300, 1800, 7200)[self.request.retries]
+            raise self.retry(
+                exc=exc,
+                countdown=delay,
+                args=[adapter_name, run_id],
+            )
+        raise
+    finally:
+        engine.dispose()
+
+
+@app.task(name="tasks.run_readiness_scan")
+def run_readiness_scan() -> dict:
+    return _admin_request("/specs/readiness/scan?limit=500")
 
 
 def _database_url() -> str:
