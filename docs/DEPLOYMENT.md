@@ -1,5 +1,10 @@
 # Deployment Guide
 
+This guide and the checked-in Compose/Render files are public templates.
+Provider-specific manifests, real domains, credentials, backup locations, and
+operational policy overrides belong under `private/production/` or in the
+provider's managed secret store.
+
 ## Required services
 
 Production requires:
@@ -26,7 +31,9 @@ ADMIN_USER
 ADMIN_PASSWORD
 ```
 
-Use separate managed Redis instances when the provider does not support logical database numbers. Never commit production values to `.env` or the repository.
+Use separate managed Redis instances when the provider does not support logical
+database numbers. Never commit production values to `.env` or the repository.
+Run `./scripts/check-public-release.sh` before publishing deployment changes.
 
 ## Deployment order
 

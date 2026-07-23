@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -39,7 +40,16 @@ SMARTPHONE_FIXTURE_PATH = PACKAGE_DIR / "specs" / "fixtures" / "smartphones.v1.j
 SMARTPHONE_CASE_FIXTURE_PATH = (
     PACKAGE_DIR / "specs" / "fixtures" / "comparison-cases.v1.json"
 )
-SMARTPHONE_PILOT_PATH = PACKAGE_DIR / "specs" / "pilot" / "smartphones-2026-07-22.json"
+SMARTPHONE_PILOT_PATH = Path(
+    os.environ.get(
+        "QIYMETLERI_PILOT_PATH",
+        PACKAGE_DIR.parent
+        / "private"
+        / "data"
+        / "pilots"
+        / "smartphones-2026-07-22.json",
+    )
+)
 
 
 class TaxonomyValidationError(ValueError):
@@ -620,10 +630,15 @@ def load_smartphone_contract() -> tuple[dict[str, Any], dict[str, Any]]:
     return taxonomy, fixture
 
 
-def load_smartphone_pilot() -> dict[str, Any]:
-    """Load and validate the frozen smartphone pilot snapshot."""
+def load_smartphone_pilot(path: Path | None = None) -> dict[str, Any]:
+    """Load and validate a private frozen smartphone pilot snapshot."""
     taxonomy = load_json(SMARTPHONE_TAXONOMY_PATH)
-    snapshot = load_json(SMARTPHONE_PILOT_PATH)
+    target = path or SMARTPHONE_PILOT_PATH
+    if not target.is_file():
+        raise FileNotFoundError(
+            "pilot data is private; set QIYMETLERI_PILOT_PATH or pass a path"
+        )
+    snapshot = load_json(target)
     validate_pilot_snapshot(taxonomy, snapshot)
     return snapshot
 
@@ -653,8 +668,8 @@ def main() -> int:
     parser.add_argument(
         "--pilot",
         type=Path,
-        default=SMARTPHONE_PILOT_PATH,
-        help="Path to the frozen pilot snapshot JSON file",
+        default=None,
+        help="Optional path to a private frozen pilot snapshot JSON file",
     )
     parser.add_argument(
         "--cases",
@@ -665,17 +680,20 @@ def main() -> int:
     args = parser.parse_args()
     taxonomy = load_json(args.taxonomy)
     fixture = load_json(args.fixture)
-    pilot = load_json(args.pilot)
     cases = load_json(args.cases)
     validate_fixture(taxonomy, fixture)
-    validate_pilot_snapshot(taxonomy, pilot)
     validate_comparison_cases(taxonomy, cases)
+    pilot_summary = ""
+    if args.pilot is not None:
+        pilot = load_json(args.pilot)
+        validate_pilot_snapshot(taxonomy, pilot)
+        pilot_summary = f", {len(pilot['models'])} private pilot models"
     print(
         f"Valid comparison contract: {len(taxonomy['groups'])} groups, "
         f"{len(taxonomy['definitions'])} definitions, "
         f"{len(fixture['models'])} fixtures, "
-        f"{len(pilot['models'])} pilot models, "
         f"{len(cases['cases'])} behavioral cases"
+        f"{pilot_summary}"
     )
     return 0
 

@@ -4,14 +4,12 @@ import unittest
 from shared.spec_taxonomy import (
     SMARTPHONE_CASE_FIXTURE_PATH,
     SMARTPHONE_FIXTURE_PATH,
-    SMARTPHONE_PILOT_PATH,
     SMARTPHONE_TAXONOMY_PATH,
     SUPPORTED_VALUE_TYPES,
     TaxonomyValidationError,
     load_json,
     load_smartphone_cases,
     load_smartphone_contract,
-    load_smartphone_pilot,
     validate_comparison_cases,
     validate_fixture,
     validate_pilot_snapshot,
@@ -19,12 +17,35 @@ from shared.spec_taxonomy import (
 )
 
 
+def synthetic_pilot() -> dict:
+    return {
+        "contract_version": 1,
+        "category_id": "smartphones",
+        "limit": 50,
+        "selection_rule": "synthetic public test ordering",
+        "generated_at": "2026-01-01T00:00:00+00:00",
+        "models": [
+            {
+                "rank": index,
+                "pilot_key": f"fixture:synthetic phone {index}",
+                "brand": "Fixture",
+                "model_family": f"Synthetic Phone {index}",
+                "representative_product_id": (f"00000000-0000-0000-0000-{index:012d}"),
+                "variant_count": 1,
+                "store_count": 0,
+                "lowest_price_azn": None,
+            }
+            for index in range(1, 51)
+        ],
+    }
+
+
 class SmartphoneTaxonomyTests(unittest.TestCase):
     def setUp(self) -> None:
         self.taxonomy = load_json(SMARTPHONE_TAXONOMY_PATH)
         self.fixture = load_json(SMARTPHONE_FIXTURE_PATH)
         self.cases = load_json(SMARTPHONE_CASE_FIXTURE_PATH)
-        self.pilot = load_json(SMARTPHONE_PILOT_PATH)
+        self.pilot = synthetic_pilot()
 
     def test_bundled_contract_is_valid_and_complete(self) -> None:
         taxonomy, fixture = load_smartphone_contract()
@@ -38,11 +59,12 @@ class SmartphoneTaxonomyTests(unittest.TestCase):
             SUPPORTED_VALUE_TYPES,
         )
 
-    def test_frozen_pilot_is_valid_and_unique(self) -> None:
-        pilot = load_smartphone_pilot()
-
-        self.assertEqual(len(pilot["models"]), 50)
-        self.assertEqual(len({model["pilot_key"] for model in pilot["models"]}), 50)
+    def test_synthetic_pilot_contract_is_valid_and_unique(self) -> None:
+        validate_pilot_snapshot(self.taxonomy, self.pilot)
+        self.assertEqual(len(self.pilot["models"]), 50)
+        self.assertEqual(
+            len({model["pilot_key"] for model in self.pilot["models"]}), 50
+        )
 
     def test_pilot_rejects_duplicate_model(self) -> None:
         invalid = copy.deepcopy(self.pilot)

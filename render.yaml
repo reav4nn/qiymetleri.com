@@ -1,3 +1,5 @@
+# Public deployment template. Keep production-only overrides and all secret
+# values in the provider secret store or private/production/deploy/.
 services:
   # FastAPI backend
   - type: web

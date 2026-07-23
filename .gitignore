@@ -85,3 +85,38 @@ env/
 *.db
 *.sqlite
 *.sqlite3
+
+# Private data and production overlays
+# Only the boundary documentation is public. Everything else in private/
+# remains local and must never be committed.
+private/*
+!private/README.md
+!private/.gitignore
+
+# Generated public-release output
+public-release/
+public-release-*.tar.gz
+public-release-*.zip
+
+# Catalogue data, exports, backups, and crawl artefacts
+data/
+exports/
+backups/
+artifacts/
+screenshots/
+*.csv
+*.parquet
+*.xlsx
+*.sql.gz
+*.dump
+*.tar.gz
+
+# Real pilot snapshots and source-specific one-off ingestion batches
+shared/specs/pilot/*.json
+backend/scripts/seed_*.py
+!backend/scripts/seed_demo.py
+!backend/scripts/seed_spec_taxonomy.py
+
+# Third-party retailer artwork is a private production overlay.
+frontend/public/stores/*
+!frontend/public/stores/README.md

@@ -4,7 +4,7 @@ from app.core.config import Settings
 def test_database_urls_use_explicit_drivers(monkeypatch) -> None:
     monkeypatch.setenv(
         "DATABASE_URL",
-        "postgresql://user:password@database:5432/catalogue",
+        "postgresql://test_user@database:5432/catalogue",
     )
     settings = Settings(_env_file=None)
 

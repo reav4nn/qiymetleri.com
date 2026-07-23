@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+
+private export-ignore
+.agents export-ignore
+PLAN.md export-ignore
+public-release export-ignore

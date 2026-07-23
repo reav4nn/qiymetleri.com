@@ -3,6 +3,8 @@ name = "qiymetleri-backend"
 version = "0.1.0"
 description = "qiymetleri.com - Price comparison API for Azerbaijan"
 authors = ["qiymetleri <info@qiymetleri.com>"]
+license = "Apache-2.0"
+readme = "../README.md"
 package-mode = false
 
 [tool.poetry.dependencies]

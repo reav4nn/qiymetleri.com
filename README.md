@@ -15,7 +15,7 @@
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#open-source-boundary">Open-source boundary</a> •
   <a href="#project-structure">Project Structure</a> •
   <a href="#getting-started">Getting Started</a>
 </p>
@@ -24,17 +24,26 @@
 
 ## Overview
 
-**qiymetleri.com** is a modern, real-time price comparison application designed specifically for the electronics market in Azerbaijan. It automatically crawls, normalizes, and aggregates product pricing information from major electronic retailers (Kontakt Home, Baku Electronics, Irshad Electronics, and iSpace), offering users up-to-date deals and historical price tracking.
+**qiymetleri.com** is a real-time electronics price comparison and objective
+specification platform for Azerbaijan. It crawls configured retailers,
+normalizes equivalent products, tracks price history, and builds auditable
+model/variant specifications for AZ/RU comparison experiences.
 
-This project is a clean rewrite focused on high-quality code organization, proper database modeling using TimescaleDB for price histories, localization support (AZ/RU), and clean colocation of components.
+The application code, taxonomy, validators, and synthetic fixtures are public.
+Production catalogue data, price history, source payloads, retailer artwork,
+and deployment secrets are intentionally excluded.
 
 ## Features
 
-- 🕷️ **Real-time Crawling**: Store-specific web scrapers built with Scrapy and Playwright to fetch accurate prices and bypass modern JS-based anti-bot protection.
-- 🔄 **Product Normalization**: Intelligent parsing and linking of product models across different stores using a shared python module.
-- 📈 **Price History**: Historical price tracking utilizing Postgres + TimescaleDB hypertables for optimized time-series querying.
-- 🌐 **Localization**: Native support for both Azerbaijani (`az`) and Russian (`ru`) languages using `next-intl`.
-- ⚡ **Modern UI/UX**: Responsive web application styled with Tailwind CSS v4 and polished shadcn / Base UI primitives.
+- **Source adapters:** Scrapy and Playwright adapters with explicit scheduling,
+  proxy, and rate-limit configuration.
+- **Product normalization:** Shared model identity and canonical variant logic.
+- **Price history:** PostgreSQL/TimescaleDB storage for current and historical
+  offers.
+- **Specification governance:** Typed values, source precedence, conflict
+  moderation, audit history, and readiness gates.
+- **Localization:** Azerbaijani and Russian interfaces through `next-intl`.
+- **Responsive interface:** Next.js, React, and Tailwind CSS.
 
 ---
 
@@ -44,8 +53,9 @@ The project follows a decoupled, service-oriented architecture:
 
 ```mermaid
 graph TD
-    A[Scrapy Spiders + Playwright] -->|Raw Data| B[Shared Normalization Service]
-    B -->|Structured Data| C[(PostgreSQL + TimescaleDB)]
+    A[Public source adapters] --> B[Shared normalization and validation]
+    H[Private source observations] --> B
+    B --> C[(Managed PostgreSQL + TimescaleDB)]
     C -->|Time-series Query| D[FastAPI Backend]
     E[Celery Workers + Redis] -->|Scheduled Crawl Jobs| A
     D -->|REST API / JSON| F[Next.js App Router]
@@ -67,15 +77,44 @@ graph TD
 
 ---
 
+## Open-source boundary
+
+The public repository is the reusable application core. It contains no
+production database, real pilot snapshot, one-off source payload, credential,
+or production environment file.
+
+> [!IMPORTANT]
+> `private/` is an ignored local overlay. Never force-add files from it.
+> Database and data rights are separate from the software licence; see
+> [the boundary](docs/OPEN_SOURCE_BOUNDARY.md) and
+> [data policy](DATA_LICENSE.md) before publishing a dataset.
+
+Before a commit or release, run:
+
+```bash
+./scripts/check-public-release.sh
+```
+
+The same audit runs in CI and rejects secret-like values, real data artefacts,
+third-party retailer artwork, and files crossing the private boundary.
+Create a history-free source archive with `./scripts/export-public-release.sh`
+and follow [the publication checklist](docs/PUBLICATION.md) before changing any
+repository visibility.
+
+---
+
 ## Project Structure
 
 ```
 qiymetleriV2/
-├── frontend/             # Next.js web application (TypeScript, Tailwind CSS v4)
-├── backend/              # FastAPI application (SQLAlchemy models, Schemas, Migrations)
-├── scraper/              # Scrapy scraper & Playwright integration
-├── shared/               # Shared Python package (product normalization & helper utils)
-└── docker-compose.yml    # Main Docker Compose configuration
+├── backend/              # Public FastAPI application, migrations, and tests
+├── frontend/             # Public Next.js web application
+├── scraper/              # Public source adapter framework
+├── shared/               # Public normalization, taxonomy, and synthetic fixtures
+├── scripts/              # Public release audit/export commands
+├── docs/                 # Architecture, governance, demo, and deployment guides
+├── private/              # Ignored local data and production overlay
+└── docker-compose.yml    # Public local-development template
 ```
 
 > [!NOTE]
@@ -85,7 +124,7 @@ qiymetleriV2/
 
 ## Getting Started
 
-### 🐳 Running with Docker (Recommended)
+### Running with Docker
 
 To start the full application stack:
 
@@ -121,7 +160,7 @@ Detailed procedures are available in [the demo runbook](docs/DEMO.md) and [the d
 
 ---
 
-### 🛠️ Manual Installation (For Local Development)
+### Manual installation
 
 If you prefer to run services individually without Docker:
 
@@ -139,8 +178,8 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 #### 3. Frontend (Next.js)
 ```bash
 cd frontend
-pnpm install
-pnpm dev
+npm ci
+npm run dev
 ```
 
 #### 4. Scraper (Scrapy)
@@ -156,10 +195,18 @@ scrapy crawl kontakt_home     # Run a spider manually
 
 ---
 
-## Linting & Formatting
+## Quality checks
 
 Run these checks before committing:
 
-- **Backend**: `cd backend && poetry run ruff check . && poetry run black --check . && poetry run pytest -q tests`
-- **Scraper**: `cd scraper && poetry run ruff check .`
-- **Frontend**: `cd frontend && npm run lint && npm run build`
+```bash
+./scripts/check-public-release.sh
+PYTHONPATH=backend:. .venv/bin/python -m pytest backend/tests shared/tests -q
+.venv/bin/ruff check backend shared scraper
+.venv/bin/black --check backend/scripts shared/tests
+cd frontend && npm run lint && npm run build
+```
+
+Security issues should be reported privately according to
+[SECURITY.md](SECURITY.md). General changes follow
+[CONTRIBUTING.md](CONTRIBUTING.md).

@@ -10,12 +10,10 @@ representative model archetypes plus tie, missing-value, variant-override, and
 source-conflict behavior. They are not claims about real products and must
 never be imported as production catalogue data.
 
-The file under `pilot/` is a dated, read-only snapshot of 50 candidates selected
-from the existing smartphone catalogue. It fixes Phase 0 scope; it is not a
-claim that their technical specifications are already complete or verified.
-Regenerate it with `python -m scripts.snapshot_comparison_pilot` from the
-backend environment, then review any catalogue naming pollution before replacing
-the committed snapshot.
+Real pilot snapshots are private catalogue data and are not committed. Generate
+one with `python -m scripts.snapshot_comparison_pilot` from the backend
+environment and write it under `private/data/pilots/`. Pass its path with
+`python -m shared.spec_taxonomy --pilot PATH` when it needs validation.
 
 Validate the bundled contract from the repository root:
 
