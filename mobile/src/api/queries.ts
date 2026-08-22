@@ -20,6 +20,7 @@ export function useHomeQuery() {
     queryKey: catalogueKeys.home(),
     queryFn: ({ signal }) => getHomeData(signal),
     initialData: getRealHomeData,
+    initialDataUpdatedAt: 0,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -29,6 +30,7 @@ export function useCatalogueQuery(query: CatalogueQuery) {
     queryKey: catalogueKeys.list(query),
     queryFn: ({ signal }) => getCatalogueData(query, signal),
     initialData: () => getRealCatalogueData(query),
+    initialDataUpdatedAt: 0,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -39,5 +41,6 @@ export function useProductQuery(productId?: string) {
     queryFn: ({ signal }) => getProductPageData(productId!, signal),
     enabled: Boolean(productId),
     initialData: productId ? () => getRealProductPageData(productId) : undefined,
+    initialDataUpdatedAt: 0,
   });
 }

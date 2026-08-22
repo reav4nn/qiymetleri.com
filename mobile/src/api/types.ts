@@ -69,7 +69,14 @@ export type FiltersResponse = {
   price_range?: { min: number | null; max: number | null };
 };
 
-export type HomeData = {
+export type DataSource = "live" | "mixed" | "snapshot";
+
+export type DataFreshness = {
+  dataSource: DataSource;
+  snapshotGeneratedAt?: string;
+};
+
+export type HomeData = DataFreshness & {
   products: ProductSummary[];
   categories: FilterOption[];
   stores: FilterOption[];
@@ -84,9 +91,9 @@ export type CatalogueQuery = {
   page?: number;
 };
 
-export type CatalogueData = ProductsResponse & { filters: FiltersResponse };
+export type CatalogueData = ProductsResponse & DataFreshness & { filters: FiltersResponse };
 
-export type ProductPageData = {
+export type ProductPageData = DataFreshness & {
   product: ProductDetail;
   history: PriceHistoryPoint[];
   stores: FilterOption[];

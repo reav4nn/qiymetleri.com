@@ -1,10 +1,9 @@
-import "expo-sqlite/localStorage/install";
-
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router/stack";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AppProviders } from "@/providers/app-providers";
@@ -13,10 +12,15 @@ import { colors } from "@/theme/colors";
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Manrope: require("@/assets/fonts/Manrope.ttf"),
-    LTSuperiorExtraBold: require("@/assets/fonts/LTSuperior-ExtraBold.ttf"),
-  });
+  const [runtimeFontsLoaded, fontError] = useFonts(
+    Platform.OS === "android"
+      ? {}
+      : {
+          Manrope: require("@/assets/fonts/Manrope.ttf"),
+          LTSuperiorExtraBold: require("@/assets/fonts/LTSuperior-ExtraBold.ttf"),
+        },
+  );
+  const fontsLoaded = Platform.OS === "android" || runtimeFontsLoaded;
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

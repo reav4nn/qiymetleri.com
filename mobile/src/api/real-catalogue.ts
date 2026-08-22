@@ -33,6 +33,22 @@ type RealCatalogueSnapshot = {
 
 export const realCatalogue = snapshotJson as RealCatalogueSnapshot;
 
+const snapshotFreshness = {
+  dataSource: "snapshot" as const,
+  snapshotGeneratedAt: realCatalogue.generated_at,
+};
+
+function variantFamilyKey(product: RealProduct): string | null {
+  if (!product.model_family) return null;
+  return `${product.brand ?? ""}\u0000${product.category}\u0000${product.model_family.toLocaleLowerCase("az")}`;
+}
+
+const variantCounts = new Map<string, number>();
+for (const product of realCatalogue.products) {
+  const key = variantFamilyKey(product);
+  if (key) variantCounts.set(key, (variantCounts.get(key) ?? 0) + 1);
+}
+
 function optionCounts(
   values: string[],
   label: (value: string) => string = (value) => value,
@@ -58,7 +74,7 @@ function summary(product: RealProduct): ProductSummary {
     image_url: product.image_url,
     lowest_price: inStockPrices.length ? Math.min(...inStockPrices) : null,
     store_count: new Set(product.offers.map((offer) => offer.store_id)).size,
-    variant_count: variantsFor(product).length,
+    variant_count: variantCounts.get(variantFamilyKey(product) ?? "") ?? 1,
   };
 }
 
@@ -94,7 +110,9 @@ function interleaveCategories(products: ProductSummary[]): ProductSummary[] {
   const groups = new Map<string, ProductSummary[]>();
   for (const product of products) {
     const category = product.category ?? "other";
-    groups.set(category, [...(groups.get(category) ?? []), product]);
+    const group = groups.get(category);
+    if (group) group.push(product);
+    else groups.set(category, [product]);
   }
   const result: ProductSummary[] = [];
   const queues = [...groups.values()];
@@ -108,13 +126,9 @@ function interleaveCategories(products: ProductSummary[]): ProductSummary[] {
 }
 
 function variantsFor(product: RealProduct): RealProduct[] {
-  if (!product.model_family) return [product];
-  const family = product.model_family.toLocaleLowerCase("az");
-  return realCatalogue.products.filter((candidate) =>
-    candidate.brand === product.brand
-      && candidate.category === product.category
-      && candidate.model_family?.toLocaleLowerCase("az") === family,
-  );
+  const familyKey = variantFamilyKey(product);
+  if (!familyKey) return [product];
+  return realCatalogue.products.filter((candidate) => variantFamilyKey(candidate) === familyKey);
 }
 
 function productVariant(product: RealProduct): ProductVariant {
@@ -139,7 +153,12 @@ export function getRealHomeData(): HomeData {
           || (left.lowest_price ?? Infinity) - (right.lowest_price ?? Infinity)),
   ).slice(0, 8);
   const filters = filtersFor(realCatalogue.products);
-  return { products, categories: filters.categories, stores: filters.stores };
+  return {
+    ...snapshotFreshness,
+    products,
+    categories: filters.categories,
+    stores: filters.stores,
+  };
 }
 
 export function getRealCatalogueData(query: CatalogueQuery): CatalogueData {
@@ -160,6 +179,7 @@ export function getRealCatalogueData(query: CatalogueQuery): CatalogueData {
   });
   const start = (page - 1) * perPage;
   return {
+    ...snapshotFreshness,
     items: items.slice(start, start + perPage),
     total: items.length,
     page,
@@ -186,5 +206,10 @@ export function getRealProductPageData(productId: string): ProductPageData | nul
     created_at: realCatalogue.generated_at,
     updated_at: realCatalogue.generated_at,
   };
-  return { product, history: [], stores: filtersFor(realCatalogue.products).stores };
+  return {
+    ...snapshotFreshness,
+    product,
+    history: [],
+    stores: filtersFor(realCatalogue.products).stores,
+  };
 }

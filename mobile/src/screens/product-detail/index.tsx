@@ -75,7 +75,10 @@ export function ProductDetailScreen({ productId }: { productId?: string }) {
         refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.accent} />}
         contentContainerStyle={{ alignSelf: "center", gap: 16, maxWidth: 720, padding: 16, paddingBottom: 36, width: "100%" }}
       >
-        <NetworkBanner />
+        <NetworkBanner
+          dataSource={query.data.dataSource}
+          snapshotGeneratedAt={query.data.snapshotGeneratedAt}
+        />
         <ProductHero product={product} lowestPrice={lowestPrice} offerCount={prices.length} />
         <OffersSection prices={prices} storeNames={storeNames} />
         <VariantsSection product={product} />

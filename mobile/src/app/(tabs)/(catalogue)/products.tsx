@@ -32,7 +32,7 @@ export default function CatalogueRoute() {
     for (const [key, value] of Object.entries(next)) {
       if (value !== undefined && value !== "") routeParams[key] = String(value);
     }
-    router.push({ pathname: "/products", params: routeParams });
+    router.replace({ pathname: "/products", params: routeParams });
   }
 
   return (

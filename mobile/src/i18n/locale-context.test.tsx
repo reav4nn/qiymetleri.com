@@ -2,22 +2,31 @@ import { render, screen, userEvent } from "@testing-library/react-native";
 import { Text } from "react-native";
 
 import { LanguageSwitch } from "@/components/language-switch";
-import { LocaleProvider, useLocale } from "@/i18n/locale-context";
+import { formatDateForLocale, LocaleProvider, useLocale } from "@/i18n/locale-context";
 
 jest.mock("expo-haptics", () => ({ selectionAsync: jest.fn(async () => undefined) }));
 
+jest.mock("expo-sqlite/kv-store", () => ({
+  AsyncStorage: {
+    getItem: jest.fn(async () => null as string | null),
+    setItem: jest.fn(async () => undefined),
+  },
+}));
+
+const mockStorage = jest.requireMock("expo-sqlite/kv-store").AsyncStorage as {
+  getItem: jest.Mock<Promise<string | null>, []>;
+  setItem: jest.Mock<Promise<void>, [string, string]>;
+};
+
 jest.useFakeTimers();
 
-test("switches locale and retains it in device storage", async () => {
-  const storage = new Map<string, string>();
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    value: {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => storage.set(key, value),
-    },
-  });
+beforeEach(() => {
+  mockStorage.getItem.mockReset();
+  mockStorage.getItem.mockResolvedValue(null);
+  mockStorage.setItem.mockClear();
+});
 
+test("switches locale and retains it in device storage", async () => {
   function Probe() {
     const { locale } = useLocale();
     return <Text>{locale}</Text>;
@@ -34,5 +43,14 @@ test("switches locale and retains it in device storage", async () => {
   expect(screen.getByRole("radio", { name: "AZ" })).toBeChecked();
   await user.press(screen.getByRole("radio", { name: "RU" }));
   expect(screen.getByRole("radio", { name: "RU" })).toBeChecked();
-  expect(storage.get("qiymetleri.locale")).toBe("ru");
+  expect(mockStorage.setItem).toHaveBeenCalledWith("qiymetleri.locale", "ru");
+});
+
+test("formats Azerbaijani dates without falling back to English month names", () => {
+  const date = new Date(2026, 7, 12, 12);
+
+  expect(formatDateForLocale("az", date, { day: "2-digit", month: "short", year: "numeric" })).toBe(
+    "12 avq 2026",
+  );
+  expect(formatDateForLocale("az", date, { day: "2-digit", month: "short" })).toBe("12 avq");
 });

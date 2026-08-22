@@ -65,7 +65,10 @@ export function HomeScreen() {
         placeholder={t("search.placeholder")}
         submitLabel={t("search.submit")}
       />
-      <NetworkBanner />
+      <NetworkBanner
+        dataSource={data?.dataSource}
+        snapshotGeneratedAt={data?.snapshotGeneratedAt}
+      />
 
       <View style={{ gap: 12 }}>
         <Text selectable role="heading" aria-level={1} style={{ color: colors.text, fontFamily: "LTSuperiorExtraBold", fontSize: 22 }}>

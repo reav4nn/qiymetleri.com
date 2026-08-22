@@ -8,7 +8,7 @@ import { queryClient } from "@/lib/query-client";
 import { colors } from "@/theme/colors";
 
 onlineManager.setEventListener((setOnline) =>
-  NetInfo.addEventListener((state) => setOnline(Boolean(state.isConnected))),
+  NetInfo.addEventListener((state) => setOnline(state.isConnected ?? true)),
 );
 
 const navigationTheme = {

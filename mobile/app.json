@@ -2,7 +2,7 @@
   "expo": {
     "name": "qiymetleri.com",
     "slug": "qiymetleri-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "qiymetleri",
@@ -15,6 +15,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "package": "com.qiymetleri.app",
+      "versionCode": 2,
       "predictiveBackGestureEnabled": true,
       "softwareKeyboardLayoutMode": "resize"
     },
@@ -32,7 +33,35 @@
           "imageWidth": 76
         }
       ],
-      "expo-sqlite"
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Manrope",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/Manrope.ttf",
+                    "weight": 400
+                  }
+                ]
+              },
+              {
+                "fontFamily": "LTSuperiorExtraBold",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/LTSuperior-ExtraBold.ttf",
+                    "weight": 400
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

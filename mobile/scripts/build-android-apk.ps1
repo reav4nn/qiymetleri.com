@@ -7,6 +7,8 @@ $ErrorActionPreference = "Stop"
 
 $mobileRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $repositoryRoot = [IO.Directory]::GetParent($mobileRoot).FullName
+$appConfig = Get-Content -Raw -LiteralPath (Join-Path $mobileRoot "app.json") | ConvertFrom-Json
+$appVersion = $appConfig.expo.version
 $defaultToolRoot = Join-Path $env:USERPROFILE ".cache\qiymetleri-android-build"
 $javaHome = if ($env:JAVA_HOME) { $env:JAVA_HOME } else { Join-Path $defaultToolRoot "jdk17\jdk-17.0.20+8" }
 $androidHome = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $defaultToolRoot "android-sdk" }
@@ -53,12 +55,27 @@ try {
 
 $sourceApk = Join-Path $shortMobileRoot "android\app\build\outputs\apk\release\app-release.apk"
 $releaseRoot = Join-Path $mobileRoot "releases"
-$releaseApk = Join-Path $releaseRoot "qiymetleri-1.0.0-$Architecture.apk"
+$releaseApk = Join-Path $releaseRoot "qiymetleri-$appVersion-$Architecture.apk"
 
 New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
 Copy-Item -LiteralPath $sourceApk -Destination $releaseApk -Force
 $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $releaseApk).Hash
 Set-Content -LiteralPath "$releaseApk.sha256" -Value "$hash  $([IO.Path]::GetFileName($releaseApk))"
+
+$buildTools = Get-ChildItem -LiteralPath (Join-Path $androidHome "build-tools") -Directory |
+  Sort-Object Name -Descending |
+  Select-Object -First 1
+if (-not $buildTools) { throw "Android build tools were not found." }
+
+$apkSigner = Join-Path $buildTools.FullName "apksigner.bat"
+$aapt = Join-Path $buildTools.FullName "aapt.exe"
+& $apkSigner verify --verbose $releaseApk
+if ($LASTEXITCODE -ne 0) { throw "APK signature verification failed." }
+
+$apkEntries = & $aapt list $releaseApk
+if ($LASTEXITCODE -ne 0 -or $apkEntries -notcontains "assets/index.android.bundle") {
+  throw "APK does not contain the standalone Android JavaScript bundle."
+}
 
 Write-Output "APK: $releaseApk"
 Write-Output "SHA256: $hash"

@@ -59,7 +59,10 @@ export function CatalogueScreen({
         placeholder={t("search.placeholder")}
         submitLabel={t("search.submit")}
       />
-      <NetworkBanner />
+      <NetworkBanner
+        dataSource={data?.dataSource}
+        snapshotGeneratedAt={data?.snapshotGeneratedAt}
+      />
       <View>
         <Text selectable role="heading" aria-level={1} style={{ color: colors.text, fontFamily: "LTSuperiorExtraBold", fontSize: 24 }}>
           {query.q ? t("catalogue.searchTitle", { query: query.q }) : t("catalogue.title")}
