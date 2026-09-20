@@ -41,9 +41,16 @@ export async function ProductCard({ product }: { product: ProductSummary }) {
               ? "-"
               : `${format.number(product.lowest_price)} ${t("product.unit")}`}
           </span>
-          <span className="rounded-md bg-[#eff6ff] px-2 py-[3px] text-xs font-bold text-[#2563eb]">
-            {t("product.offers", { count: product.store_count })}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {product.variant_count > 1 ? (
+              <span className="rounded-md bg-[#f4f4f5] px-2 py-[3px] text-xs font-semibold text-[#52525b]">
+                {product.variant_count} variant
+              </span>
+            ) : null}
+            <span className="rounded-md bg-[#eff6ff] px-2 py-[3px] text-xs font-bold text-[#2563eb]">
+              {t("product.offers", { count: product.store_count })}
+            </span>
+          </div>
         </div>
       </div>
     </Link>

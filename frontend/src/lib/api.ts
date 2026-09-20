@@ -81,7 +81,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://localhost:8000";
 
-type CatalogueQuery = {
+export type CatalogueQuery = {
   q?: string;
   category?: string;
   brand?: string;
@@ -103,6 +103,12 @@ function queryString(query: CatalogueQuery, includePaging = true): string {
   return params.toString();
 }
 
+import {
+  getRealHomeData,
+  getRealCatalogueData,
+  getRealProductPageData,
+} from "./real-catalogue";
+
 export async function getHomeData(): Promise<HomeData> {
   try {
     const [productsResponse, filtersResponse] = await Promise.all([
@@ -118,6 +124,9 @@ export async function getHomeData(): Promise<HomeData> {
 
     const products = (await productsResponse.json()) as ProductsResponse;
     const filters = (await filtersResponse.json()) as FiltersResponse;
+    if (products.items.length === 0) {
+      return getRealHomeData();
+    }
     return {
       products: products.items,
       categories: filters.categories,
@@ -125,7 +134,7 @@ export async function getHomeData(): Promise<HomeData> {
       available: true,
     };
   } catch {
-    return { products: [], categories: [], stores: [], available: false };
+    return getRealHomeData();
   }
 }
 
@@ -154,17 +163,12 @@ export async function getCatalogueData(
 
     const products = (await productsResponse.json()) as ProductsResponse;
     const filters = (await filtersResponse.json()) as FiltersResponse;
+    if (products.items.length === 0 && !query.q && !query.category && !query.brand && !query.store_id) {
+      return getRealCatalogueData(query);
+    }
     return { ...products, filters, available: true };
   } catch {
-    return {
-      items: [],
-      total: 0,
-      page: 1,
-      per_page: 20,
-      pages: 0,
-      filters: { categories: [], brands: [], stores: [] },
-      available: false,
-    };
+    return getRealCatalogueData(query);
   }
 }
 
@@ -188,6 +192,8 @@ export async function getProductPageData(
     );
 
     if (productResponse.status === 404 || productResponse.status === 422) {
+      const fallback = getRealProductPageData(productId);
+      if (fallback.status === "ready") return fallback;
       return { status: "not-found" };
     }
     if (!productResponse.ok) {
@@ -219,6 +225,8 @@ export async function getProductPageData(
           : [],
     };
   } catch {
+    const fallback = getRealProductPageData(productId);
+    if (fallback.status === "ready") return fallback;
     return { status: "unavailable" };
   }
 }

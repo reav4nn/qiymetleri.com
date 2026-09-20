@@ -41,8 +41,12 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         url = os.getenv("DATABASE_URL", "")
         if url:
+            if url.startswith("postgres://"):
+                url = "postgresql://" + url[len("postgres://"):]
             # Supabase/Render provide postgresql:// — convert to asyncpg
-            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            if not url.startswith("postgresql+asyncpg://"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return url
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -52,9 +56,13 @@ class Settings(BaseSettings):
     def SYNC_DATABASE_URL(self) -> str:
         url = os.getenv("DATABASE_URL", "")
         if url:
-            return url.replace(
-                "postgresql+asyncpg://", "postgresql+psycopg://", 1
-            ).replace("postgresql://", "postgresql+psycopg://", 1)
+            if url.startswith("postgres://"):
+                url = "postgresql://" + url[len("postgres://"):]
+            if url.startswith("postgresql+asyncpg://"):
+                url = url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+            elif not url.startswith("postgresql+psycopg://"):
+                url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+            return url
         return (
             f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

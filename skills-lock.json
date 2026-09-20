@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "academic-pptx": {
+      "source": "gabberflast/academic-pptx-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "1c779c705825f767a118b9b5e4082c8ba2953481b36f3727c45433a92ad0b1fb"
+    },
     "expo-data-fetching": {
       "source": "expo/skills",
       "sourceType": "github",
