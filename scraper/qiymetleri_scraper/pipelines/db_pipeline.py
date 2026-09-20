@@ -45,7 +45,14 @@ class DatabasePipeline:
 
     def open_spider(self):
         spider = self.crawler.spider
-        self.engine = create_engine(self.database_url)
+        db_url = self.database_url or ""
+        if db_url.startswith("postgres://"):
+            db_url = "postgresql://" + db_url[len("postgres://"):]
+        elif db_url.startswith("postgresql+asyncpg://"):
+            db_url = "postgresql://" + db_url[len("postgresql+asyncpg://"):]
+        elif db_url.startswith("postgresql+psycopg://"):
+            db_url = "postgresql://" + db_url[len("postgresql+psycopg://"):]
+        self.engine = create_engine(db_url)
         self.session_factory = sessionmaker(bind=self.engine)
         self._spider_name = spider.name
         self._run_start = datetime.now(timezone.utc)
