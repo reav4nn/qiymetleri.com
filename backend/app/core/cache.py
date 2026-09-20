@@ -35,4 +35,3 @@ async def invalidate_cache(pattern: str) -> None:
             await redis_client.delete(key)
     except Exception as exc:
         logger.debug("Redis invalidate_cache error: %s", exc)
-

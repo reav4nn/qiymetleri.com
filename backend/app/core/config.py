@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         url = os.getenv("DATABASE_URL", "")
         if url:
             if url.startswith("postgres://"):
-                url = "postgresql://" + url[len("postgres://"):]
+                url = "postgresql://" + url[len("postgres://") :]
             # Supabase/Render provide postgresql:// — convert to asyncpg
             if not url.startswith("postgresql+asyncpg://"):
                 url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
         url = os.getenv("DATABASE_URL", "")
         if url:
             if url.startswith("postgres://"):
-                url = "postgresql://" + url[len("postgres://"):]
+                url = "postgresql://" + url[len("postgres://") :]
             if url.startswith("postgresql+asyncpg://"):
                 url = url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
             elif not url.startswith("postgresql+psycopg://"):

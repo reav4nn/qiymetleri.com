@@ -5,11 +5,11 @@ Usage:
 """
 
 import asyncio
+from datetime import datetime, timezone
 import json
 import logging
 from pathlib import Path
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy import text
 
@@ -31,6 +31,7 @@ async def seed(force: bool = False) -> None:
         # Fallback to demo seed
         logger.warning(f"File {data_path} not found. Falling back to seed_demo.")
         from scripts.seed_demo import seed as seed_demo
+
         await seed_demo()
         return
 
@@ -47,7 +48,9 @@ async def seed(force: bool = False) -> None:
         res = await session.execute(text("SELECT COUNT(*) FROM products"))
         count = res.scalar() or 0
         if count > 50 and not force:
-            print(f"Database already contains {count} products. Skipping seed (use force=True to reseed).")
+            print(
+                f"Database already contains {count} products. Skipping seed (use force=True to reseed)."
+            )
             return
 
         print(f"Seeding {len(products)} products into database...")
@@ -130,7 +133,7 @@ async def seed(force: bool = False) -> None:
                 if last_checked:
                     try:
                         checked_at = datetime.fromisoformat(last_checked)
-                    except Exception:
+                    except (ValueError, TypeError):
                         checked_at = datetime.now(timezone.utc)
                 else:
                     checked_at = datetime.now(timezone.utc)
@@ -188,13 +191,15 @@ async def seed(force: bool = False) -> None:
                     )
 
         await session.commit()
-        print(f"Successfully seeded {seeded_products} products and {seeded_prices} price offers.")
+        print(
+            f"Successfully seeded {seeded_products} products and {seeded_prices} price offers."
+        )
 
     try:
         await invalidate_cache("products:*")
         await invalidate_cache("filters:*")
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Cache invalidation error: %s", exc)
 
     await engine.dispose()
 
