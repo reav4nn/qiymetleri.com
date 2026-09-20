@@ -100,7 +100,7 @@ export async function GET(
   const backendUrl =
     process.env.INTERNAL_API_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
-    "https://qiymetleri.onrender.com";
+    "https://qiymetleri-backend.onrender.com";
 
   try {
     const authHeader = `Basic ${Buffer.from(`${ADMIN_USER}:${ADMIN_PASSWORD}`).toString("base64")}`;
@@ -338,7 +338,7 @@ export async function POST(
   const backendUrl =
     process.env.INTERNAL_API_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
-    "https://qiymetleri.onrender.com";
+    "https://qiymetleri-backend.onrender.com";
 
   // Run all scrapers handler
   if (path === "scrapers/run-all") {
@@ -462,7 +462,7 @@ export async function PATCH(
   const backendUrl =
     process.env.INTERNAL_API_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
-    "https://qiymetleri.onrender.com";
+    "https://qiymetleri-backend.onrender.com";
 
   try {
     const authHeader = `Basic ${Buffer.from(`${ADMIN_USER}:${ADMIN_PASSWORD}`).toString("base64")}`;
@@ -501,7 +501,7 @@ export async function DELETE(
   const backendUrl =
     process.env.INTERNAL_API_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
-    "https://qiymetleri.onrender.com";
+    "https://qiymetleri-backend.onrender.com";
 
   try {
     const authHeader = `Basic ${Buffer.from(`${ADMIN_USER}:${ADMIN_PASSWORD}`).toString("base64")}`;

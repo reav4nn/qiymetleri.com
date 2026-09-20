@@ -1,6 +1,6 @@
 import { fetch } from "expo/fetch";
 
-const fallbackApiUrl = "https://qiymetleri.onrender.com";
+const fallbackApiUrl = "https://qiymetleri-backend.onrender.com";
 export const API_REQUEST_TIMEOUT_MS = 8_000;
 
 export const apiBaseUrl = (process.env.EXPO_PUBLIC_API_URL || fallbackApiUrl).replace(/\/$/, "");
