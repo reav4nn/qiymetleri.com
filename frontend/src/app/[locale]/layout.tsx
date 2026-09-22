@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { FavouritesProvider } from "@/lib/favourites";
 import "../globals.css";
 
 const manrope = Manrope({
@@ -34,7 +35,9 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={manrope.variable}>
       <body className="font-sans antialiased">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <FavouritesProvider>{children}</FavouritesProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

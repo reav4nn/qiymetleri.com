@@ -155,7 +155,7 @@ export default async function ProductDetailPage({
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.85fr)]">
           <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-card border border-border bg-white p-5 sm:min-h-[460px] sm:p-8">
-            <FavouriteButton label={t("product.favourite")} />
+            <FavouriteButton productId={product.id} label={t("product.favourite")} />
             <div
               className="h-full min-h-[260px] w-full bg-contain bg-center bg-no-repeat sm:min-h-[390px]"
               style={{

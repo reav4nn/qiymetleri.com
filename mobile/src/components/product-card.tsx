@@ -3,20 +3,22 @@ import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 
 import type { ProductSummary } from "@/api/types";
 import { useLocale } from "@/i18n/locale-context";
 import { colors } from "@/theme/colors";
 
+import { useFavourites } from "@/hooks/use-favourites";
+
 export function ProductCard({ product, width }: { product: ProductSummary; width: number }) {
   const { formatNumber, t } = useLocale();
   const router = useRouter();
-  const [favourite, setFavourite] = useState(false);
+  const { isFavourite, toggleFavourite: toggleFav } = useFavourites();
+  const favourite = isFavourite(product.id);
 
-  function toggleFavourite(event: GestureResponderEvent) {
+  function handleToggleFavourite(event: GestureResponderEvent) {
     event.stopPropagation();
-    setFavourite((value) => !value);
+    toggleFav(product.id);
     void Haptics.selectionAsync();
   }
 
@@ -66,7 +68,7 @@ export function ProductCard({ product, width }: { product: ProductSummary; width
             role="button"
             aria-label={t("product.favourite")}
             aria-pressed={favourite}
-            onPress={toggleFavourite}
+            onPress={handleToggleFavourite}
             hitSlop={4}
             style={({ pressed }) => ({
               alignItems: "center",

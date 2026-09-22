@@ -1,24 +1,32 @@
 "use client";
 
-import { useState } from "react";
 import { Heart } from "lucide-react";
+import { useFavourites } from "@/lib/favourites";
 import { cn } from "@/lib/utils";
 
-export function FavouriteButton({ label }: { label: string }) {
-  const [isFavourite, setIsFavourite] = useState(false);
+export function FavouriteButton({
+  productId,
+  label,
+}: {
+  productId: string;
+  label: string;
+}) {
+  const { isFavourite, toggleFavourite } = useFavourites();
+  const active = isFavourite(productId);
 
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={active}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        setIsFavourite(!isFavourite);
+        toggleFavourite(productId);
       }}
       className={cn(
         "absolute top-3 right-3 z-2 flex size-11 items-center justify-center rounded-full border bg-[#fafafa] transition-colors",
-        isFavourite
+        active
           ? "border-accent bg-accent-soft text-accent"
           : "border-border text-[#d4d4d8] hover:text-[#a1a1aa]"
       )}
@@ -26,7 +34,7 @@ export function FavouriteButton({ label }: { label: string }) {
       <Heart
         className={cn(
           "size-5 transition-transform active:scale-90",
-          isFavourite ? "fill-accent stroke-accent" : ""
+          active ? "fill-accent stroke-accent" : ""
         )}
         strokeWidth={2}
       />

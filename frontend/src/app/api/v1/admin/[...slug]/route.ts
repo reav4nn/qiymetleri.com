@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { realCatalogue } from "@/lib/real-catalogue";
 
 const ADMIN_USER = process.env.ADMIN_USER ?? "admin";
-const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD ??
-  "f814e6fd9169883e546fc6ce3fd71b2aa2908048f5178cd5";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
 const SESSION_COOKIE = "qiymetleri_admin_session";
 
 function isAuthorized(req: NextRequest): boolean {
@@ -110,6 +108,7 @@ export async function GET(
         Authorization: authHeader,
         "Content-Type": "application/json",
       },
+      cache: "no-store",
     });
 
     if (res.ok) {
@@ -149,11 +148,17 @@ export async function GET(
   }
 
   if (path === "stores") {
+    const allStores = [
+      { id: "kontakt_home", name: "Kontakt Home", base_url: "https://kontakt.az" },
+      { id: "baku_electronics", name: "Baku Electronics", base_url: "https://bakuelectronics.az" },
+      { id: "irshad_electronics", name: "Irshad Electronics", base_url: "https://irshad.az" },
+      { id: "ispace", name: "iSpace", base_url: "https://ispace.az" },
+    ];
     return NextResponse.json(
-      realCatalogue.sources.map((s) => ({
+      allStores.map((s) => ({
         id: s.id,
         name: s.name,
-        base_url: `https://${s.id.replace("_", "")}.az`,
+        base_url: s.base_url,
         is_active: true,
         product_count: realCatalogue.products.filter((p) =>
           p.offers.some((o) => o.store_id === s.id),

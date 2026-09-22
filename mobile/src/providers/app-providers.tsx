@@ -23,11 +23,15 @@ const navigationTheme = {
   },
 };
 
+import { FavouritesProvider } from "@/hooks/use-favourites";
+
 export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
-        <ThemeProvider value={navigationTheme}>{children}</ThemeProvider>
+        <FavouritesProvider>
+          <ThemeProvider value={navigationTheme}>{children}</ThemeProvider>
+        </FavouritesProvider>
       </LocaleProvider>
     </QueryClientProvider>
   );

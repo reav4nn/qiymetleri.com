@@ -1,7 +1,8 @@
 {
   "nav": {
     "categories": "Kateqoriyalar",
-    "login": "Daxil ol"
+    "login": "Daxil ol",
+    "favourites": "Bəyəndiklərim"
   },
   "search": {
     "placeholder": "Hansı məhsulu axtarırsınız?",
@@ -106,5 +107,12 @@
     "tablets": "Tabletlər",
     "watches": "Smart Saatlar",
     "count": "{count, number} məhsul"
+  },
+  "favourites": {
+    "title": "Bəyəndiklərim",
+    "emptyTitle": "Hələ heç bir məhsulu bəyənməmisiniz",
+    "emptyDesc": "Məhsul kartlarındakı ürək ikonuna toxunaraq istədiyiniz məhsulları bura əlavə edə bilərsiniz.",
+    "explore": "Məhsullara bax",
+    "count": "{count, number} məhsul saxlanılıb"
   }
 }

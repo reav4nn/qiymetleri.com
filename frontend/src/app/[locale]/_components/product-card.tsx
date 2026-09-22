@@ -12,7 +12,7 @@ export async function ProductCard({ product }: { product: ProductSummary }) {
       href={`/products/${product.id}`}
       className="group relative flex flex-col gap-3 rounded-card border-[1.5px] border-border bg-white p-4 transition-shadow hover:border-[#e4e4e7] hover:shadow-[0_8px_24px_rgba(0,0,0,.08)]"
     >
-      <FavouriteButton label={t("product.favourite")} />
+      <FavouriteButton productId={product.id} label={t("product.favourite")} />
 
       <div
         className="flex aspect-[4/3] items-center justify-center rounded-button bg-contain bg-center bg-no-repeat sm:aspect-square"

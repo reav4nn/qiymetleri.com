@@ -120,13 +120,65 @@ function groupProducts(products: RealProduct[]): ProductSummary[] {
   return summaries;
 }
 
+export function getAllCatalogueProducts(): ProductSummary[] {
+  return groupProducts(realCatalogue.products);
+}
+
+const SEARCH_ALIASES: Record<string, string> = {
+  // Azerbaijani transliterations & aliases
+  ayfon: "iphone",
+  aypad: "ipad",
+  makbuk: "macbook",
+  mekbuk: "macbook",
+  eyrpods: "airpods",
+  eyrpodz: "airpods",
+  qulaqliq: "headphones",
+  qulaqlıq: "headphones",
+  notbuk: "laptop",
+  noutbuk: "laptop",
+  saat: "watch",
+  smartsaat: "watch",
+  planset: "tablet",
+  planşet: "tablet",
+  telefon: "smartphone",
+  smartfon: "smartphone",
+  samsung: "samsung",
+  huavey: "huawei",
+  syaomi: "xiaomi",
+  redmi: "redmi",
+  realmi: "realme",
+  // Russian transliterations
+  айфон: "iphone",
+  айпад: "ipad",
+  макбук: "macbook",
+  самсунг: "samsung",
+  хуавей: "huawei",
+  сяоми: "xiaomi",
+  наушники: "headphones",
+  ноутбук: "laptop",
+  часы: "watch",
+  планшет: "tablet",
+  телефон: "smartphone",
+  смартфон: "smartphone",
+};
+
+function normalizeSearchTerms(raw?: string): string[] {
+  if (!raw) return [];
+  return raw
+    .trim()
+    .toLocaleLowerCase("az")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((term) => SEARCH_ALIASES[term] ?? term);
+}
+
 function matchingProducts(query: CatalogueQuery): RealProduct[] {
-  const search = query.q?.trim().toLocaleLowerCase("az") ?? "";
+  const terms = normalizeSearchTerms(query.q);
   return realCatalogue.products.filter((product) => {
-    const searchable = `${product.name} ${product.brand ?? ""} ${product.model_family ?? ""}`
+    const searchable = `${product.name} ${product.brand ?? ""} ${product.model_family ?? ""} ${product.category}`
       .toLocaleLowerCase("az");
     return (
-      (!search || searchable.includes(search)) &&
+      (terms.length === 0 || terms.every((term) => searchable.includes(term))) &&
       (!query.category || product.category === query.category) &&
       (!query.brand || product.brand === query.brand) &&
       (!query.store_id || product.offers.some((offer) => offer.store_id === query.store_id))

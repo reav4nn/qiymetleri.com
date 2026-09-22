@@ -2,8 +2,9 @@ import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import { Stack } from "expo-router/stack";
-import { useState } from "react";
 import { Linking, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+
+import { useFavourites } from "@/hooks/use-favourites";
 
 import type { CurrentPrice, PriceHistoryPoint, ProductDetail } from "@/api/types";
 import { ResourceNotFoundError } from "@/api/client";
@@ -91,7 +92,8 @@ export function ProductDetailScreen({ productId }: { productId?: string }) {
 
 function ProductHero({ product, lowestPrice, offerCount }: { product: ProductDetail; lowestPrice: number | null; offerCount: number }) {
   const { formatDate, formatNumber, t } = useLocale();
-  const [favourite, setFavourite] = useState(false);
+  const { isFavourite, toggleFavourite } = useFavourites();
+  const favourite = isFavourite(product.id);
   return (
     <View style={{ backgroundColor: colors.surface, borderColor: colors.border, borderCurve: "continuous", borderRadius: 20, borderWidth: 1, gap: 16, padding: 16 }}>
       <View style={{ alignItems: "center", aspectRatio: 1.18, backgroundColor: colors.background, borderCurve: "continuous", borderRadius: 16, justifyContent: "center", overflow: "hidden" }}>
@@ -100,7 +102,7 @@ function ProductHero({ product, lowestPrice, offerCount }: { product: ProductDet
         ) : (
           <Text selectable style={{ color: colors.mutedLight, fontFamily: "Manrope" }}>qiymetleri.com</Text>
         )}
-        <Pressable role="button" aria-label={t("product.favourite")} aria-pressed={favourite} onPress={() => { setFavourite((value) => !value); void Haptics.selectionAsync(); }} style={({ pressed }) => ({ alignItems: "center", backgroundColor: favourite ? colors.accentSoft : colors.surface, borderColor: favourite ? colors.accent : colors.border, borderRadius: 24, borderWidth: 1, height: 48, justifyContent: "center", opacity: pressed ? 0.7 : 0.95, position: "absolute", right: 10, top: 10, width: 48 })}>
+        <Pressable role="button" aria-label={t("product.favourite")} aria-pressed={favourite} onPress={() => { toggleFavourite(product.id); void Haptics.selectionAsync(); }} style={({ pressed }) => ({ alignItems: "center", backgroundColor: favourite ? colors.accentSoft : colors.surface, borderColor: favourite ? colors.accent : colors.border, borderRadius: 24, borderWidth: 1, height: 48, justifyContent: "center", opacity: pressed ? 0.7 : 0.95, position: "absolute", right: 10, top: 10, width: 48 })}>
           <Text aria-hidden style={{ color: favourite ? colors.accent : colors.mutedLight, fontSize: 23 }}>{favourite ? "♥" : "♡"}</Text>
         </Pressable>
       </View>

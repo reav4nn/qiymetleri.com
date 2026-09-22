@@ -4,6 +4,7 @@ import { Grid2X2, Search, UserRound } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LanguageToggle } from "@/components/language-toggle";
+import { HeaderFavouritesButton } from "@/components/header-favourites-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -58,6 +59,8 @@ export async function SiteHeader() {
             <LanguageToggle />
           </Suspense>
         </div>
+
+        <HeaderFavouritesButton label={t("nav.favourites")} />
 
         <Link
           href="/login"

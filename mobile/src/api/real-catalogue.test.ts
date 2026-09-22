@@ -41,6 +41,11 @@ test("real catalogue supports search, category filters and price sorting", () =>
   expect(catalogue.total).toBeGreaterThan(5);
   expect(catalogue.items.every((product) => product.name.toLowerCase().includes("iphone"))).toBe(true);
   expect(catalogue.items[0]?.lowest_price).toBeLessThanOrEqual(catalogue.items.at(-1)?.lowest_price ?? Infinity);
+
+  // Test Azerbaijani transliteration "ayfon"
+  const ayfonResults = getRealCatalogueData({ q: "ayfon" });
+  expect(ayfonResults.total).toBeGreaterThan(0);
+  expect(ayfonResults.items.every((product) => product.name.toLowerCase().includes("iphone"))).toBe(true);
 });
 
 test("real product detail uses genuine store offers without fabricated history", () => {
