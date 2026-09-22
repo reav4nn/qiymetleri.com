@@ -95,12 +95,14 @@ export function ProductCard({ product, width }: { product: ProductSummary; width
           {product.name}
         </Text>
         <View style={{ gap: 3 }}>
-          <Text selectable style={{ color: colors.price, fontFamily: "Manrope", fontSize: 10, fontWeight: "800" }}>
-            {t("product.cheapest")}
-          </Text>
+          {product.lowest_price !== null ? (
+            <Text selectable style={{ color: colors.price, fontFamily: "Manrope", fontSize: 10, fontWeight: "800" }}>
+              {t("product.cheapest")}
+            </Text>
+          ) : null}
           <Text selectable style={{ color: colors.text, fontFamily: "LTSuperiorExtraBold", fontSize: 18 }}>
             {product.lowest_price === null
-              ? "-"
+              ? t("productPage.outOfStock")
               : `${formatNumber(product.lowest_price)} ${t("product.unit")}`}
           </Text>
           <Text selectable style={{ color: "#2563eb", fontFamily: "Manrope", fontSize: 11, fontWeight: "800" }}>

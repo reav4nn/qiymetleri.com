@@ -197,13 +197,15 @@ export default async function ProductDetailPage({
             <p className="mt-2 text-sm text-[#71717a]">{product.canonical_id}</p>
 
             <div className="mt-6 rounded-card bg-[#f8fafc] p-4">
-              <div className="flex items-center gap-2 text-xs font-extrabold tracking-[0.05em] text-[#16a34a] uppercase">
-                <TrendingDown className="size-4" />
-                {t("product.cheapest")}
-              </div>
+              {lowestPrice !== null ? (
+                <div className="flex items-center gap-2 text-xs font-extrabold tracking-[0.05em] text-[#16a34a] uppercase">
+                  <TrendingDown className="size-4" />
+                  {t("product.cheapest")}
+                </div>
+              ) : null}
               <div className="mt-1 text-3xl font-extrabold tracking-[-0.04em]">
                 {lowestPrice === null
-                  ? "-"
+                  ? t("productPage.outOfStock")
                   : `${format.number(lowestPrice)} ${t("product.unit")}`}
               </div>
               <p className="mt-1 text-sm text-[#71717a]">

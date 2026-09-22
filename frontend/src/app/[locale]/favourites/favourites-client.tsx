@@ -80,26 +80,28 @@ export function FavouritesClient({
               {product.name}
             </div>
 
-            <div>
-              <div className="mb-0.5 text-[11px] font-bold tracking-[0.03em] uppercase text-[#16a34a]">
-                {product.lowest_price === null ? t("productPage.outOfStock") : t("product.cheapest")}
+            <div className="mt-auto flex flex-col justify-end pt-1">
+              <div className="mb-1 min-h-[16px] text-[11px] font-bold tracking-[0.03em] uppercase">
+                {product.lowest_price !== null ? (
+                  <span className="text-[#16a34a]">{t("product.cheapest")}</span>
+                ) : (
+                  <span className="invisible">&nbsp;</span>
+                )}
               </div>
-              <div className="flex items-baseline justify-between">
-                <span className={`text-xl font-extrabold tracking-[-0.02em] ${product.lowest_price === null ? "text-sm font-semibold text-[#71717a]" : ""}`}>
-                  {product.lowest_price === null
-                    ? t("productPage.outOfStock")
-                    : `${format.number(product.lowest_price)} ${t("product.unit")}`}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {product.variant_count > 1 ? (
-                    <span className="rounded-md bg-[#f4f4f5] px-2 py-[3px] text-xs font-semibold text-[#52525b]">
-                      {product.variant_count} variant
-                    </span>
-                  ) : null}
-                  <span className="rounded-md bg-[#eff6ff] px-2 py-[3px] text-xs font-bold text-[#2563eb]">
-                    {t("product.offers", { count: product.store_count })}
+              <div className="text-xl font-extrabold tracking-[-0.02em] text-foreground whitespace-nowrap">
+                {product.lowest_price === null
+                  ? t("productPage.outOfStock")
+                  : `${format.number(product.lowest_price)} ${t("product.unit")}`}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {product.variant_count > 1 ? (
+                  <span className="rounded-md bg-[#f4f4f5] px-2 py-[3px] text-xs font-semibold text-[#52525b] whitespace-nowrap">
+                    {product.variant_count} variant
                   </span>
-                </div>
+                ) : null}
+                <span className="rounded-md bg-[#eff6ff] px-2 py-[3px] text-xs font-bold text-[#2563eb] whitespace-nowrap">
+                  {t("product.offers", { count: product.store_count })}
+                </span>
               </div>
             </div>
           </Link>
