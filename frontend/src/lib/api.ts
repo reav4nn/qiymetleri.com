@@ -76,10 +76,16 @@ export type HomeData = {
   available: boolean;
 };
 
-const API_BASE_URL =
-  process.env.INTERNAL_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "https://qiymetleri-backend.onrender.com";
+function resolveApiBaseUrl(): string {
+  const envUrl = process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  if (!envUrl) return "https://qiymetleri-backend.onrender.com";
+  if (envUrl.includes("qiymetleri.onrender.com") && !envUrl.includes("qiymetleri-backend")) {
+    return "https://qiymetleri-backend.onrender.com";
+  }
+  return envUrl;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export type CatalogueQuery = {
   q?: string;
