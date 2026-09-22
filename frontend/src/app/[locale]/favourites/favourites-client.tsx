@@ -81,13 +81,13 @@ export function FavouritesClient({
             </div>
 
             <div>
-              <div className="mb-0.5 text-[11px] font-bold tracking-[0.03em] text-[#16a34a] uppercase">
-                {t("product.cheapest")}
+              <div className="mb-0.5 text-[11px] font-bold tracking-[0.03em] uppercase text-[#16a34a]">
+                {product.lowest_price === null ? t("productPage.outOfStock") : t("product.cheapest")}
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-extrabold tracking-[-0.02em]">
+                <span className={`text-xl font-extrabold tracking-[-0.02em] ${product.lowest_price === null ? "text-sm font-semibold text-[#71717a]" : ""}`}>
                   {product.lowest_price === null
-                    ? "-"
+                    ? t("productPage.outOfStock")
                     : `${format.number(product.lowest_price)} ${t("product.unit")}`}
                 </span>
                 <div className="flex items-center gap-1.5">

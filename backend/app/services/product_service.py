@@ -169,17 +169,47 @@ async def get_products(
     # Build grouped items
     grouped_items = []
     for family_key, members in families.items():
-        all_prices = []
+        in_stock_prices = []
+        recorded_prices = []
         all_store_ids = set()
         best_score = max(s for _, s in members)
 
+        rep = members[0][0]
+        rep_lowest_price = None
+
         for m, _ in members:
+            m_in_stock = []
+            m_recorded = []
             for cp in m.current_prices:
-                if cp.in_stock:
-                    all_prices.append(cp.price_azn)
+                if cp.price_azn is not None and float(cp.price_azn) > 0:
+                    val = float(cp.price_azn)
+                    recorded_prices.append(val)
+                    m_recorded.append(val)
+                    if cp.in_stock:
+                        in_stock_prices.append(val)
+                        m_in_stock.append(val)
                 all_store_ids.add(cp.store_id)
 
-        rep = members[0][0]
+            m_best = (
+                min(m_in_stock)
+                if m_in_stock
+                else (min(m_recorded) if m_recorded else None)
+            )
+            if m_best is not None:
+                if rep_lowest_price is None or m_best < rep_lowest_price:
+                    rep_lowest_price = m_best
+                    rep = m
+
+        lowest_price = (
+            min(in_stock_prices)
+            if in_stock_prices
+            else (min(recorded_prices) if recorded_prices else None)
+        )
+
+        image_url = rep.image_url or next(
+            (m.image_url for m, _ in members if m.image_url), None
+        )
+
         grouped_items.append(
             {
                 "id": rep.id,
@@ -188,10 +218,8 @@ async def get_products(
                 "category": rep.category,
                 "model_family": rep.model_family,
                 "name": rep.model_family or rep.name,
-                "image_url": next(
-                    (m.image_url for m, _ in members if m.image_url), None
-                ),
-                "lowest_price": min(all_prices) if all_prices else None,
+                "image_url": image_url,
+                "lowest_price": lowest_price,
                 "store_count": len(all_store_ids),
                 "variant_count": len(members),
                 "_score": best_score,
