@@ -6,6 +6,7 @@ Brand is always Apple.
 Categories covered (MVP): iPhones, Macs, AirPods, Apple Watches.
 """
 
+import json
 import re
 from datetime import datetime, timezone
 
@@ -39,8 +40,8 @@ class ISpaceSpider(scrapy.Spider):
     store_id = "ispace"
 
     custom_settings = {
-        "DOWNLOAD_DELAY": 2,
-        "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
+        "DOWNLOAD_DELAY": 1,
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 4,
     }
 
     async def start(self):
@@ -73,20 +74,37 @@ class ISpaceSpider(scrapy.Spider):
         page = response.meta.get("playwright_page")
 
         try:
-            product_cards = response.css(".carousel-product")
+            # 1. Prefer ItemList JSON-LD schema from category page
+            itemlist_urls = []
+            for script in response.css('script[type="application/ld+json"]::text').getall():
+                try:
+                    data = json.loads(script)
+                    if data.get("@type") == "ItemList":
+                        for elem in data.get("itemListElement", []):
+                            if isinstance(elem, dict) and elem.get("url"):
+                                itemlist_urls.append(elem["url"])
+                except Exception:
+                    pass
 
+            if itemlist_urls:
+                self.logger.info(
+                    f"[iSpace] Found {len(itemlist_urls)} products via ItemList in {category}"
+                )
+                for url in itemlist_urls:
+                    yield scrapy.Request(
+                        url=url,
+                        callback=self.parse_product,
+                        cb_kwargs={"category": category},
+                    )
+                return
+
+            # 2. Fallback to scraping carousel product cards
+            product_cards = response.css(".carousel-product")
             self.logger.info(
-                f"[iSpace] {len(product_cards)} products in {category} "
-                f"on {response.url}"
+                f"[iSpace] {len(product_cards)} products in {category} on {response.url}"
             )
 
             for card in product_cards:
-                item = ProductItem()
-                item["store_id"] = self.store_id
-                item["category"] = category
-                item["scraped_at"] = datetime.now(timezone.utc).isoformat()
-
-                # Name: .entity-card_name
                 name = (
                     card.css(".entity-card_name::attr(data-title)").get()
                     or card.css(".entity-card_name-text::text").get()
@@ -96,52 +114,71 @@ class ISpaceSpider(scrapy.Spider):
                 if not name or len(name) < 3:
                     continue
 
-                # Filter out accessories mixed into category pages
                 name_lower = name.lower()
-                is_accessory = any(
-                    re.search(p, name_lower) for p in _ACCESSORY_PATTERNS
-                )
-                if is_accessory:
-                    self.logger.debug(
-                        f"[iSpace] Skipped accessory: '{name}' in {category}"
-                    )
+                if any(re.search(p, name_lower) for p in _ACCESSORY_PATTERNS):
                     continue
 
-                item["original_title"] = name
-
-                # Price: .carousel-product_price-value
                 price_text = (
-                    card.css(
-                        ".carousel-product_price-value::text"
-                    ).get()
-                    or ""
+                    card.css(".carousel-product_price-value::text").get() or ""
                 ).strip()
-                item["price_raw"] = price_text
 
-                # URL: <a> with href containing /product/
                 link = card.css("a[href*='/product/']::attr(href)").get()
+                img = card.css(".entity-card_image::attr(src)").get() or card.css("img::attr(src)").get()
+
+                item = ProductItem()
+                item["store_id"] = self.store_id
+                item["category"] = category
+                item["scraped_at"] = datetime.now(timezone.utc).isoformat()
+                item["original_title"] = name
+                item["price_raw"] = price_text
                 if link:
                     item["url"] = response.urljoin(link)
-
-                # Brand is always Apple
                 item["brand"] = "apple"
-
-                # Image: .entity-card_image src
-                img = card.css(
-                    ".entity-card_image::attr(src)"
-                ).get()
-                if not img:
-                    img = card.css("img::attr(src)").get()
                 if img and "icon" not in img and "svg" not in img:
                     item["image_url"] = response.urljoin(img)
-
-                # Assume in stock
                 item["in_stock"] = True
-
                 yield item
         finally:
             if page:
                 await page.close()
+
+    def parse_product(self, response, category: str):
+        for script in response.css('script[type="application/ld+json"]::text').getall():
+            try:
+                data = json.loads(script)
+                if data.get("@type") == "Product":
+                    name = data.get("name", "").strip()
+                    if not name:
+                        continue
+                    name_lower = name.lower()
+                    if any(re.search(p, name_lower) for p in _ACCESSORY_PATTERNS):
+                        continue
+
+                    offers = data.get("offers")
+                    if not offers or not isinstance(offers, dict):
+                        continue
+
+                    price = str(offers.get("price", "")).strip()
+                    if not price:
+                        continue
+
+                    avail = str(offers.get("availability", ""))
+                    in_stock = "InStock" in avail
+
+                    item = ProductItem()
+                    item["store_id"] = self.store_id
+                    item["category"] = category
+                    item["scraped_at"] = datetime.now(timezone.utc).isoformat()
+                    item["original_title"] = name
+                    item["price_raw"] = f"{price} ₼"
+                    item["url"] = offers.get("url") or response.url
+                    item["brand"] = "apple"
+                    item["image_url"] = data.get("image") or ""
+                    item["in_stock"] = in_stock
+                    yield item
+                    return
+            except Exception:
+                pass
 
     async def errback_close_page(self, failure):
         page = failure.request.meta.get("playwright_page")

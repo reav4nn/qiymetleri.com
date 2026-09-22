@@ -11,6 +11,17 @@ if [ -n "$DATABASE_URL" ]; then
         echo "Alembic upgrade warning: migrations could not complete cleanly. Continuing..."
     }
 
+    python -c "
+import asyncio
+from app.core.cache import invalidate_cache
+try:
+    asyncio.run(invalidate_cache('products:*'))
+    asyncio.run(invalidate_cache('filters:*'))
+    print('Product and filter caches invalidated.')
+except Exception as e:
+    print('Cache invalidate notice:', e)
+" 2>/dev/null || true
+
     echo "Ensuring catalogue is populated..."
     python -m scripts.seed_catalogue || {
         echo "Seed warning: seed_catalogue did not complete. Continuing..."
